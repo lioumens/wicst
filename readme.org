@@ -4,11 +4,11 @@
 The project can be split up into a three-tier architecture of Presentation/Logical/Physical. This is similar to business intelligence "[[https://docs.oracle.com/en/middleware/bi/analytics-server/datamodel-oas/semantic-models-architecture.html][semantic architecture]]" or web design's three-tier architecture. I like to think of it in analogy to statistical contexts as: Raw Data -> Modeling -> Results
 
 1. Presentation
-   This tier is customized for the end user and has the highest level of abstraction over the raw data. This should be easy to use for non-technical users, and should not require specialized knowledge of the data curation or sources of the data. There are often many services that this presentation tier will have, each built for specific purposes
+   - This tier is customized for the end user and has the highest level of abstraction over the raw data. This should be easy to use for non-technical users, and should not require specialized knowledge of the data curation or sources of the data. There are often many services that this presentation tier will have, each built for specific purposes
 2. Logical
-   This tier should contain all the "business logic" of what this project offers. In this case, I would presume this mostly contains a series of statistical models that summarize the data. If data visualizations and data reports are desired in the presentation tier, then this tier will contain all the code that goes behind generating those reports. Ideally, the structure of this tier matches the design of the presentation tier, and is relatively robust to changes that happen in the Physical and Presentation tier. Many times this will result in a series of "endpoints" in which the presentation tier can consume data in a consistent format.
+   - This tier should contain all the "business logic" of what this project offers. In this case, I would presume this mostly contains a series of statistical models that summarize the data. If data visualizations and data reports are desired in the presentation tier, then this tier will contain all the code that goes behind generating those reports. Ideally, the structure of this tier matches the design of the presentation tier, and is relatively robust to changes that happen in the Physical and Presentation tier. Many times this will result in a series of "endpoints" in which the presentation tier can consume data in a consistent format.
 3. Physical
-   This tier is how the data is actually stored and organized. The design of these databases and implementation of this data should be highly dependent on internal operations, and should be regularly curated so that the data is clean and organized. We will aim for a balance of consistency, availability, and robustness.
+   - This tier is how the data is actually stored and organized. The design of these databases and implementation of this data should be highly dependent on internal operations, and should be regularly curated so that the data is clean and organized. We will aim for a balance of consistency, availability, and robustness.
 ** Customers (Presentation Layer)
 *** Questions for each Customer
 **** What is the reason for them to use this data?
@@ -40,8 +40,9 @@ The project can be split up into a three-tier architecture of Presentation/Logic
 Time will be split evenly across the three layers of the project design: Presentation(33%), Logical(33%), Physical(33%). The time spent on the presentation layer and physical layer I anticipate will need most of your time, as those are very "practice dependent".
 
 I'll propose that my work will have roughly 3 phases, and progress in mostly a top-down manner.
+
 1. Minimum Viable (~10%)
-   - We will identify /one/ customer, and create all three layers of the project to service the one customer. There will be strict boundaries on the data integrated
+   - We will identify /one/ customer, and create all three layers of the project to service the one customer. There will be strict boundaries on the data integrated into the minimum product
    - The customer identified will be representative of general pattern of needs in the project, and feedback sessions will iterate on the basic product until it is serviceable and can be utilized live.
 2. Design for current customers (~60%)
    - Taking into consideration the aggregate needs of the customers /currently/ serviced, we will create a design that adheres best to the current utilization of data. Database schemas have appropriate identifying information, security practices are implemented, etc.f
