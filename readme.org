@@ -1,0 +1,63 @@
+#+TITLE: Wicst Data Organization
+
+* Project Design
+The project can be split up into a three-tier architecture of Presentation/Logical/Physical. This is similar to business intelligence "[[https://docs.oracle.com/en/middleware/bi/analytics-server/datamodel-oas/semantic-models-architecture.html][semantic architecture]]" or web design's three-tier architecture. I like to think of it in analogy to statistical contexts as: Raw Data -> Modeling -> Results
+
+1. Presentation
+   This tier is customized for the end user and has the highest level of abstraction over the raw data. This should be easy to use for non-technical users, and should not require specialized knowledge of the data curation or sources of the data. There are often many services that this presentation tier will have, each built for specific purposes
+2. Logical
+   This tier should contain all the "business logic" of what this project offers. In this case, I would presume this mostly contains a series of statistical models that summarize the data. If data visualizations and data reports are desired in the presentation tier, then this tier will contain all the code that goes behind generating those reports. Ideally, the structure of this tier matches the design of the presentation tier, and is relatively robust to changes that happen in the Physical and Presentation tier. Many times this will result in a series of "endpoints" in which the presentation tier can consume data in a consistent format.
+3. Physical
+   This tier is how the data is actually stored and organized. The design of these databases and implementation of this data should be highly dependent on internal operations, and should be regularly curated so that the data is clean and organized. We will aim for a balance of consistency, availability, and robustness.
+** Customers (Presentation Layer)
+*** Questions for each Customer
+**** What is the reason for them to use this data?
+- "We need to see summaries of this data for grant writing"
+- "We would like to see recommendations for seeds in the upcoming planting season"
+**** Are there any data privacy concerns that should be addressed?
+- Do we need to set any limits on how much/how often they will be accessing this data?
+- Are there any legal restrictions that need to be met?
+**** Who and how will they be accessing the Data?
+- Access through the browser? through their phone?
+- Will they need direct access to the data? Or be able to submit requests for updating the data?
+- User authentication or verification?
+**** How critical is this Customer?
+**** How should they be able to access the data?
+- Are they using this data in production, and building tools on top of this? Will they need an API to access our data?
+- Do they want to be able to download csv files of their summary?
+- What visualizations or reports might they want, and how frequently?
+** Statistical Analysis (Logical Layer)
+*** How should the implementation of analyses be done? R? Python?
+*** What summaries would be the most useful?
+*** Do we need to create logic for customers to update our data? or just read?
+** The Data (Physical Layer)
+*** What is the structure of the current data?
+*** What is necessary to keep and clean?
+*** How often will the data need to be updated and read from?
+*** Where should this be hosted?
+
+* Execution Plan
+Time will be split evenly across the three layers of the project design: Presentation(33%), Logical(33%), Physical(33%). The time spent on the presentation layer and physical layer I anticipate will need most of your time, as those are very "practice dependent".
+
+I'll propose that my work will have roughly 3 phases, and progress in mostly a top-down manner.
+1. Minimum Viable (~10%)
+   - We will identify /one/ customer, and create all three layers of the project to service the one customer. There will be strict boundaries on the data integrated
+   - The customer identified will be representative of general pattern of needs in the project, and feedback sessions will iterate on the basic product until it is serviceable and can be utilized live.
+2. Design for current customers (~60%)
+   - Taking into consideration the aggregate needs of the customers /currently/ serviced, we will create a design that adheres best to the current utilization of data. Database schemas have appropriate identifying information, security practices are implemented, etc.f
+     - Flowcharts? Page 12 [[https://cms.library.wisc.edu/archives/wp-content/uploads/sites/21/2015/06/2014-Electronic-Business-Communication-and-University-Records.pdf][2014 Business Communication and University Records]]
+   - Customer needed data will be curated and cleaned, organized into well-defined schemas with identifying information
+   - Data Retention Schedules will be developed, with policies on when and how data will be curated.
+     - [[https://www.library.wisc.edu/archives/records-management/uw-madison-records-retention-schedules-and-disposition/][retention schedules at UW]]
+   - Data stewards and responsibilities will be identified and assigned.
+3. Design for scalability/persistence (~30%)
+   - I will try to make this system healthy enough to run on its own after I'm no longer on this project.
+   - This will be writing appropriate documentation, and passing on the necessary skills to keep these services in operation.
+   - Hosting services will also be a considderation. I will prioritize looking for a department, campus, commerical solution in order keep these services available.
+     - department will also have web hosting solutions available if needed
+     - RPosit has some platforms for computing machine time.
+     - DOIT has solutions for Oracle,MSSQL, and dedicated staff to keeping these services running.
+     - There are associated costs with keeping these databases up as well, and I would also rely on their expertises in this regard. If we choose one of these routes, I'll be responsible for communicating our project's technical needs. I will try to come up with reasonable cost estimates for the upkeep of this project.
+     - [[https://storage.researchdata.wisc.edu/][Research Data Services]] also has some campus related tools we may be able to use, including cloud services like Amazon web services, and Azure.
+     - At this time, I'm considering single file endpoints, with Rposit for computing, UW for web hosting. Sqlite can be created for single file endpoint.
+   - Can also develop and track project metrics to make it easier to justify for future funding projects.
