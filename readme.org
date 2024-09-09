@@ -62,3 +62,45 @@ I'll propose that my work will have roughly 3 phases, and progress in mostly a t
      - [[https://storage.researchdata.wisc.edu/][Research Data Services]] also has some campus related tools we may be able to use, including cloud services like Amazon web services, and Azure.
      - At this time, I'm considering single file endpoints, with Rposit for computing, UW for web hosting. Sqlite can be created for single file endpoint.
    - Can also develop and track project metrics to make it easier to justify for future funding projects.
+* Task List
+** Personal
+- [ ] oatlage?
+* Background Information
+** Terminology
+- bu/a :: bushel per acre
+- T/a :: tons per acre
+- PPNT :: Preplant soil nitrate test
+  + measures residual/carryover N
+- PSNT ::
+- leaching ::
+** Data
+- each season has multiple crops, wheat (grain, straw) and alfalfa (multiple cuts)
+- two sites ARL and LAC. No LAC past 2003
+- system 1:6, 14:15.
+  - 14 only shows up in 2002, and 15 only shows up in 1999-2002. These look like modifications of 4 and 5. From notes tab:
+    #+begin_quote
+    all plots for cuts 3 and 4 of CS4 and CS5 were not sampled for quality analysis (not sure why)
+    #+end_quote
+- blocks 16 each year starting in 2017, 14 each year from 1989 - 2016.
+- system 2 has only filler corn the first year
+- system 3: 1989, 1990 don't have all 3 crop1. 2019 is missing wg?
+  - 1994, LAC, there's one wg rotation
+
+** Actionable
+*** 1989 system 2 has potential mislabel
+- supposed to be corn/sb but two rows of block 1 have both labeled as corn and none with soybean.
+  #+begin_src R
+wicst_raw |>
+  filter(system == 2) |>
+  select(year, crop1, crop2, crop3) |>
+  distinct(year, crop1, crop2, crop3) |>
+  xtabs(~year + crop1, data =  _)
+  #+end_src
+- it's possible this is just how the trial started? It's unclear how this
+** Treatment
+- "c silage" is 2017-2019
+- "c_silage" is 2020-2023
+* Notes
+** Simplified Data Exploration of all our data
+** <2024-09-06 Fri> Organic Marketing World, how
+** Formalized data request system??

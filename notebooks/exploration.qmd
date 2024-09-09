@@ -1,0 +1,126 @@
+---
+title: "sandbox"
+format: html
+---
+
+```{r}
+library(here)
+library(readxl)
+library(skimr)
+library(tidyverse)
+wicst_raw <- read_excel(here("data-raw/2024-09-06 WICST_Master_Data - ML.xlsx")) 
+```
+
+```{r}
+skim(wicst_raw)
+```
+
+```{r}
+wicst_raw$crop1 |> unique()
+wicst_raw |> 
+  count(year, crop1)
+# fc = filler corn
+# c = corn
+# direct seeded alfalfa
+# oatlage
+```
+
+## By the variables
+
+### Site
+
+```{r}
+xtabs(~year + site, data = wicst_raw)
+wicst_raw |> count(year, site) |> pivot_wider(names_from = )
+```
+
+### System
+
+Let's go backwards by year... 
+
+```{r}
+xtabs(~system + year, data = wicst_raw)
+# wicst_raw |> 
+#   count(year, system)
+```
+
+### Block
+
+```{r}
+xtabs(~year + block + site, data = wicst_raw)
+```
+
+4 blocks every year.
+
+```{r}
+wicst_raw |> 
+  filter(site == "ARL", year %in% c(2002)) |> 
+  xtabs(~block + system, data = _)
+xtabs(~block + site, data = wicst_raw)
+```
+
+It looks like every part of the growing cycle is represented every year?
+
+```{r}
+# corn siulage
+wicst_raw$crop1 |> unique()
+wicst_raw |> filter(crop1 == "past") |> count(system)
+
+wicst_raw |>
+  filter(crop1 %in% c("c silage", "c_silage")) |> 
+  count(year, crop1)
+```
+
+```{r}
+# system 1: fc and c.
+
+wicst_raw |> 
+  filter(system == 1, crop1 == "fc") |> count(year)
+```
+
+```{r}
+# system 3: 
+wicst_raw |> 
+  filter(system == 3) |>
+  select(year, crop1, crop2, crop3) |>
+  distinct(year, crop1, crop2, crop3) |> 
+  xtabs(~year + crop1, data = _)
+
+# extra wg in 1994? why
+
+wicst_raw |> filter(system == 3, year == 1994) |> 
+  select(year, block, crop1, crop2, crop3, system) |> 
+  filter(crop1 == "wg")
+
+xtabs(~ year + block +  system, data = wicst_raw)
+
+wicst_raw |> count(year, block, system) |> 
+  filter(system == 3) |> arrange()
+
+wicst_raw |>
+  filter(between(year, 1994, 1995), system == 3) |> 
+  arrange(site, year, block)
+  
+
+wicst_raw |> 
+  filter(between(year, 1994, 1995), system == 3) |> 
+  xtabs(~year + crop3 + site, data = _)
+
+# 1994, system 3, at LAC, one of them
+  
+wicst_raw |> distinct(crop1, crop2, crop3, crop4) |> 
+  arrange(crop1) |> 
+  rownames_to_column(var = "treatment_id")
+
+wicst_raw |> filter(year == 1989, system == 3)
+  
+```
+
+can we track crop rotation in a single plot?
+
+```{r}
+wicst_raw |> filter(system == 2, plot == 108)
+  
+```
+
+
