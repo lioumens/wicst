@@ -63,9 +63,10 @@ I'll propose that my work will have roughly 3 phases, and progress in mostly a t
      - At this time, I'm considering single file endpoints, with Rposit for computing, UW for web hosting. Sqlite can be created for single file endpoint.
    - Can also develop and track project metrics to make it easier to justify for future funding projects.
 * Task List
-** Personal
-- [ ] oatlage?
+** Data
+** Knowledge
 * Background Information
+** Farming
 ** Terminology
 - bu/a :: bushel per acre
 - T/a :: tons per acre
@@ -73,6 +74,39 @@ I'll propose that my work will have roughly 3 phases, and progress in mostly a t
   + measures residual/carryover N
 - PSNT ::
 - leaching ::
+- os :: oat straw
+- of :: oat forage (oatlage)
+- wg :: wheat grain
+- ws :: wheat straw
+- hay tedding :: lifting and separating hay to speed up dry down time. "fluffing"
+- windrow :: row of cut hay/small grain crop. Normally before being baled combined or rolled
+- raking :: seems another method of making windrows,
+- hay :: cut grass left out to dry, generally used for food.
+  - 10% moisture
+- straw :: wheat/oats/barley after the combine that cuts off the berry stuff on the top.
+  - generally used for bedding, decoration, scattered etc.
+- hay bale  :: a bundle that has more moisture than straw bale
+- straw bale :: oat/wheat straw after the cutting, super dry
+- baleage :: fermented forage >  "baled" > wrapped in a tube or plastic
+  - 45-55% moisture
+  - basically skip the
+- haylage :: forage chopper > bagged/silo/bunk/covered
+  - 60-70% moisture ("high moisture haylage")
+  - called such because it's left to wilt for shorter period of time than normal hay
+- forage ::
+- silage :: anything stored in silo
+- ensile :: put into a silo to preserve as silage
+- plowing :: technically a type x of tilling but more intense
+- moldboard plowing :: more scoop and flip action of plowing
+- chisel plowing :: more claw deep and disturb type of plowing
+- flail mower :: cutter adapted for occasional immovable objects, will just "not cut" the rock instead of catching it and throwing it.
+  - also can cut lower to the ground.
+- cultivator :: it's like mixing top soil... technically tilling. but "no-till system"
+- tine weeding :: little claw like thing dragging behind
+- ANPP :: aerial net primary production
+  - seems like measuring the surface area and productivity of the cover.
+  - they have canapeo measurements
+- paddock :: enclosed area for pasturing or exercise animals
 ** Data
 - each season has multiple crops, wheat (grain, straw) and alfalfa (multiple cuts)
 - two sites ARL and LAC. No LAC past 2003
@@ -85,7 +119,7 @@ I'll propose that my work will have roughly 3 phases, and progress in mostly a t
 - system 2 has only filler corn the first year
 - system 3: 1989, 1990 don't have all 3 crop1. 2019 is missing wg?
   - 1994, LAC, there's one wg rotation
-
+- oat grain crop1
 ** Actionable
 *** 1989 system 2 has potential mislabel
 - supposed to be corn/sb but two rows of block 1 have both labeled as corn and none with soybean.
@@ -100,7 +134,31 @@ wicst_raw |>
 ** Treatment
 - "c silage" is 2017-2019
 - "c_silage" is 2020-2023
+* Table Documentation/Notes
+** sites
+- description: holds information relevant to where research plots are
+** plots
+- system should be a property of plots... but the lakeland plots are an excepttion to that requirement what to do here...
+** harvests
+- "Collecting a product off the field, no matter the form"
+** Plantings
+** Fertilizings
+** Persons
+** HarvestPlantings
+- linkage table
+- resolves many to many relationship between Harvests and Plantings because multiple crops can be involved in a harvest (oats/alfalfa). Multiple harvests can be made of a single crop (alfalfa).
+- plantings may not be harvested, instead they may be tilled into the land, or they may simply die. but the reverse harvest must have
+* Relationships
+- sites-plots
+- plots is an identifying relationship
+* Business Rules
+-
 * Notes
-** Simplified Data Exploration of all our data
+** [2024-09-26 Thu] wheat yield, harvest/plant review, visit to farm
+- [ ] bag weight, length, width to harvest table
+- [ ] row spacing, planting depth to planting table
+- ANPP?
+- explanation of the wheat yields. The grain is cut off, then the straw is bagged as "wet", then set in a room to be dried
 ** <2024-09-06 Fri> Organic Marketing World, how
-** Formalized data request system??
+** [2024-09-16 Mon] First Meeting with Adam
+*** "I want all of the soil test phosphorus data from your organic corn systems from 1990 to 2010"
