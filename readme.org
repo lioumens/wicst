@@ -1,4 +1,5 @@
 #+TITLE: Wicst Data Organization
+#+TODO: TODO(t) REVISIT(r) REVIEW(v) | DONE(d) IGNORED(i)
 
 * Project Design
 The project can be split up into a three-tier architecture of Presentation/Logical/Physical. This is similar to business intelligence "[[https://docs.oracle.com/en/middleware/bi/analytics-server/datamodel-oas/semantic-models-architecture.html][semantic architecture]]" or web design's three-tier architecture. I like to think of it in analogy to statistical contexts as: Raw Data -> Modeling -> Results
@@ -67,6 +68,11 @@ I'll propose that my work will have roughly 3 phases, and progress in mostly a t
 ** Knowledge
 * Background Information
 ** Farming
+*** Fertilizers
+- three numbers for starting fertilizers 9-11-30 means Nitrogen-Phosphorus-Potassium
+- Liming is mostly for controlling ph of the soil, measured by eutralizing Index. It's the carbonate CO3-2
+  - 80-89 grade is the neutralizing index zones, so the higher the index zone, the higher the quality of lime. It's finer or has more carbonate.
+
 ** Terminology
 - bu/a :: bushel per acre
 - T/a :: tons per acre
@@ -148,12 +154,32 @@ wicst_raw |>
 - linkage table
 - resolves many to many relationship between Harvests and Plantings because multiple crops can be involved in a harvest (oats/alfalfa). Multiple harvests can be made of a single crop (alfalfa).
 - plantings may not be harvested, instead they may be tilled into the land, or they may simply die. but the reverse harvest must have
+** HarvestPersons?
+- maybe not necessary
 * Relationships
 - sites-plots
 - plots is an identifying relationship
 * Business Rules
 -
+* GCP
+- postg
+** postgres db
+- pass: Sanfordlab
+- myliou:iamtheadmin
+** Journey
+- download gcloud cli through the sdk, enable IAM,
+** Getting into the db
+1. Direct connection
+   The database will have a public facing IP address. If you try to connect to that directly ip, port 5432, then you'll be asked username/password and you're in! Since this is weaker in security, google will require that you specify which ip addresses you'll be connecting from, so that people can't just bruteforce attack your database. You need to specify a mask of ip addresses as a range.
+2. SQL Proxy Auth
+   Essentially you're setting up a tunnel from your computer to
+** SQL Proxy Auth
+A "proxy" is just another networking way of connecting to your database.
+- setup a dedicated host
 * Notes
+** [2024-10-03 Thu]
+- Adam: 146.151.194.52
+- Gregg: 146.151.200.14
 ** [2024-09-26 Thu] wheat yield, harvest/plant review, visit to farm
 - [ ] bag weight, length, width to harvest table
 - [ ] row spacing, planting depth to planting table

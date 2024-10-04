@@ -1,0 +1,36 @@
+#+title: Memorandum of Understanding
+
+
+* I. The Parties
+
+This Memorandum of Understanding (MOU) has been created and entered into on this 2 day of October, 2024 ("Effective Date") by and between:
+
+Gregg Sanford Lab of Department of Soil Sciences, residing at [], here known as "Party A",
+
+and
+
+IT Department of College of Agriculture and Life Sciences, residing at [], here known as "Party B",
+
+both of whom are collectively known as the "Parties".
+
+* II. The Purpose
+
+The First Party and the Second Party desire to enter into an agreement in which they will work together to achieve the various aims and objectives relating to the
+
+operation and maintanance of a database for the Sanford Lab
+
+here known as the "Project".
+
+* III. The Party Obligations
+
+Party A Obligations:
+- communicate
+
+Party B Oblications:
+- Maintain offsite backups and perform disaster recovery in case disaster destroys the database.
+- Maintain and manage database at reasonably high availability at >99.99% uptime.
+- Monitor log files and performance of database, ensuring optimum performance
+- Schedule consistent maintenance on the server, including patching operating system
+- Monitor security and prevent any unauthorized access to the database
+- Manage user access and permissions by adding and removing users as needed
+- Communicating and reporting signs of damage to data integrity, potential security vulnerabilities, scheduled maintainances and downtimes, and usage of computing and database resources.
