@@ -72,7 +72,6 @@ I'll propose that my work will have roughly 3 phases, and progress in mostly a t
 - three numbers for starting fertilizers 9-11-30 means Nitrogen-Phosphorus-Potassium
 - Liming is mostly for controlling ph of the soil, measured by eutralizing Index. It's the carbonate CO3-2
   - 80-89 grade is the neutralizing index zones, so the higher the index zone, the higher the quality of lime. It's finer or has more carbonate.
-
 ** Terminology
 - bu/a :: bushel per acre
 - T/a :: tons per acre
@@ -145,7 +144,7 @@ wicst_raw |>
 - description: holds information relevant to where research plots are
 ** plots
 - system should be a property of plots... but the lakeland plots are an excepttion to that requirement what to do here...
-** harvests
+** harvestings
 - "Collecting a product off the field, no matter the form"
 ** Plantings
 ** Fertilizings
@@ -156,11 +155,73 @@ wicst_raw |>
 - plantings may not be harvested, instead they may be tilled into the land, or they may simply die. but the reverse harvest must have
 ** HarvestPersons?
 - maybe not necessary
+** HarvestLosses
+- captures any losses recorded in the field during harvest times, needs to be separate because sometimes the "true" yield reflective shouldn't adjust for these losses. losses happen in the real world too.
+** HarvestingDetails?
+This table preserves some of the intermediary tools used to calculate final harvest numbers. Generally there are additional implements used, such as bags for straw and wagons for bales. We require that these numbers be associated with specific harvests. If we harvest 3 cuts of alfalfa through the season, it's possible each cut will use a different bag.
+TBD: do we really need wet -> dry -> bag?
+- harvesting_id (PK, FK)
+- wet_bag_weight
+- dry_bag_weight?
+  - I believe some datatables also measure the dry bag... is this because the bag itself has some moisture?
+- wagon_color
+- wagon_weight
+- bag_and_wet_product
+- bag_and_dry_product
+- notes?
+  - since this is 1-1 with the harvest, this will also be anything related to the harvest itself
+** HarvestingDimensions
+Each harvest must capture an /intended/ area. These dimensions are not always given, but given that the harvest area for some plots will vary depending on the measurements taken each year, it's important that these intermediary numbers also be preserved as those measurements will affect yield/area calculations. Finally, there is some noted confusion about what "numbers" to use for length/width in the datasheets, so it would be nice to see if there are errors being made about particular years. The numbers are associated with single harvests. should be a 1-1 optional participation?
+TBD: maybe merged with details table
+- harvesting_id (PK, FK)
+- plot
+- harvest_length
+- harvest_width
+** biomassings
+it looks like 1 evaluation per season for everything except pasture. In the datasheets,even at a single date, there are multiple "bags", if we record the bag weight for those instances, each row in the table is a bagging. I'd say it should be a cut evaluation or something. plot -> cut ->
+- the length of plot changes for each plot cutting... so if pasture and anpp go into the same table, each cut by definition can't be the same quadrant because they will have different areas. we should consider plot(cut x quadrat)
+*** Questions
+- Does the cutting in a field season happen in the exact same quadrant?
+- Do the cuts on N, C, S happen at the same time? can we assume that they might be different
+*** Fields
+- plot
+- section
+- date
+- cut/quadrat
+- quadrat size
+- crop
+  - alfalfa
+  - weeds
+  - oats
+  - berseem clover
+  - red clover
+  - residue
+  - pasture
 * Relationships
 - sites-plots
 - plots is an identifying relationship
+**  HarvestLosses 3o---| Harvestings
+- Losses refers to harvestings
+- one to many because many losses in a field at harvest time, different sections of plot
+- Non-identifying because
+  - the distinction is actually not THAT important, since we're using a surrogate key (not a composite) for harvest losses, ie, it's going to be redundant to make the harvest id also a key, because our surrogate key harvestlosses_id will identify the loss.
+- harvestloss -> harvestings participation is MANDATORY because you can't have a loss without a harvest
+- the other way harvestings -> loss is OPTIONAL because not all harvestings will have a loss.
+  - on the joins... you'll just have to rememeber to hit this table, and zero out the harvests without any values here.
+** HarvestingDetails |o---| Harvestings
+- details refer to harvestings
+- 1-1 because... only one action being described
+  #+begin_quote
+CREATE SCHEMA IF NOT EXISTS `myagg` DEFAULT CHARACTER SET utf8
+CREATE TABLE IF NOT EXISTS `myagg`.`EIHarvests?` (
+)
+ENGINE = InnoDB
+  #+end_quote
 * Business Rules
--
+* Style Guide
+** Table Names
+- lowercase and all plural
+- SAS needs all the tablenames to be lowercase otherwise they won't get imported
 * GCP
 - postg
 ** postgres db
@@ -177,13 +238,18 @@ wicst_raw |>
 A "proxy" is just another networking way of connecting to your database.
 - setup a dedicated host
 * Notes
+** [2024-10-09 Wed] wisconet with david
+- attendance: izzy, david, chris, david
+- 4 instances of ec2, relational dbs, mysql.
+- each station has a folder for achives
+- normalzied everything for consistent measures, basically every column, boto3
 ** [2024-10-03 Thu]
 - Adam: 146.151.194.52
 - Gregg: 146.151.200.14
 ** [2024-09-26 Thu] wheat yield, harvest/plant review, visit to farm
 - [ ] bag weight, length, width to harvest table
 - [ ] row spacing, planting depth to planting table
-- ANPP?
+- ANPP? really should be a separate table as its another condsequence
 - explanation of the wheat yields. The grain is cut off, then the straw is bagged as "wet", then set in a room to be dried
 ** <2024-09-06 Fri> Organic Marketing World, how
 ** [2024-09-16 Mon] First Meeting with Adam
