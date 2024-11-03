@@ -141,35 +141,69 @@ wicst_raw |>
 - "c_silage" is 2020-2023
 * Table Documentation/Notes
 ** sites
-- description: holds information relevant to where research plots are
+- description: holds information relevant to where research plots are and experiments are happening
 ** plots
 - system should be a property of plots... but the lakeland plots are an excepttion to that requirement what to do here...
+** Plantings
+** Manurings
+- include just source
+- source (liquid, solid)
+- methods (broadcast, injected)
+** Fertilizings
+- uan32 : can just put 32-0-0-0-0
+- [ ] split out lime into a different table, just need the grading, see ch5 of extension pdf
+- [ ] N, p2o5, k20, s, ... as column names
+** Tillings
+*** Fields
+- type (primary, secondary, tert)
+- date
+- implement (field cultivator, rotary hoe, tine weeder, row cultivator, strip tiller, cultipacker, chisel plow, disk-chisel plow, disk)
+- passes
+** Pesticidings
+*** Fields
+- date
+- common name (roundup/power max, fs transform plus)
+- category (herbicide, insecticide, fungicide, adjuvant)
+  - ams is an adjuvant
+  - fs transform plus is adjuvant
+- rate
+- rate unit
+** Pesticides
+separate out the types of pesticides here, and more detailed information about them, posibilities
+** Persons
 ** harvestings
 - "Collecting a product off the field, no matter the form"
-** Plantings
-** Fertilizings
-** Persons
 ** HarvestPlantings
 - linkage table
 - resolves many to many relationship between Harvests and Plantings because multiple crops can be involved in a harvest (oats/alfalfa). Multiple harvests can be made of a single crop (alfalfa).
 - plantings may not be harvested, instead they may be tilled into the land, or they may simply die. but the reverse harvest must have
+** HarvestingDetails?
+This table preserves some of the intermediary tools used to calculate final harvest numbers. Generally there are additional implements used, such as bags for straw and wagons for bales. We require that these numbers be associated with specific harvests. If we harvest 3 cuts of alfalfa through the season, it's possible each cut will use a different bag.
+TBD: do we really need wet -> dry -> bag?
+*** Fields
+**** harvesting_id (PK, FK)
+**** wet_bag_weight
+**** dry_bag_weight?
+ - I believe some datatables also measure the dry bag... is this because the bag itself has some moisture?
+**** wagon_color
+**** wagon_weight
+**** bag_and_wet_product
+**** bag_and_dry_product
+**** num_bales
+- sometimes meta information of how many bales were measured... needed? in comments?
+- 2021_harvests_wheat_straw has an example.
+**** comments
+ - since this is 1-1 with the harvest, this will also be anything related to the harvest itself
 ** HarvestPersons?
 - maybe not necessary
 ** HarvestLosses
 - captures any losses recorded in the field during harvest times, needs to be separate because sometimes the "true" yield reflective shouldn't adjust for these losses. losses happen in the real world too.
-** HarvestingDetails?
-This table preserves some of the intermediary tools used to calculate final harvest numbers. Generally there are additional implements used, such as bags for straw and wagons for bales. We require that these numbers be associated with specific harvests. If we harvest 3 cuts of alfalfa through the season, it's possible each cut will use a different bag.
-TBD: do we really need wet -> dry -> bag?
-- harvesting_id (PK, FK)
-- wet_bag_weight
-- dry_bag_weight?
-  - I believe some datatables also measure the dry bag... is this because the bag itself has some moisture?
-- wagon_color
-- wagon_weight
-- bag_and_wet_product
-- bag_and_dry_product
-- notes?
-  - since this is 1-1 with the harvest, this will also be anything related to the harvest itself
+- there are TWO types of losses, those that affect all area for cultivator blight, and those that you directly subtract from the harvest area
+*** Fields
+**** harvest_area
+**** assessment_area
+** HarvestLossDetails
+- will have the mess? I guess?
 ** HarvestingDimensions
 Each harvest must capture an /intended/ area. These dimensions are not always given, but given that the harvest area for some plots will vary depending on the measurements taken each year, it's important that these intermediary numbers also be preserved as those measurements will affect yield/area calculations. Finally, there is some noted confusion about what "numbers" to use for length/width in the datasheets, so it would be nice to see if there are errors being made about particular years. The numbers are associated with single harvests. should be a 1-1 optional participation?
 TBD: maybe merged with details table
@@ -181,26 +215,61 @@ TBD: maybe merged with details table
 it looks like 1 evaluation per season for everything except pasture. In the datasheets,even at a single date, there are multiple "bags", if we record the bag weight for those instances, each row in the table is a bagging. I'd say it should be a cut evaluation or something. plot -> cut ->
 - the length of plot changes for each plot cutting... so if pasture and anpp go into the same table, each cut by definition can't be the same quadrant because they will have different areas. we should consider plot(cut x quadrat)
 *** Questions
+- [X] how important is % moisture when evaluating this... it seems pasture its recorded, but anpp like alfalfa is not.
+- [X] alfalfa is harvested, but then also evaluated later in the season?
 - Does the cutting in a field season happen in the exact same quadrant?
-- Do the cuts on N, C, S happen at the same time? can we assume that they might be different
+- Do the cuts on N, C, S happen at the same time? can we assume that they might be different?
 *** Fields
-- plot
-- section
-- date
-- cut/quadrat
-- quadrat size
-- crop
-  - alfalfa
-  - weeds
-  - oats
-  - berseem clover
-  - red clover
-  - residue
-  - pasture
+**** plot (subplot)
+"section", main, e1, e2, e3, e4 should be captured or implied by the plot and the table, so doesn't need duplication in this column
+**** sample_date
+**** coordinate
+  we need this because for the canopeo measurements, even within small EI plots with SW, there are 3 measurements being taken, one for south, central and north. Furthermore, the locations in the main plots are also sometimes 3 measurements, though often the sampling itself is just "center".
+  For pasture, there's multiple locations that rotate for biomassing
+  multiple locations are captured _sometimes_, idk if default should be center if only 1?
+  - south
+  - central
+  - north
+  - paddock 1
+  - paddock 2
+  - paddock 3
+  - paddock 4
+  - paddock 5
+  - paddock 6
+  - paddock 7
+  - paddock 8
+**** cut
+**** biomassing_area
+**** method
+there's the above ground quadrat methodology, which is normally .5m2 or 1m2 quadrats, and the below ground stuff was .3
+- quadrat
+- undercutting
+**** crop_component
+- shoots
+- roots
+- both
+**** crop
+- alfalfa
+- weeds
+- oats
+- berseem clover
+- red clover
+- residue
+  - dead stuff, but different than weeds.
+- pasture
+** BiomassingDetails
+*** Fields
+**** biomassing_id
+**** biomass_width
+**** biomass_length
+**** bag_weight
+** Undercutting?
+they were using underccuts to measure biomassings... maybe ignore?
+*** using the undercuts
 * Relationships
 - sites-plots
 - plots is an identifying relationship
-**  HarvestLosses 3o---| Harvestings
+** HarvestLosses 3o---| Harvestings
 - Losses refers to harvestings
 - one to many because many losses in a field at harvest time, different sections of plot
 - Non-identifying because
@@ -237,13 +306,105 @@ ENGINE = InnoDB
 ** SQL Proxy Auth
 A "proxy" is just another networking way of connecting to your database.
 - setup a dedicated host
+* MSSQL
+** Login
+Database <WEIR> has been setup on Prod (stanley.doit.wisc.edu), and Development (carrington.doit.wisc.edu)
+
+Dev:
+WEIR_dbo  PASSWORD= Ty&xJUmh!X*AYp
+WEIR_User PASSWORD= gIP#mRoA2t9BAz
+WEIR_Read PASSWORD= 8q4r^W@1^RUJRD
+
+
+Prod:
+WEIR_dbo  PASSWORD= @Dd8jGMSfyJ%P$
+WEIR_User PASSWORD= 0xt&j8nZ!WSDGh
+WEIR_Read PASSWORD= 8R*BCYGY$ms1a@
+** Install
+*** ODBC drivers
+Need to install [[from ][odbc drivers]]
+#+begin_src
+brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
+brew update
+HOMEBREW_ACCEPT_EULA=Y brew install msodbcsql18 mssql-tools18
+#+end_src
+
+- brew output
+  #+begin_quote
+  If you installed this formula with the registration option (default), you'll
+  need to manually remove [ODBC Driver 18 for SQL Server] section from
+  odbcinst.ini after the formula is uninstalled. This can be done by executing
+  the following command:
+    odbcinst -u -d -n "ODBC Driver 18 for SQL Server"
+  #+end_quote
+*** Firewall
 * Notes
+** dflkjdf
+josh passed away, 2013 can you continue this,janet was the one that
+** [2024-10-18 Fri] NSCR Kristin Foehringer
+- started as soil scientist, wrangling planners and conservation planning process at, "atcat50"
+- "farm lab" at dairy science research lab
+*** background
+erin & gregg asked to expand socnet that aligns with the government nrce. want to monitor more soils.
+*** powerpoint
+- reactive,if there's a problem, NRCS purpose. they don't put in a gully to prevent erosion for example
+- constrained by farm bill, has to be written into law for them to be more preventative not reactive
+- phase 3, need to quantify what they're doing to report to the american people
+- CEMA, farm scale forested land, asses soil organic stock monitoring, they contract it out, farmers request, they contact someone qualified, and they would pay the farmer to do it.
+  - "CEMA 221" bachelors in soils eg, side job.
+  - you are also the person owning the data. "QI" qualified individual
+  - opportunity to expand socnet
+- USDA is starting to provide information on carbon markets, and farmers can "arm them selves" against people tyring to buy their carbon credits
+**** comet
+usda's response for monitoring.
+- "the blue book" has ab unch of equations and such, sthe impact of greenhouse gasses and evaluation of practices
+**** partnerships for climate smart commodities
+- grants for, IRA funds and they're. iowa soybean association, wisconsin farmers association. invest climate commodites, and doling out to farmers to implmeent those climate friendly things. But they eventually enter their data into COMET to see how much they get.
+*** terminology
+- PLU - planning land unit
+- TSP - technical service provider
+- QI - Qualified Individual
+- COMET-farm - https://comet-farm.com/home, web monitoring
+  - empirical model in dephth
+- COMET-planner
+- IPCC - international panel of carbon.. counting? panel for standardizing impact
+- MMRV :: monitoring something something
+- CENTURY :: soil carbon model biochemical models
+- CRP :: land removed to plant corn...
+  - contracts are 15 years and stuff
+- STIR :: soil tillage intensity rating
+- RUSSELL2 ::
+** [2024-10-10 Thu] w/ doit database
+*** Notes
+- MSSQL server over 20 years
+  - two shared, 2022, 2021 always on dedicated
+  - development environment, production environment, regular database user, database owner user, read/write user, back it up, patching operating system, microsoft sql administrator, query, 24/7 shop, WAMS department kind of, and through their application, wisconsin public radio.
+  - per month, hosting fee, how big it is, 100$ an hour for etl help, consulting
+- no enterprise mysql support
+- no postgress,
+- Derek, team lead for oracle database hosting
+  - Exodata
+  - cloud at customer
+  - storage
+  - student systems, hr
+*** Questions
+- MSSQL vs Oracle, some geometry requests
+- who's creating the user accounts and such, creating new views? sql.
+- helping upload csv files to upload
+- Maintain offsite backups and perform disaster recovery in case disaster destroys the database.
+- Maintain and manage database at reasonably high availability at >99.99% uptime.
+- Monitor log files and performance of database, ensuring optimum performance
+- Schedule consistent maintenance on the server, including patching operating system
+- Monitor security and prevent any unauthorized access to the database
+- Manage user access and permissions by adding and removing users as needed
+- Communicating and reporting signs of damage to data integrity, potential security vulnerabilities, scheduled maintainances and downtimes, and usage of computing and database resources.
 ** [2024-10-09 Wed] wisconet with david
 - attendance: izzy, david, chris, david
 - 4 instances of ec2, relational dbs, mysql.
 - each station has a folder for achives
 - normalzied everything for consistent measures, basically every column, boto3
-** [2024-10-03 Thu]
+** [2024-10-03 Thu] static ips
+- Michael: 146.151.200.13
 - Adam: 146.151.194.52
 - Gregg: 146.151.200.14
 ** [2024-09-26 Thu] wheat yield, harvest/plant review, visit to farm

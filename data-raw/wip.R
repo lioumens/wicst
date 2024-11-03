@@ -1,4 +1,5 @@
 library(readxl)
+library(purrr)
 
 wip <- "~/OneDrive - UW-Madison/Database development/wip_db.xlsx"
 

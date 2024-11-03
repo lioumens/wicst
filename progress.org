@@ -3,7 +3,7 @@
 
 * WICST Yield Biomass
 #+PROPERTY: COOKIE_DATA recursive
-** 2023 [18/24]
+** 2023 [24/24]
 *** DONE Biofuels
 **** IGNORED 2023 Biofuels Harvest.xlsx
 - template
@@ -30,32 +30,33 @@
 - duplicated in yields
 *** DONE RRL exports
 - all ready for import into R anyway, done for this stage, revisit later?
-*** REVIEW Forages
+*** DONE Forages
 **** IGNORED _Old
 **** DONE 2023_alfalfa_yields.xlsx
 - easy copy
-**** REVIEW [#C] 2023_corn_silage_yields.xlsx
+**** DONE [#C] 2023_corn_silage_yields.xlsx
+- w/ Gregg: Leave out the extra line of excel
 - everything else copied
 - 1 line in core,22.5 * 2000 for harvest yield? where does this come from?
 **** IGNORED Corn silage harvest datasheet.xlsx
 - just template
 **** DONE Oatlage bale weights.xlsx
-*** REVIEW Grains
-**** REVIEW [#B] 2023_WICST_wheat_yields.xlsx
+*** DONE Grains
+**** DONE [#B] 2023_WICST_wheat_yields.xlsx
 - looks identical... mostly extra pivot charts than aschank
 - copied
-- [ ] "barley filler" in =Harvest data - Grain= sheet
-**** REVIEW [#C] 2023_WICST_wheat_yields (aschank@wisc.edu).xlsx
+- [X] "barley filler" in =Harvest data - Grain= sheet
+**** DONE [#C] 2023_WICST_wheat_yields (aschank@wisc.edu).xlsx
 - ignore?
 **** DONE 2023_WICST_soybean_yields.xlsx
 - easy copy
 - one comment to keep in data
 **** DONE 2023_WICST_corn_grain_yields.xlsx
 - copied main harvest sheet
-**** REVIEW [#C] PROJ 2023_WICST_corn_grain_yields - grs.xlsx
+**** DONE [#C] PROJ 2023_WICST_corn_grain_yields - grs.xlsx
 - ignore?
 - looks like copy of corn grain yields, with few extra calculations by greg
-** 2022 [19/23]
+** 2022 [22/23]
 *** DONE Fall ANPP
 **** DONE WICST Fall 2022 CS1 CS2 CS3 SI CC ANPP.xlsx
 - I don't want to do bag weights.... they're coded in individual cells for all of them... not worth recording in db imo
@@ -85,9 +86,11 @@
 - WICST_SI info is duplicated in the WICST_core sheet, so second sheet is ignored
 **** IGNORED 2022_WICST_CS3_straw_yields.xlsx
 - this seems like a complete duplicate of 2022_WICST_CS3_straw_yield.xlsx in the grains folder
-**** TODO [#A] Hand-harvested second cut DSA.xlsx
+**** DONE [#A] Hand-harvested second cut DSA.xlsx
 - they're .5^2 quadrats that were cut, 1m by .5m likely
-**** REVIEW [#B] 2022 Biofuels Harvest.xlsx
+- add a note that just says "late harvest", hand sample ignored
+**** DONE [#B] 2022 Biofuels Harvest.xlsx
+- conclusion: use the N/S averages for width. Fill in with existing values 63.7. For 2022 and 2023, use 10 minimum, and 19 for plots with double passes.
 - length width are missing for many of these, need to ask if fill in or leave harvest area blank
 - What is portage?
   - ignore for now..
@@ -106,7 +109,7 @@
 - Lexi Schank: "Some area was lost from this plot due to excessive weed growth, cultivator blight, or other confounding factors. Since we can't confirm that all of this loss is from the data section, we used the following formula to correct the area used for the yield calculation: (area of data section) * (1 - (loss area / full plot area)) = 'area excluding potential loss'"
 - Gregg Sanford: "missing grab sample, used average moisture" from blocks 1-3
 - Lexi Schank: "We used a different area (4 rows instead of 6) due to loss in typical data section. This is reflected in the 'width' and therefore calculated into area and yield"
-**** REVIEW [#C] 2022_WICST_CS3_straw_yield.xlsx
+**** DONE [#C] 2022_WICST_CS3_straw_yield.xlsx
 - "weights recorded for main plots included the trailer weight, and the only distinction we have for which one was used is a color description. I averaged the weights of each of the red bale wagons as well as the black bale wagons, and got the same value. I will subtract this value from the plot weight (applies to mains only) - Lexi Schank"
 - save wagon weight in table? not needed right...?
 - red/black wagon weights calculated and copied into separate columns
@@ -124,7 +127,7 @@
 - template
 **** DONE 2022_CS6_Pasture_Yields.xlsx
 - comments to column
-** 2021 [11/17]
+** 2021 [15/17]
 *** IGNORED 2021_RRL_analysis_wheat_straw.xlsx
 - rrl pdf... going to assume there are rrl exports if we need later
 *** DONE ANPP
@@ -149,23 +152,26 @@
 **** DONE 2021_WICST_FORAGE_YIELDS.xlsx
 - Alfalfa section was just copied.
 - corn silage part is conflicting "2021_harvests_corn_silage_main", can delete the entire sheet if not correct bc the pdf file seems to match the numbers in SI (the other file)
-**** REVIEW [#A] 2021_WICST_SI_corn_silage_yields.xlsx
+**** DONE [#A] 2021_WICST_SI_corn_silage_yields.xlsx
+- conclusion is to use the pdf one
 - there are yields here that conflict with [[*2021_WICST_FORAGE_YIELDS.xlsx][2021_WICST_FORAGE_YIELDS.xlsx]], not sure which ones to use for the main plots
 - the pdf file seems to match this one though
 - rounding propogation in the pasture section, so using the source datafile
 **** IGNORED Alfalfa-2021.xlsx
 - ignored because it looks duplicated
 - copied
-**** REVIEW [#C] Corn_Silage_Map_Weights.pdf
+**** DONE [#C] Corn_Silage_Map_Weights.pdf
+- ask about the filler corn & the plot width 410.
 - ignored for now.. unless they want to point out the important info to capture here.
 - theres filler corn numbers here I don't see elsewhere, and the total?
-**** REVIEW [#C] CS3_Straw-2021.xlsx
+**** DONE [#C] CS3_Straw-2021.xlsx
+- replace with wet bag weight, so that we get rid of negative moistures
 - information seems duplicated in [[*2021_WICST_FORAGE_YIELDS.xlsx][2021_WICST_FORAGE_YIELDS.xlsx]]
 - ignored
 - negative moistures need to resolve
 *** Grains
 **** Wheat
-***** REVIEW [#C] Wheat-2021.xlsx
+***** DONE [#C] Wheat-2021.xlsx
 - MISSING DATE, filled in from ag calendar from website 7/19/2021, is that correct?
 - otherwise easy copy
 - =2021_harvests_wheat_grain=
@@ -173,16 +179,320 @@
 ***** REVISIT 2021_WICST_Soybean_yields.xlsx
 - same question about adjusting for loss across entire field, the denominator
 - template ignored...
-- added column for harvest loss
+- added column for harvest loss, but need to split into assesed area, and direct loss
 **** Corn Grain
-***** REVIEW 2021_WICST_Corn_Grain_Yields.xlsx
-- what does filler mean in these spreadsheets?
+***** REVISIT 2021_WICST_Corn_Grain_Yields.xlsx
+:LOGBOOK:
+- Note taken on [2024-11-01 Fri 09:00] \\
+  i think the conclusion was to disregard the filler stuff, since it's just numbers that they needed to report, but not part of experiment
+:END:
+- need to ask about filler in these spreadsheets? whether we want to keep track, lots of missing values
 - copied in, added column for harvest loss in m2, unmerged silage rows and added column
 - fixed date and harvest loss percentage of plot
 - why is the denominator of the harvest loss by 60'x510' not 30'x510'. it seems like that they didn't know what region the loss happened, so assumed it was evenly spread out along both.
+- i think the conclusi
+** 2020 [12/13]
+*** Forages
+**** DONE CS3_Straw.xlsx
+- copied and tidied =2020_harvests_wheat_straw=
+**** DONE 2nd Cut 2020.xlsx
+- duplicated in the forage yields doc
+**** DONE 2020_WICST_corn_silage_yields.xlsx
+- duplicate corn silage, but the rest is copied into =2020_harvests_corn_silage_ei=
+**** REVISIT 2020_WICST_forage_yields.xlsx
+- gregg: just use the dm values, they look trust worthy enough
+- missing percent moisture origin source does it matter though?, and split into 3 pasture corn silage and alfalfa yields
+*** Grains
+**** DONE 2020_WICST_Corn_Grain_Yields.xlsx
+- easy copy, replace "NA" with "." in column
+**** DONE 2020_WICST_Soybean_yields.xlsx
+- gregg: it's just abnormally high. make a note
+- highglight ignored... don't know what it is
+**** DONE Grain_Bags_2020.xlsx
+- conclusion: just use the plot to join
+- missing rrl ids, just copied the whole sheet
+- not sure what the "rotation means"
+**** DONE WICST_2019_CS3_oat_grain_yields.xlsx
+- copied
+**** DONE WICST_2020_CS3_wheat_grain_yields.xlsx
+- easy copy
+*** DONE Green_Manure_and_CCs
+**** DONE Alfalfa_and_SI_CC_fall2020_biomass.xlsx
+- missing moistures?
+- note that ei's don't have anythign to do with canopeo, both are combined in there
+*** DONE Perennials
+**** DONE Perennial_Biomass_Grab_Samples.xlsx
+- just copied it all =2020_biofuels=, but doesn't seem any useful info
+** 2019 [10/14]
+*** Biomass
+**** DONE WICST_2019_Oat_Straw_Yields.xlsx
+- copied with comments
+*** Forages
+**** REVIEW 2019_All_Forage_Data_Arlington.xlsx
+- fill in the pasture forage yields with this datasheeet
+**** REVISIT 2019_WICST_corn_silage_yields.xlsx
+- easy copy
+- [ ] 415'? or 510' for that weird plot
+  - confirmed for 415' w/ greg in his handwritten book!
+  - also confirmed all the new yields, found 1 different for plot 203W
+**** DONE 2019_WICST_forage_yields.xlsx
+- PTP?
+- missing values in "all" forage data
+**** IGNORED 2019_WICST_pasture_yields.xlsx
+- duplicated in forage
+*** DONE Grains
+**** DONE 2019_WICST_Corn_Grain_Yields.xlsx
+**** DONE WICST_2019_CS3_oat_grain_yields.xlsx
+**** DONE 2019_WICST_Soybean_yields.xlsx
+- "main" only referred to ei treatments, so changed one without ei to also be main
+- added ml_plot_section
+- easy copy
+*** Green Manure
+**** DONE 2019-CC & Green Manure ANPP.xlsx
+- =2019_anpp_oats=: line 14 down was separated in the original
+- should those values be ignored, the values in [[*CS3_bc_oat_CC_ANPP-2019.xlsx][CS3_bc_oat_CC_ANPP-2019.xlsx]] seem to match the top half of this document, the ones in the bottom... not sure
+**** DONE CS3_bc_oat_CC_ANPP-2019.xlsx
+- info is duplicated in the green manure sheet, just long format
+**** REVISIT [#A] CS4_CS5_Alfalfa_Plowdown_ANPP - 2019.xlsx
+- gregg: resolved to .3m2
+- duplicated values with 2019 CC, but the m2 values is oddly specific d
+- 666 lbs/acre? if 1, otherwise 2000 lbs if .3m2
+- w/ greg
+  - janet was using this machine, and gregg was worried that we're going to much agressive things to the soil, had also just transitioned to do the EI plots
+**** REVISIT WICST_UNDERCUTTING_WEIGHTS_2019.xlsx
+-  copied, but probably not using right now
+- w/ greg, the ft2 is correct
+*** Perennials
+**** DONE 2019_WICST_biofuels_perennial_harvest_yields.xlsx
+- easy copy
+** 2018 [7/10]
+*** Corn
+**** DONE 2018_WICST_Corn_Grain_Yields.xlsx
+- easy copy
+*** Forages
+**** DONE ARL_records_WICST_FORAGE_cut1_to_3.xlsx
+- looks like duplicate, combined the "num bales" into =2018_harvests_alfalfa=
+**** REVISIT 2018_WICST_corn_silage_yields.xlsx
+- [X] should we consider "harvest loss" by lodging a thing?
+  - currently i am using the % estimate to say direct loss area to harvest.
+  - w/ greg, yes we should just log it as harvest loss
+- easy copy
+- inferred plot width and length
+- we need area estimates... as in we'd need to make an adjustment to calculation?
+**** REVISIT 2018_CS6_pasture_yields.xlsx
+- need which coordinate pasture these are from 2018? and more generally all the years
+- gregg: formalized later, if there's no information here than just say it's missing
+**** DONE 2018_CS4_CS5_alfalfa_yields.xlsx
+- copied, supplemented with info from bale sheet
+*** Green Manure
+**** REVISIT 2018_WICST_undercutting_weights.xlsx
+- what to do with, top bottom needs explanation
+- [X] which .3m2 or 3.3ft is the measurement to use
+  - same, 3.3ft2
+- undercutting evaluation
+*** Perennials
+**** DONE 2018_WICST_biofuels_perennial_harvest_yields.xlsx
+- easy copy
+*** Soybeans
+**** DONE 2018_WICST_Soybean_yields.xlsx
+- easy copy
+*** Wheat
+**** DONE 2018_CS3_wheat_yields.xlsx
+- easy copy, adjustments
+- date pulled from agcalendar
+**** DONE 2018_CS3_wheat_straw_yields.xlsx
+- easy copy
+** 2017 [9/13]
+*** IGNORED 2017_C_N_DATA
+- template
+*** REVISIT 2017_CS1_CS2_CS3_corn_micros.xlsx
+- easy copy
+- w/ greg: maybe anna kate's publication, manure project, move to side folder maybe new schema
+  - NEW SCHEMA
+*** DONE 2017_CS1_CS2_CS3_CS4_CS5_corn_grain_yields.xlsx
+- easy copy
+*** DONE 2017_CS2_CS3_soybean_harvest_yields.xlsx
+- easy copy
+- the two approaches give the same number?!
+*** DONE 2017_CS3_straw_harvest.xlsx
+- ares are oddly specific? but i'll use them anyway
+*** DONE 2017_CS3_wheat_harvest_yields.xlsx
+- easy copy
+*** DONE 2017_CS4_CS5_alfalfa_yields.xlsx
+- easy copy
+*** REVIEW 2017_CS4_CS5_corn_silage.xlsx
+- are both corn silages here to be combined?
+- w/ greg: these should just be included, but they just weren't randomized
+*** DONE 2017_CS6_pasture_yields.xlsx
+- copy
+- note two lines here are harvests, rest are anpp
+*** DONE 2017_WICST_biofuels_perennial_harvest_yields.xlsx
+*** REVIEW 2017_WICST_ORGANICS_DAMAGE_COUNTS.xlsx
+- it doesn't look like any of yields were adjusted for the loss here
+- [ ] confirm that these losses should be recorded and adjust yield calculations
+- Corn for 8 of them, SB for the other 4. e.g. [[*2017_CS1_CS2_CS3_CS4_CS5_corn_grain_yields.xlsx][2017_CS1_CS2_CS3_CS4_CS5_corn_grain_yields.xlsx]]
+*** DONE 2017_WICST_undercutting_weights.xlsx
+- easy copy
+*** REVIEW clean up
+- [ ] corn silage drydown estimates?
+- mostly duplicated data, there's
+** 2016 [5/7]
+*** DONE 2016_500_block_perennial_harvest.xlsx
+*** DONE 2016_CS3_Straw_Harvest.xlsx
+*** REVIEW 2016_CS3_Wheat_Harvest.xlsx
+- [ ] should I record an implied loss from canada thistle?
+- 510 - whatever the lenght?
+*** REVIEW 2016_CS4_CS5_weights.xlsx
+- [ ] harvest area assumed to be 510 x 60 for everything?
+ - this is what's used in the master file I think
+- sheet 1 ignored, seems like yld file has the %dm to use
+*** DONE 2016_CS6_Pasture_Yields.xlsx
+- kg and lbs separated, note there ar
+*** DONE 2016_WICST_Corn_Harvest.xlsx
+- easy copy
+*** DONE 2016_WICST_Soybean_Harvest.xlsx
+- easy copy
+** 2015 [11/18]
+*** REVISIT 2015 WICST Forage Weights.xlsx
+- [ ] need the actual harvest dates, they're inconsistent?
+- copy of =Forages 2015.xlsx= with a few extra moistures for haylage
+- assume the date is the bale date not the harvest date?
+- w/ greg: small grain baleage, haylage and grain baleage, 510 x 60. for harvest area.
+*** DONE 2015 WICST moisture grab samples.xlsx
+- just supplementary info for calculating moisture
+- copied
+*** DONE 2015_CS6_pasture_greenchop_yields.xlsx
+- copied, deleted assumed moisture
+- =2015_harvests_pasture=
+  There's another data file [[*WICST CS6 Hay Exclosure Harvests 2015.xlsx][WICST CS6 Hay Exclosure Harvests 2015.xlsx]] that has the moistures?
+- [ ] fill in missing moisture?
+*** IGNORED Forages 2015.xlsx
+- copy of forage weights without moisture
+*** Individual Data Files
+**** WICST Hay (ds alfalfa) Harvest 1st Crop (7-3-2015).xlsx
+- combined into =2015_harvests_alfalfa=
+- although this seems like it should be part of harvests? If it's hay...
+**** WICST Alfalfa Harvest 1st Crop (5-22-2015).xlsx
+- combined into =2015_harvests_alfalfa=
+**** WICST Alfalfa Harvest 2nd and 3rd Crop (7-28-15).xlsx
+- combined into =2015_harvests_alfalfa=
+**** WICST Alfalfa Harvest 2nd Crop (6-27-2015).xlsx
+- combined into =2015_harvests_alfalfa=
+**** REVIEW [#A] WICST Alfalfa Harvest 3rd and 4th Crop (9-3-2015).xlsx
+- combined into =2015_harvests_alfalfa=
+- this list goes for all the hay/alfalfa numbers here
+- [ ] missing harvests of cuttings (if made)
+- [ ] missing wet weights
+- [ ] area that was evaluated
+- [ ] Moistures don't match up? 103 crop 2 should be 100 - 54.87 \neq 46.5
+**** REVIEW [#C] WICST CS3 T6 Rye (6-22-2015).xlsx
+- [ ] confirm ignore?
+- set up =2015_harvests_rye_sample=
+- samples for evval soybean wheat? can't findwhere the wet values are, and harvests
+**** DONE WICST CS6 Hay Exclosure Harvests 2015.xlsx
+- these are anpps, but the first 4 are actual harvests. There's another data file [[*2015_CS6_pasture_greenchop_yields.xlsx][2015_CS6_pasture_greenchop_yields.xlsx]] that has the chop.
+**** IGNORED WICST Hay 1st Crop CS6 Harvest Grabs (6-3 and 6-19-15).xlsx
+- duplicated in [[*WICST CS6 Hay Exclosure Harvests 2015.xlsx][WICST CS6 Hay Exclosure Harvests 2015.xlsx]]
+**** REVIEW [#A] WICST Oat Baleage Samples (6-23-15).xlsx
+- [ ] missing all the yield information?
+- [ ] missing wet information to calculate moisture?
+- =2015_harvests_oatlage=
+**** DONE WICST_500_perennial_harvest_11_20_2015.xlsx
+**** REVIEW [#B] WICST_CS1_CS2_CS4_CS5_2015_Harvest.xlsx
+- [ ] weed study stuff on the sides? ignore?
+- [ ] if not, double check calculated plot sizes in ml_width/length
+- confirmed with master that main plots use 30x510
+**** DONE WICST_CS2_soybean_harvest.xlsx
+- copied
+**** DONE WICST_CS3_Corn_Main_Plot_Harvest_10_20_2015.xlsx
+- combined with [[*WICST_CS1_CS2_CS4_CS5_2015_Harvest.xlsx][WICST_CS1_CS2_CS4_CS5_2015_Harvest.xlsx]] into =2015_harvests_corn=
+**** DONE WICST_CS3_T6_soybean_harvest.xlsx
+**** REVIEW [#C] WICST_Main_Plot_Wheat_Harvest_Grabs_(7_31_15).xlsx
+- not sure what this is... just grabbed along with the harvest? I think these are just used for calculating the moisture. Not worth saving, maybe wet + bag? don't know how large a section even
+- [ ] confirm ignore, or supp data
+**** IGNORED WICST_mainplot_CS3_wheat_harvest_2015.xlsx
+- duplicated in [[*WICST_mainplot_wheat_harvest_2015.xlsx][WICST_mainplot_wheat_harvest_2015.xlsx]]
+**** DONE WICST_mainplot_wheat_harvest_2015.xlsx
+- easy copy, added =2015_harvests_wheat=
+**** REVIEW [#B] WICST_Straw_Bale_harvest_8-4-15_8-5-15.xlsx
+- can't get these numbers to match up with master spreadsheet, logged in data anomalies.
+- [ ] how to account for CERES as harvest loss?
+  - log it as direct loss
+** 2014 [2/4]
+*** DONE WICST_Cutting_Weights_2014.xlsx
+- these are just the moistures
+*** DONE WICST_Cutting_Weights_2014_(old).xlsx
+- copy of above but older version?
+*** REVIEW Moisture corrections made on 1_8_2016.xlsx
+- these are just lists of numbers, not sure source or system, so currently ignoring
+*** REVIEW [#A] 2014_CS6_pasture_greenchop_yields.xlsx
+- copied but generally missing.
+- [ ] it looks like moisture can be found in WICST_Cutting_Weights_2014.xlsx
+** 2013 [7/12]
+*** DONE WICST Sample Weights 2013.xlsx
+- reorganized into my columns, split across pasure, straw, anpp clover, and undercutting
+  =2013_anpp_pasture=, =2013_harvests_straw=
+- [ ] Need to fill in the ml block, for undercutting wheat? I'm not really sure how useful the =2013_undercutting_wheat= is.
+*** REVIEW [#B] WICST Roots and ANPP 2013.xlsx
+- I'm generally kind of confused by this spreadsheet... maybe i'm just tired, but theres' the block of wheat roots here? wheat straw weights are quite large? w/o plot dimensions.
+- I think the oat/clover is confusing too with 5 rows subcoordinates? What are teh wet weights? are they dry with bag or without bag? What should the
+- reorganized and put into my spreadsheet format, split across product
+- [ ] missing dates, but duplicates with anpp clover... haven't moved it over yet from 2013_anpp_alfalfa
+*** Wheat
+**** REVIEW [#B] WICST Wheat Harvest 7.29.13.xlsx
+- not sure what the tare weight comments are about
+*** Soybean
+**** DONE WICST CS2 and CS3 Soybean Harvest 10.2.13 and 10.10.13.xlsx
+- pretty easy copy, need to imply the harvest area
+*** Corn
+**** DONE WICST Corn Microplot Harvest 10.22.13.xlsx
+- copied over with additional details
+**** DONE WICST Corn Main Plot Harvest 10.25.13.xlsx
+- copied with additional details, added the plot lengths original from harvest area, and yields 2011-2018
+**** DONE WICST CS3&CS5 Main Plot Corn Harvest 11.7.13.xlsx
+- copied with additional detail from harvest plot lengths from harvest area
+*** DONE Harvest Area.xlsx
+:LOGBOOK:
+- Note taken on [2024-11-01 Fri 09:45] \\
+  w/ gregg: go with 510 for everything instead of these measured areas
+:END:
+*** Pasture
+**** REVIEW [#A] 2013_CS6_pasture_greenchop_yields.xlsx
+- [ ] what field was this from? the hay chop file =WICST CS6 Hay Exclosure Harvests 2015.xlsx= has 405 recorded, but in notes it's unknown
+- [ ] resolve conflicts about bag or no bag, and some grab sample weights
+**** REVIEW [#A] WICST CS6 Hay Exclosure Harvests 2013.xlsx
+- noted in data anomalies,m conflicts with [[*2013_CS6_pasture_greenchop_yields.xlsx][2013_CS6_pasture_greenchop_yields.xlsx]]
+**** IGNORED WICST CS6 Hay Exclosure Samples 10.17.13.xlsx
+*** Alfafla
+**** WICST CS4 Alfalfa Hay Harvest 9.27.13.xlsx
+- the fourth cut, fed into =2013_harvests_alfalfa=
+**** REVIEW [#A] 440 2013 forage ylds.xlsx
+- [ ] one yield that's 500 off, I think the one that's right is
+- the first 3 cuts
+**** WICST Alfalfa Harvest Weights 2013.xlsx
+- [ ] one yield that's 500 off, I think the one that's right is from 440 2013 forage ylds.xlsx, plot 314
+** 2012 [/]
+** 2011 [/]
+** 2010 [/]
+** 2009 [1/1]
+*** DONE 2009_CS4_corn silage.xlsx
+- [X] delete moistures?
+  yes!
 * WIP
+** 2023_harvests_corn
+** 2023_harvests_wheat_grain
 ** 2022_anpp_cs3
+- note that coordinate is
 - [ ] are these 1m2 quadrats? I've filled them in as such
+** 2019_harvests_forage
+** 2019_harvests_forage_all
+- these are related to previous, need to assemble
+** 2016_harvests_pasture
+- two harvests, rest anpp?
+- missing coordinate
+** 2015_harvests_forage
+** 2015_harvests_forage_moisture
+- has supplemental data from forage
 * Local Variables
 # Local Variables:
 # org-todo-keyword-faces: (("REVISIT" . warning) ("REVIEW" . error) ("STARTED" . success))

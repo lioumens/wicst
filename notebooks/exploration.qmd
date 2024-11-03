@@ -7,13 +7,79 @@ format: html
 library(here)
 library(readxl)
 library(skimr)
-library(tidyverse)
+# library(tidyverse)
+library(dplyr)
 wicst_raw <- read_excel(here("data-raw/2024-09-06 WICST_Master_Data - ML.xlsx")) 
 ```
 
 ```{r}
 skim(wicst_raw)
+
+# system 4 is more inconsistent
+wicst_raw |> 
+  filter(site == "LAC", system == 2) |>
+  distinct(plot)
+
+wicst_raw |>
+  filter(plot == "108") |> 
+  count(site)
+# plot numbers overlap between sites
+
+# how do plots fit into block across year
+wicst_raw |>
+  filter(site == "ARL", plot == "108") |>
+  arrange(system)
+
+wicst_raw |> filter(block == 1, site == "ARL") |>
+  filter(plot == 105) |>
+  count(year) |>
+  arrange(desc(n))
+# why 2019 and 2023 twice?
+
+wicst_raw |> filter(block == 1, site == "ARL", year == 2019, plot == 105)
+# yikes, year + plot not unique. NetK, NetN are different.... many others are the same, i.e. manure same
+# goes crop1 = corn, then crop1 = corn silage...?
+
+# list of all duplicate year+plots
+wicst_raw |> count(site, year, plot, system) |>
+  arrange(desc(n), desc(year)) |> 
+  filter(n == 2)
+# it looks like they started doing corn silage in 2017 for both systems?
+
+wicst_raw |> count(site, year, plot, system) |>
+  arrange(desc(n), desc(year)) |> 
+  filter(n == 2) |> 
+  count(year)
+# yep, every year since 2017
+
+wicst_raw |> count(site, year, plot, system) |>
+  arrange(desc(n), desc(year)) |> 
+  filter(n == 2, year == 2022) |>
+  pull(plot) -> dup_plots
+# these are the plots that went c -> cs
+
+# is it true for all the dupes? (same w/ and w/o system)
+wicst_raw |> count(site, year, plot, system) |>
+  arrange(desc(n), desc(year)) |> 
+  filter(n == 2) |>
+  select(-n) |> 
+  left_join(wicst_raw, by = join_by(site, year, plot, system)) |> 
+  select(site, year, plot, crop1) |> count(crop1)
+# yes! all of them are corn and corn silage, associated. (excetp the c_silage c silage issue)
+
+# if we remove "corn silage", do we get unique?
+wicst_raw |> filter(crop1 != "c_silage", crop1 != "c silage") |> 
+  count(plot, year, site) |> 
+  arrange(desc(n))
+# awesome, they're all unique
+
+
+
+
+
 ```
+
+
 
 ```{r}
 wicst_raw$crop1 |> unique()
@@ -39,7 +105,7 @@ wicst_raw |> count(year, site) |> pivot_wider(names_from = )
 Let's go backwards by year... 
 
 ```{r}
-xtabs(~system + year, data = wicst_raw)
+xtabs(~system + year, data = wicst_raw |> filter(between(year, 1999, 2002)))
 # wicst_raw |> 
 #   count(year, system)
 ```
@@ -120,7 +186,558 @@ can we track crop rotation in a single plot?
 
 ```{r}
 wicst_raw |> filter(system == 2, plot == 108)
+# "phase" tracks which part of the treatment we're in
+```
+
+```{r}
+wicst_raw |> count(site, plot) |> 
+  arrange(desc(n))
+# why are some of these 38, 37... it should only be 35. and at most it was repeated twice right? how does that explain 38?
+
+# 103, 213, 314, 410 have 38 rows
+wicst_raw |> 
+  filter(plot == 103, site == "ARL") #|> 
+  count(year) |>
+  arrange(desc(n))
+# 2017, 2020, 2023 have repeats, from system 5
+# multiple years in which we have c->cs
+# what is reasoning for inconsistency? why some 37 and some 38
+  
+# 105, 110, 111, 113, 114, 203
+wicst_raw |>
+  filter(site == "ARL", plot == 114) |> 
+  count(year) |> 
+  filter(n == 2)
+# 110 is system 5, 2019 and 2022
+# 111 is system 4, 2017, 2021
+# 113 is system 4
+# 2019 & 2023
+
+# plot 114 shows an example in which phase 3 is NOT always alfalfa (early years)
+# some of phase 4 is also corn...
+wicst_raw |> 
+  filter(site == "ARL", system == 4) |> 
+  count(phase, crop1)
+wicst_raw |> filter(site == "ARL", system == 4, between(phase, 3, 4),
+                    crop1 == "fc")
+# they are early years though
+
+
+```
+
+are plots part of the same block?
+
+```{r}
+wicst_raw |> count(site, plot, system)
+# 140 
+wicst_raw |> count(site, plot, system) |> 
+  count(site, plot) |> arrange(desc(n))
+# it looks like many of LAC have duplicate plots of system treatments
+
+wicst_raw |> filter(plot == "209", site == "LAC")
+# oh it's the 14/15 system
+
+# all the same
+wicst_raw |> filter(plot == "209") |> count(block) 
+
+# are the sites all the same blockwise
+wicst_raw |> count(site, plot, system, block) |> 
+  filter(!system %in% c(14, 15))
+
+# seems like the plot identification has not changed
+xtabs(~plot + block + site, data = wicst_raw)
+# all strictly 0, no plots part of another block
+
+xtabs(~plot + system + site, data = wicst_raw |> filter(block == 1))
+# I had thought that 14 was a modified 4, and 15 was a modified 5, but plot 102 at LAC seems the exception to that, it's most
+```
+
+```{r}
+wicst_raw |>
+  filter(system == 2) |>
+  select(year, crop1, crop2, crop3) |>
+  distinct(year, crop1, crop2, crop3) |>
+  xtabs(~year + crop1, data =  _)
+```
+
+## TABLES
+
+- treatment
+- stat_block
+
+
+```{r}
+View(wicst_raw)
+```
+
+
+```{r}
+# treatment table
+wicst_raw |>
+  count(system, crop1, crop2, crop3, crop4) |>
+  print(n=50)
+
+# stat table
+tt_stat <- wicst_raw |> distinct(site, plot, block)
+
+# plot table
+library(tibble)
+
+# wicst_raw (trt id)
+wicst_raw |> distinct(site,plot, block) |> 
+  add_column(ei_subdiv= NA)  # ecological intensification? just 1 year started?
+
+# plot_year ( cycle, phase, system, silage)
+wicst_raw |> distinct(site, year, plot) |> 
+  add_column(trtid = NA,
+             silage = NA)
+
+wicst_raw |> filter(system == 5, crop1 == "og", crop2 == "os", crop3 == "a0", crop4 == "a0")
+
+
+
+
+
+
+
+# system 3: 1989, 1990 don't have all 3 crop1. 2019 is missing wg?
+tt_trt <- wicst_raw |> distinct(system, crop1, crop2, crop3, crop4) |> rownames_to_column(var = "trtid")
+wicst_raw |> count(system, crop1, crop2, crop3, crop4) |> rownames_to_column(var = "trtid") |> View()
+```
+
+```{r}
+wicst_raw |> 
+  filter(system == 2) |>
+  count(crop1, phase)
+
+wicst_raw |> filter(system == 2) |> 
+  count(crop1, phase, year)
+
+wicst_raw |> filter(system == 2, plot %in% c(108, 206, 310, 408), site == "LAC") |> View()
+wicst_raw |> filter(system == 2, site == "LAC", crop1 == "fc")
+wicst_raw |> filter(system == 2, site == "ARL", crop1 == "fc")
+
+xtabs(~year + phase + plot, data = wicst_raw |> filter(site == "ARL",
+                                                       # plot %in% c(108, 206, 310, 408),
+                                                       plot %in% c(101, 214, 303, 401)
+                                                       ))
+```
+
+does phase + system tell you _main_ crop?
+
+```{r}
+# somewhat inconsistent fc and fphase... would think it's all 1
+wicst_raw |> filter(crop1 == "fc") |> count(year)
+# no phase 2??
+wicst_raw |> count(crop1, phase) |> filter(crop1 == "fc")
+# these should match
+
+wicst_raw |> count(phase, system, crop1) |> View()
+# phase 3 filler corn
+wicst_raw |> filter(crop1 == "fc", phase %in% 3:4, system %in% 3)
+
+
+```
+
+
+
+
+
+
+```{r}
+tbl_subplots <- wicst_raw |> 
+
+# plantings
+wicst_raw |> filter()
+
+wicst_raw |> distinct(site, plot, block) 
+
+# all at lakeland
+wicst_raw |> filter(!(system %in% c(14, 15))) |> distinct(site, plot, block, system) # correct
+
+wicst_raw |> filter(site == "ARL", plot == 106) |> arrange(year) |> xtabs(~ year + crop1, data = _)
+
+wicst_raw |> count(crop1)
+
+wicst_raw |> filter(crop1 == "og") |> count(site, year)
+
+wicst_raw |> filter(crop1 == "og", year == 1991)
+
+wicst_raw |> filter(plot %in% c(102, 212, 313, 407), site == "ARL") |> 
+  xtabs(~year + crop1 + plot, data = _)
+
+wicst_raw |> filter(system == 3, site == "ARL", crop1 == "og") # 2019 is the weird one
+wicst_raw |> filter(site == "LAC") |> count(crop2)
+wicst_raw |> filter(site == "ARL", crop2 == "wl") # 2014 "Wheat suffered significant winter loss/weed pressure. Plots taken off as forage and not harvested for grain."
+
+# wheat straw and oat straw... lets do oat straw first
+wicst_raw |> filter(site == "ARL", crop2 == "os", system == 5) |> View()
+# 1991 and 1993 vs
+wicst_raw |> filter(site == "ARL", plot == "411") |> filter(between(year, 2014, 2016))
+wicst_raw |> filter(crop3 == "rc")
+wicst_raw |> filter(system == 5, phase == 2) |> count(crop1)
+
+wicst_raw |> filter(system == 3, phase == 3, crop1 == "og")
+
+regions <- c("NW", "NE", "E", "W", "SE", "SW")
+ei_plots <- c(109, 306, 412, 108, 310, 408, 101, 303, 401, 104, 301, 402, 106, 307, 411, 102, 313, 407)
+
+library(glue)
+expand_grid(region = regions, plot = ei_plots) |> 
+  mutate(subplot_id = glue("{plot}_{region}"))
+
+
+library(readxl)
+download.file(url = , destfile = "~/Downloads")
+read_xlsx("//uwprod.sharepoint.com/sites/SanfordLab/_layouts/15/doc.aspx?sourcedoc={6e6996a1-8245-4197-b3df-97212e059f5d}")
+read.csv("~/Downloads/wip_db(subplots).csv")
+
+library(googlesheets4)
+tbl_subplots <- read_sheet("https://docs.google.com/spreadsheets/d/17xClHeJw-TarYvlFkAXlfnIDUMF8ZU6JSrbEYUlnXAw/edit?usp=sharing", sheet = "subplots") 
+
+tbl_subplots
+wicst_raw$crop2 |> unique()
+
+wicst_raw |> filter(crop1 == "wg" | crop2 %in% c("wl", "ws"), year == 2023)
+
+```
+
+
+# REAL TABLES
+
+```{r}
+library(dplyr)
+
+
+wip_db <- "https://docs.google.com/spreadsheets/d/1-_WAaRZrHZ03d-QKOlQu7TyxDirlM-I8Wjx7qjbqa2E/edit?usp=sharing"
+
+# tbl_subplots |>
+#   mutate(parent_plot_id = substring(subplot_id, 1, 3)) |> 
+#   write_sheet(tbl_plots, wip_db, sheet = "plots")
+
+
+tbl_sites <- wicst_raw |> 
+  distinct(site) |> 
+  rename(site_id = site) |> 
+  mutate(site_name = case_match(site_id,
+                                "LAC"~"Lakeland",
+                                "ARL"~"Arlington"))
+
+library(stringr)
+# plots
+tbl_plots <- wicst_raw |> distinct(site, plot, block) |>
+  mutate(plot_id = paste0(substr(site, 1, 1), plot), 
+         .before = 1) |>
+  select(-plot) |> 
+  rename(site_id = site)
+# should add size of plots here? or dependent on yea
+
+tbl_treatments <- read_sheet(wip_db, sheet = "treatments")
+
+arl_trts <- data.frame(plots = c(109, 204, 306, 412, 108, 206, 310, 408, 101, 214, 303, 401, 104, 201, 301, 402, 106, 202, 307, 411, 102, 212, 313, 407, 111, 209, 305, 409, 113, 210, 311, 414, 105, 203, 308, 406, 107, 205, 309, 404, 110, 208, 304, 413, 103, 213, 314, 410, 114, 211, 312, 403, 112, 207, 302, 405),
+           treatment = rep(1:14, each = 4)
+) |> mutate(plot = paste0("A", plots)) |> 
+  select(-plots, plot, treatment)
+
+lac_trts <- wicst_raw |> filter(site == "LAC", system %in% 1:6, phase != 0, year == 1993) |> 
+  group_by(phase, system) |> 
+  summarize(pp = paste0(unique(plot), collapse = ", "),
+            cc = paste0(unique(crop1), collapse = ","),
+            plots = list(plot),
+            .groups = "drop_last") |> 
+  arrange(system, phase) |> 
+  add_column(treatment = c(1, 3, 2, 6, 5, 4, 7, 10, 9, 8, 12, 11, 13, 14)) |> 
+  ungroup() |> 
+  select(plots, treatment) |> 
+  unnest_longer(plots) |> 
+  mutate(plot = paste0("L", plots)) |> 
+  select(-plots)
+
+lac_trts
+arl_trts
+
+all_trts <- bind_rows(arl_trts, lac_trts)
+
+updated_plots <- tbl_plots |> left_join(all_trts, by = join_by(plot_id == plot)) |> 
+  arrange(site_id, treatment)
+
+updated_plots |> write_sheet(ss = wip_db, sheet = "plots")
+```
+
+```{r}
+hvv2023 <- read_sheet(ss = "https://docs.google.com/spreadsheets/d/1-_WAaRZrHZ03d-QKOlQu7TyxDirlM-I8Wjx7qjbqa2E/edit?gid=156450153#gid=156450153", sheet = '2023_corn_harvest') |> 
+  clean_names() |> 
+  filter(plot_section == "Main") |> 
+  select(harvest_date:plot_section, harvest_lbs, percent_moisture, area_ft_2)
+
+cc2023 <- hvv2023 |> 
+  select(harvest_date, plot, harvest_lbs, percent_moisture, area_ft_2) |> 
+  add_column(crop = "corn") |> 
+  rename(harvest_weight = harvest_lbs, harvest_area = area_ft_2)
   
 ```
 
+```{r}
+library(stringr)
+wheat_grain_2023 <- read_sheet(ss = wip_db, sheet = "2023_wheat_grain") |> 
+  clean_names()
+wheat_straw_2023 <- read_sheet(ss = wip_db, sheet = "2023_wheat_straw") |> 
+  clean_names()
+
+wheat_straw_2023
+wwstraw2023 <- wheat_straw_2023 |> filter(subplot == "Main") |> rename(harvest_area = area_ft_2, harvest_weight = plot_wt_lbs, percent_moisture = percent_mst) |> 
+  mutate(crop = "wheat straw") |> 
+  select(harvest_date, plot, crop, harvest_area, harvest_weight, percent_moisture)
+
+wwgrain2023 <- wheat_grain_2023 |> filter(subplot == "Main") |>
+  select(harvest_date, plot, crop, harvest_weight_lbs, harvested_area_ft2, percent_moisture) |> 
+  mutate(crop = str_to_lower(crop)) |> 
+  rename(harvest_weight = harvest_weight_lbs, harvest_area = harvested_area_ft2)
+
+all_harvest_2023 <- bind_rows(wwgrain2023, wwstraw2023, cc2023) |> mutate(plot = paste0("A", plot))
+
+tbl_harvest <- all_harvest_2023
+
+
+all_harvest_2023 <- all_harvest_2023 |> rename(product = crop)
+
+all_harvest_2023 |> write_sheet(wip_db, sheet = "Harvests")
+list()
+```
+
+```{r}
+
+alfalfa_harvest <- read_sheet(wip_db, sheet = "2023_alfalfa") |> clean_names()
+
+alfalfa_harvest |> names()
+
+alf_clean <- alfalfa_harvest |> 
+  select(harvest_date, cut, plot, sys, crop, plot_wt_tons, plot_area_ft_2, moisture_rrl, product_type) |> 
+  mutate(harvest_weight = plot_wt_tons * 2000,
+         plot = paste0("A", plot),
+         crop = case_match(crop,
+                           "dsA"~"alfalfa",
+                           "ORG A1"~"alfalfa",
+                           "A1"~"alfalfa",
+                           "A2"~"alfalfa",
+                           "o/A"~"oatlage",
+                           .default = crop
+                           )) |>
+  rename(product = crop, harvest_area = plot_area_ft_2, percent_moisture = moisture_rrl, product_description = product_type) |> 
+  select(-plot_wt_tons, -sys, -cut)
+
+alf_clean$product |> unique()
+alf_clean |> filter(product == "ORG A1" | product == "o/A") |> View()
+harvest_missing_pasture <- bind_rows(all_harvest_2023, alf_clean)
+
+# add pastures
+
+hh_pasture <- read_sheet(wip_db, sheet = "2023_pasture") |> 
+  clean_names() |> 
+  mutate(crop = str_to_lower(crop),
+         plot = paste0("A", plot)) |> 
+  rename(product = crop,
+         harvest_weight = plot_wt_lbs,
+         harvest_area = plot_area_ft,
+         percent_moisture = moisture) |>
+  select(harvest_date, plot, product, harvest_area, harvest_weight, percent_moisture) |> 
+  add_column(product_description = NA, .after = "product")
+  
+
+all_harvest_2023 <- bind_rows(harvest_missing_pasture, hh_pasture)
+
+
+# all_harvest_2023
+  
+
+all_harvest_2023 |> write_sheet(wip_db, sheet = "Harvests")
+
+```
+
+
+```{r}
+wicst_raw |> 
+  filter(system == 5 | system == 3) |> 
+  count(crop1, crop2, crop3, crop4)
+wicst_raw |> 
+  filter(system == 5, crop1 == "og")
+```
+
+
+# DATABASE
+
+```{r}
+library(dplyr)
+# con <- DBI::dbConnect(RSQLite::SQLite(), dbname = ":memory:")
+
+con <- DBI::dbConnect(RPostgres::Postgres(), 
+  host = "130.211.202.135",
+  dbname = "postgres",
+  user = "postgres",
+  password = rstudioapi::askForPassword("Database password")
+)
+
+con <- DBI::dbConnect(RPostgres::Postgres(),
+               host = "127.0.0.1",
+               dbname = "postgres",
+               user = "postgres",
+               password = rstudioapi::askForPassword("Database password"))
+
+copy_to(con, nycflights13::flights, "flights",
+  temporary = FALSE, 
+  indexes = list(
+    c("year", "month", "day"), 
+    "carrier", 
+    "tailnum",
+    "dest"
+  )
+)
+flights_db <- tbl(con, "flights")
+
+flights_db %>%
+  select(year:day, dep_delay, arr_delay) |> 
+  show_query() |> 
+  group_by()
+
+library(ggplot2)
+
+flights_db |> 
+  ggplot(aes(year, y = dep_delay)) + 
+  geom_point()
+```
+
+
+```{r}
+fert_raw <- read_sheet(wip_db, sheet = "2022_2023_fertilizings") |> clean_names()
+
+tbl_fertilizings <- fert_raw |> 
+  rowwise() |> 
+  mutate(urea_ammonium_nitrate = ifelse(is.na(urea_ammonium_nitrate), NA, paste("UAN", urea_ammonium_nitrate)),
+                   nitrogen_phosphorus_potassium = ifelse(is.na(nitrogen_phosphorus_potassium), NA, paste0(nitrogen_phosphorus_potassium, "-0-0")),
+         neutralizing_index = ifelse(is.na(neutralizing_index), NA, glue("Lime ({neutralizing_index})")),
+         fertilizer = coalesce(nitrogen_phosphorus_potassium_sulfur_calcium, nitrogen_phosphorus_potassium, urea_ammonium_nitrate, neutralizing_index),
+         fertilizer = ifelse(type == "cpm", "cpm", fertilizer),
+         plot = paste0("A", plot)) |> 
+  rownames_to_column(var = "fertilizing_id") |> 
+  ungroup() |> 
+  rename(fertilizer_type = type) |> 
+  select(fertilizing_id, date, plot, fertilizer, fertilizer_type, rate, rate_unit)
+
+tbl_fertilizings |> write_sheet(wip_db, "Fertilizings")
+```
+
+## Manuring
+
+```{r}
+manure_raw <- read_sheet(wip_db, sheet = "2023_manuring")
+
+tbl_manurings <- manure_raw |>
+  mutate(plot = paste0("A", plot)) |> 
+  rownames_to_column(var = "manuring_id")
+
+tbl_manurings |> write_sheet(wip_db, sheet = "Manurings")
+
+
+``` 
+
+
+## Yield
+
+```{r}
+tbl_harvests
+```
+
+# By File
+
+## 
+
+```{r}
+library(readxl)
+library(tidyr)
+raw_anpp <- read_xlsx(wip, sheet = "2023_anpp_alfalfa")
+
+raw_anpp |> build_longer_spec(cols = `Alfalfa bag 1 weight (g)`:`bag type...9`,
+                              names_to = c("alfalfa_weight_with_bag", "bag_type"), names_pattern = "(.*) .*")
+raw_anpp |> pivot_longer(cols = starts_with("Alfalfa"), names_to = "alfalfa")
+
+?build_longer_spec
+
+library(dplyr)
+spec <- raw_anpp |> build_longer_spec(cols = `Alfalfa bag 1 weight (g)`:`bag type...9`) |> 
+  mutate(.value = rep(c("wt_with_bag", "bag"), 3),
+         name = c("alfalfa1", "alfalfa1", "alfalfa2", "alfalfa2", "weed", "weed"))
+
+
+bag_wts <- data.frame(bag = c(1, 2, 3),
+           bag_wt = c(44.34, 45.89, 26.6))
+
+mid_anpp <- raw_anpp |> mutate(`Weeds weight (g)` = case_match(`Weeds weight (g)`,
+                                                   "."~NA,
+                                                   .default = as.numeric(`Weeds weight (g)`),
+                                                   .ptype = numeric()),
+                   `bag type...9` = case_match(`bag type...9`,
+                                               "."~NA,
+                                               .default = as.integer(`bag type...9`),
+                                               .ptype = integer())) |> 
+  pivot_longer_spec(spec) |> 
+  left_join(bag_wts, by = join_by(bag))
+library(clipr)
+write_clip(mid_anpp)
+
+mid_anpp |> group_by(Plot, Coordinate, alf = startsWith(name, "alf")) |> 
+  summarise(across(c(wt_with_bag, wt), list(summ = ~sum(.x, na.rm = T)))) |> 
+  mutate(wt_with_bag_summ - wt_summ) |> 
+  arrange(Plot, alf, Coordinate)
+
+
+```
+
+## FalL ANPP in CS3 Wheat
+
+```{r}
+raw_anpp_wheat <- read_xlsx(wip, sheet = "2023_anpp_wheat", na = ".") |> select(-Notes)
+wheat_spec <- raw_anpp_wheat |> build_longer_spec(cols = `Oats bag 1 weight (g)`:`bag type...17`) |> 
+  mutate(.value = rep(c("wt_with_bag", "bag_type"), 7),
+         name = rep(c("oat", "oat", "berseem_clover", "red_clover", "red_clover", "weeds", "wheat_straw"), each = 2))
+
+wheat_bag_wts = data.frame(bag_type = c(2, 4),
+                           bag_wts = c(45.89,59.3))
+
+anpp_wheat_2023 <- raw_anpp_wheat |> 
+  pivot_longer_spec(wheat_spec) |>
+  left_join(wheat_bag_wts, by = join_by("bag_type"))
+# |> 
+#   mutate(wt = wt_with_bag - bag_wts,
+#          Coordinate = factor(Coordinate, levels = c("North", "Center", "South", "NW", "NE", "W", "E", "SW", "SE"))) |> 
+#   group_by(Plot, Coordinate, name) |> 
+#   summarize(sum = sum(wt)) |> 
+#   arrange(name, Plot, Coordinate)
+# matches except for 402 NORTH for weeds
+
+
+tbl(con, "treatment_grid")
+
+
+
+```
+
+
+```{r}
+library(DatabaseConnector)
+connectionDetails <- createConnectionDetails(dbms="sql server", 
+                                             server="carrington.doit.wisc.edu",
+                                             user="WEIR_dbo",
+                                             password="Ty&xJUmh!X*AYp")
+conn <- connect(connectionDetails)
+pak::pak("odbc")
+con <- DBI::dbConnect(odbc::odbc(),
+                      driver = "ODBC Driver 18 for SQL Server", 
+                      server = "carrington.doit.wisc.edu",
+                      uid = "WEIR_dbo",
+                      database = "WEIR",
+                      pwd = "Ty&xJUmh!X*AYp",
+                      port = 1433)
+library(odbc)
+odbcListDrivers()
+```
 
