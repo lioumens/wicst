@@ -144,6 +144,7 @@ wicst_raw |>
 H2023_A204MMS_CS_1
 - H...._......._.._. (action)
   - H :: harvest
+  - L :: Harvest Loss?
   - B :: biomassing
   - C :: Canopeo?
   - S :: plantings/seedings
@@ -239,11 +240,40 @@ TBD: do we really need wet -> dry -> bag?
 ** HarvestLosses
 - captures any losses recorded in the field during harvest times, needs to be separate because sometimes the "true" yield reflective shouldn't adjust for these losses. losses happen in the real world too.
 - there are TWO types of losses, those that affect all area for cultivator blight, and those that you directly subtract from the harvest area
+- We do NOT track losses that do not affect final harvests, that is not the purpose of this table, i.e. filler corn reductions in the side plots
 *** Fields
-**** harvest_area
-**** assessment_area
+**** harvestingloss_id                                                     :PK:
+**** harvesting_id                                                         :FK:
+- link to harvesting_id, where there's plot info and such
+**** harvest_loss_area
+- the direct loss to the harvesting area, most important
 ** HarvestLossDetails
-- will have the mess? I guess?
+- If "direct loss" is not known, the details will contain how much was damaged and the proportional factor. Unfortunately this normally happens when
+*** Fields
+**** harvestingloss_id
+**** assessment_total_area
+- assessment_total is the denominator for the final correction factor assessment_loss_area / assessment_total_area
+**** assessment_total_length
+- is it helpful to know how area was calculated? I guess?
+**** assessment_total_width
+**** assessment_loss_length
+**** assessment_loss_width
+**** assessment_loss_area
+**** assessment_loss_rows
+**** loss_rows
+**** loss_width
+**** loss_length
+**** loss_reason?
+- free text for reason?
+- can potentially systematize and move "up" to harvestloss table
+**** loss_location?
+- free text for describing where?
+**** comments
+** HarvestSystematicLosses
+*Nah, still no. We can make this a game time decision if we just track assessment area and damage.*
+- a reason for SPLITTING these losses, is that we MUST make the assumption by default that every loss in harvest losses is mutually exclusive.
+I think there needs to be a different table for systematic changes, because all of this needs to be combined into a multiplicative factor for harvest area lost. That means there's multiple fractions like 1/5 for water loss, 1/7 for lodging, etc, but there's multiple things you could do for each fraction, i.e. assume they're independent! in which case it's not the simple sum, but you need inclusion exclusion formula for calculating loss.
+- assume mutual exclusion (this is the easiest case when multiple rows are evaluated over the same assessment area, and is probably the most common case).
 ** HarvestingDimensions
 Each harvest must capture an /intended/ area. These dimensions are not always given, but given that the harvest area for some plots will vary depending on the measurements taken each year, it's important that these intermediary numbers also be preserved as those measurements will affect yield/area calculations. Finally, there is some noted confusion about what "numbers" to use for length/width in the datasheets, so it would be nice to see if there are errors being made about particular years. The numbers are associated with single harvests. should be a 1-1 optional participation?
 TBD: maybe merged with details table

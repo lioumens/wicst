@@ -5,8 +5,6 @@ library(purrr)
 library(tibble)
 library(rlang)
 
-load("data/wip_20241024.Rdata")
-
 source("migration/yield_prep.R")
 
 # corn grain -------------------------------------------------------------

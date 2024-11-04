@@ -9,60 +9,154 @@ source("migration/yield_prep.R")
 raw_2022_c <- xl_snap$`2022_harvests_corn_corrected` |>
   clean_names()
 
-raw_2022_c_loss <- xl_snap$`2022_harvests_corn_loss` |> clean_names()
-
-pre_2022_c_loss <- raw_2022_c_loss |> 
-  filter(main_si == "Main") |> 
-  mutate(section_description = section,
-         loss_width = width_ft,
-         loss_length = length_ft,
-         loss_area = width_ft * length_ft) 
-  
+raw_2022_c |> names()
 
 pre_2022_c <- raw_2022_c |>
-  filter(plot_section == "Main") |> 
-  mutate(harvesting_id = get_harvest_id(2022, plot, plot_section, product = "corn"),
-         harvest_area = area_ft_2,
-         harvest_length = length_ft,
-         harvest_width = width_ft,
-         comments = stitch_notes(notes, ml_notes))
+  mutate(
+    harvest_date = harvest_date,
+    plot = plot,
+    subplot = str_c(plot, plot_section),
+    section = plot_section,
+    harvesting_id = get_harvest_id(year = 2022,
+                                   plot = plot,
+                                   section = section,
+                                   product = "corn"),
+    harvest_area = area_ft_2,
+    harvest_lbs = harvest_lbs,
+    percent_moisture = percent_moisture,
+    rrl_id = rrl_id,
+    harvest_length = length_ft,
+    harvest_width = width_ft,
+    comments = stitch_notes(notes, ml_notes)
+  )
 
-tbl_2022_c <- pre_2022_c |> select(any_of(harvesting_cols))
+tbl_2022_c <- pre_2022_c |> 
+  filter(section == "Main") |> 
+  select(any_of(harvesting_cols))
 
-tbl_2022_c_loss <- pre_2022_c_loss |> 
-  left_join(pre_2022_c |> distinct(harvesting_id, plot), join_by(plot)) |> 
-  select(harvesting_id, plot, section_description, loss_width, loss_length, loss_area)
+tbl_2022_ei_c <- pre_2022_c |> 
+  filter(section != "Main") |> 
+  select(any_of(ei_harvesting_cols))
 
-# for duplicating sheet
-# total_areas <- data.frame(plot = c(202, 307, 413), total_area = c(30600, 12600, 30600))
-# sum_2022_c_loss <- pre_2022_c_loss |> 
-#   group_by(plot) |>
-#   summarize(total_loss = sum(loss_area)) |> 
-#   left_join(total_areas, by = join_by(plot))
-
-# dupe_2022_c <- pre_2022_c |> 
-#   left_join(sum_2022_c_loss, 
-#             by = join_by(plot)) |> 
-#   mutate(corrected_lbs = harvest_lbs * ((100 - percent_moisture) / (100 - c_ideal_percent_moisture)),
-#          corrected_bu = corrected_lbs / c_bushel,
-#          acre_frac = harvest_area / acre_to_ft2,
-#          corrected_lbs_per_acre = corrected_lbs / acre_frac,
-#          corrected_bu_per_acre = corrected_lbs_per_acre / c_bushel,
-#          lost_frac = coalesce(total_loss / total_area, 0),
-#          true_area = harvest_area * (1 - lost_frac),
-#          true_acre_frac = true_area / acre_to_ft2,
-#          true_lbs_per_acre = corrected_lbs / true_acre_frac,
-#          true_bu_per_acre = true_lbs_per_acre / c_bushel
-#          ) |> View()
-# matches
+dupe_2022_c <- pre_2022_c |> get_yield("corn")
+dupe_2022_ei_c <- tbl_2022_ei_c |> get_yield("corn")
 
 supp_2022_c <- pre_2022_c |> 
+  filter(section == "Main") |> 
   select(any_of(supp_harvesting_cols))
 
+supp_2022_ei_c <- pre_2022_c |> 
+  filter(section != "Main") |> 
+  select(any_of(supp_ei_harvesting_cols)) |> 
+  select(where(\(x) !all(is.na(x)))) # drop columns of all NA
+
+# Corn Loss ---------------------------------------------------------------
+
+raw_2022_loss_c <- xl_snap$`2022_harvests_corn_loss` |> clean_names()
+
+unique(c(loss_cols, supp_loss_cols))
+raw_2022_loss_c |> names()
+
+pre_2022_loss_c <- raw_2022_loss_c |> mutate(
+  section_old = section,
+  section = case_when(main_si == "Main" ~ "Main",
+                      .default = section),
+  subplot = str_c(plot, section)) |> 
+  # number the losses
+  mutate(loss_num = row_number(),
+         .by = subplot) |>
+  # attach to common columns
+  mutate(
+    harvestingloss_id = get_harvestingloss_id(year = 2022,
+                                              plot = plot,
+                                              section = section,
+                                              coordinate = "X", 
+                                              product = "corn",
+                                              cut = 1,
+                                              site = "A",
+                                              loss_num = loss_num),
+    assessment_loss_length = length_ft,
+    assessment_loss_width = width_ft,
+    assessment_loss_rows = number_rows_wide,
+    assessment_loss_area = length_ft * width_ft,
+    assessment_total_length = case_when(!(plot %in% ei_plots)~510,
+                                        main_si == "SI" ~ 50,
+                                        .default = 210),
+    assessment_total_width = case_when(main_si == "SI" ~ 30,
+                                       .default = 60),
+    assessment_total_area = assessment_total_width * assessment_total_length,
+    loss_location = if_else(section_old != "Main", NA, section_old),
+    loss_reason = "weed, cultivator blight, other confounding"
+  ) |> 
+  # join harvest table for id and harvest area
+  left_join(pre_2022_c |> select(harvesting_id, subplot, harvest_area), by = "subplot") |> 
+  mutate(loss_area = coalesce(
+    get0("loss_width", ifnotfound = NA) * get0("loss_length", ifnotfound = NA), # direct loss if available
+    harvest_area * assessment_loss_area / assessment_total_area # proportional loss otherwise
+  ))
+
+
+tbl_2022_loss_c <- pre_2022_loss_c |> 
+  filter(section == "Main") |> 
+  select(any_of(loss_cols))
+
+tbl_2022_loss_ei_c <- pre_2022_loss_c |> 
+  filter(section == "Main") |> 
+  select(any_of(ei_loss_cols))
+
+supp_2022_loss_c <- pre_2022_loss_c |> 
+  filter(section == "Main") |> 
+  select(any_of(supp_loss_cols))
+
+supp_2022_loss_ei_c <- pre_2022_loss_c |> 
+  filter(section != "Main") |> 
+  select(any_of(supp_ei_loss_cols))
+
+
+dupe_2022_c <- tbl_2022_c |> 
+  left_join(
+    tbl_2022_loss_c |> summarize(total_area_loss = sum(loss_area), .by = harvesting_id),
+    by = "harvesting_id") |>
+  mutate(harvest_area = harvest_area - coalesce(total_area_loss, 0)) |>
+  get_yield("corn") 
+# matches!
+
+# wheat grain -------------------------------------------------------------
+
+raw_2022_wg <- xl_snap$`2022_harvests_wheat_grain` |> clean_names()
+# raw_2022_wg |> names()
+
+pre_2022_wg <- raw_2022_wg |> 
+  filter(subplot == "Main") |> 
+  mutate(
+    harvesting_id = get_harvest_id(2022, plot, subplot, "wheat grain"),
+    harvest_lbs = harvest_weight_lbs,
+    harvest_area = harvested_area_ft2,
+    percent_moisture = percent_moisture,
+    harvest_width = plot_width_ft,
+    harvest_length = plot_length_ft,
+    comments = ml_notes
+  )
+
+tbl_2022_wg <- pre_2022_wg |> 
+  select(harvesting_id, harvest_date, plot, crop, harvest_lbs, harvest_area, percent_moisture)
+
+supp_2022_wg <- pre_2022_wg |>
+  select(any_of(supp_harvesting_cols))
+
+# dupe
+# dupe_2022_wg <- pre_2022_wg |> 
+#   mutate(corrected_lbs = harvest_lbs * ((100 - percent_moisture) / (100 - wg_ideal_percent_moisture)),
+#          corrected_bu = corrected_lbs / wg_bushel,
+#          acre_frac = harvest_area / acre_to_ft2,
+#          corrected_lbs_per_acre = corrected_lbs / acre_frac,
+#          corrected_bu_per_acre = corrected_lbs_per_acre / wg_bushel)
 
 # straw -------------------------------------------------------------------
 
 raw_2022_ws <- xl_snap$`2022_harvests_straw_main` |> clean_names()
+
+raw_2022_ws
 
 # raw_2022_ws$biomass |> str_split(",") |> list_transpose() |> set_names(nm = c("product", "desc")) |> as.data.frame()
 
@@ -74,7 +168,10 @@ raw_2022_ws <- xl_snap$`2022_harvests_straw_main` |> clean_names()
 pre_2022_ws <- raw_2022_ws |> 
   separate_wider_regex(biomass, c(crop = ".*", "\\s*,\\s*", crop_description = ".*")) |> 
   mutate(
-    harvesting_id = get_harvest_id(2022, plot, section = "Main", product = "wheat straw"),
+    harvesting_id = get_harvest_id(year = 2022,
+                                   plot = plot,
+                                   section = "Main",
+                                   product = "wheat straw"),
     crop = str_to_lower(crop),
          harvest_date = date,
          harvest_area = area_ft_2,
@@ -132,36 +229,7 @@ supp_2022_sb <- pre_2022_sb |>
 # dupe_2022_sb |> View()
 
 
-# wheat grain -------------------------------------------------------------
 
-raw_2022_wg <- xl_snap$`2022_harvests_wheat_grain` |> clean_names()
-# raw_2022_wg |> names()
-
-pre_2022_wg <- raw_2022_wg |> 
-  filter(subplot == "Main") |> 
-  mutate(
-    harvesting_id = get_harvest_id(2022, plot, subplot, "wheat grain"),
-    harvest_lbs = harvest_weight_lbs,
-    harvest_area = harvested_area_ft2,
-    percent_moisture = percent_moisture,
-    harvest_width = plot_width_ft,
-    harvest_length = plot_length_ft,
-    comments = ml_notes
-  )
-
-tbl_2022_wg <- pre_2022_wg |> 
-  select(harvesting_id, harvest_date, plot, crop, harvest_lbs, harvest_area, percent_moisture)
-
-supp_2022_wg <- pre_2022_wg |>
-  select(any_of(supp_harvesting_cols))
-
-# dupe
-# dupe_2022_wg <- pre_2022_wg |> 
-#   mutate(corrected_lbs = harvest_lbs * ((100 - percent_moisture) / (100 - wg_ideal_percent_moisture)),
-#          corrected_bu = corrected_lbs / wg_bushel,
-#          acre_frac = harvest_area / acre_to_ft2,
-#          corrected_lbs_per_acre = corrected_lbs / acre_frac,
-#          corrected_bu_per_acre = corrected_lbs_per_acre / wg_bushel)
 
 # pasture -----------------------------------------------------------------
 
