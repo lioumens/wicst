@@ -479,8 +479,29 @@
 - [X] delete moistures?
   yes!
 * WIP
-** 2023_harvests_corn
-** 2023_harvests_wheat_grain
+** DONE 2023_harvests_corn
+** DONE 2023_harvests_wheat_grain
+** DONE 2023_harvests_wheat_straw
+** DONE 2023_harvests_soybean
+** DONE 2023_harvests_alfalfa
+** DONE 2023_harvests_corn_silage_core
+** DONE 2023_harvests_corn_silage_ei
+** DONE 2023_harvests_oatlage
+- numbales for cut 1, added in alfalfa supp info
+** DONE 2023_harvests_pasture
+- treated as biomassing, paddock 4
+** IGNORED 2023_harvests_prairie_115
+- saved into a variable... but no table right now
+** DONE 2023_harvests_prairie_wicst
+** DONE 2023_anpp_wheat
+- negative value zeroed, commented
+- 1m2 quadrats filled in code,
+** REVIEW [#C] 2023_anpp_wheat_canopeo
+- not sure if we should track the crop, but for ei that's the next step I guess
+- [ ] track the crop... need other tables first? or definition or idea of organization
+** DONE 2023_anpp_alfalfa
+- consolodated comments, and changed negative dm to 0
+** 2023_anpp_alfalfa_canopeo
 ** 2022_anpp_cs3
 - note that coordinate is
 - [ ] are these 1m2 quadrats? I've filled them in as such
@@ -493,6 +514,10 @@
 ** 2015_harvests_forage
 ** 2015_harvests_forage_moisture
 - has supplemental data from forage
+* Tables
+** tbl_2023_biomassing
+- [ ] moistures should be zero?
+- [ ] how to think about "cut" for pastures vs anpp... it's just left in the field
 * Local Variables
 # Local Variables:
 # org-todo-keyword-faces: (("REVISIT" . warning) ("REVIEW" . error) ("STARTED" . success))

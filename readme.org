@@ -140,10 +140,46 @@ wicst_raw |>
 - "c silage" is 2017-2019
 - "c_silage" is 2020-2023
 * Table Documentation/Notes
+** Global ID Structure
+H2023_A204MMS_CS_1
+- H...._......._.._. (action)
+  - H :: harvest
+  - B :: biomassing
+  - C :: Canopeo?
+  - S :: plantings/seedings
+  - M :: manuring
+  - F :: fertilizing
+  - P :: pesticidings
+- .YYYY_......._.._. (year)
+  - the 4 digit year
+- ....._A......_.._. (site)
+  - A :: Arlington
+  - L :: Lakeland
+- ....._.PPP..._.._. (plot)
+  - 3 digit plot id
+- ....._....MM._.._. (section)
+  - MM :: Main
+  - MA :: Macro (biofuels)
+  - MI :: Micro (biofuels)
+  - WW :: West (EI)
+  - ES :: East Strip
+  - WS :: West Strip (corn silage)
+- ....._......C_.._. (coordinate)
+  - S :: South
+  - C :: Central
+  - N :: North
+- ....._......._CN_. (product)
+  - very loose description of the product
+- ....._......._.._1 (cut)
+  - 1 - 5 currently for cut from location
+  - signifies temporal
 ** sites
 - description: holds information relevant to where research plots are and experiments are happening
 ** plots
 - system should be a property of plots... but the lakeland plots are an excepttion to that requirement what to do here...
+** subplots
+** sideplots
+for corn silaging. ID will be
 ** Plantings
 ** Manurings
 - include just source
@@ -170,7 +206,13 @@ wicst_raw |>
 - rate unit
 ** Pesticides
 separate out the types of pesticides here, and more detailed information about them, posibilities
-** Persons
+** Canopeo
+*** Fields
+**** canopeo_id
+**** coverage_date
+**** plot
+**** coordinate
+**** percent_cover
 ** harvestings
 - "Collecting a product off the field, no matter the form"
 ** HarvestPlantings
@@ -194,8 +236,6 @@ TBD: do we really need wet -> dry -> bag?
 - 2021_harvests_wheat_straw has an example.
 **** comments
  - since this is 1-1 with the harvest, this will also be anything related to the harvest itself
-** HarvestPersons?
-- maybe not necessary
 ** HarvestLosses
 - captures any losses recorded in the field during harvest times, needs to be separate because sometimes the "true" yield reflective shouldn't adjust for these losses. losses happen in the real world too.
 - there are TWO types of losses, those that affect all area for cultivator blight, and those that you directly subtract from the harvest area

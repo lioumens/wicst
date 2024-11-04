@@ -7,7 +7,7 @@ library(purrr)
 library(tidyr)
 library(rlang)
 
-load("data/wip_20241102.Rdata")
+load("data/wip_20241103.Rdata")
 load("data/master_20240926.Rdata")
 
 c_ideal_percent_moisture = 15.5
@@ -23,6 +23,7 @@ b_bushel = 48
 kg_to_lbs = 2.2046226
 acre_to_ft2 = 43560
 m2_to_ft2 = 10.7639
+m_to_ft = 3.28084
 
 # workshopping custom id
 # section: 0 - main
@@ -52,26 +53,31 @@ get_harvest_id <- function(year, plot, section, product, cut = 1, site = "A") {
                              c("NE") ~ "NE",
                              c("SW") ~ "SW",
                              c("SE") ~ "SE",
+                             c("East 15'") ~ "ES", # Corn Silage
+                             c("West 15'") ~ "WS", # Corn Silage
+                             c("Macro") ~ "MA",
+                             c("Micro") ~ "MI",
                              c("Main", "main") ~ "MM",
                              .default = "XX")
   
   product_code <- case_match(product,
-                             c("corn")~"cn",
-                             c("corn silage")~"cs",
-                             c("wheat")~"wg",
-                             c("soybean")~"sb",
-                             c("wheat straw")~"ws",
-                             c("wheat grain")~"wg",
-                             c("barley")~"by",
-                             c("alfalfa", "dsA", "A1", "A2", "o/A", "ORG A1")~"af",
-                             c("red_clover")~"rc",
-                             c("berseem_clover")~"bc",
-                             c("oats")~"ot",
-                             c("pasture")~"pt",
-                             .default = "xx")
+                             c("corn")~"CN",
+                             c("corn silage")~"CS",
+                             c("wheat")~"WG",
+                             c("soybean")~"SB",
+                             c("wheat straw")~"WS",
+                             c("wheat grain")~"WG",
+                             c("barley")~"BY",
+                             c("alfalfa", "dsA", "A1", "A2", "o/A", "ORG A1")~"AF",
+                             c("red_clover")~"RC",
+                             c("berseem_clover")~"BC",
+                             c("oats")~"OT",
+                             c("pasture")~"PT",
+                             c("prairie")~"PR",
+                             .default = "XX")
   
   return(glue("H{year}_{site}{plot}{section}{coordinate}_{product}_{cut}",
-              plot = replace_na(as.character(plot), "XXX"),
+              plot = replace_na(as.character(plot), "XXX"), # handle when plot is missing
               section = section_code,
               coordinate = "X", # coordinate is not applicable in harvests
               product = product_code))
@@ -105,20 +111,67 @@ get_biomassing_id <- function(year, plot, section, coordinate, biomass, cut = 1,
                                 c("Paddock 7", "paddock 7", "7")~"7",
                                 .default = "X")
   biomass_code <- case_match(biomass,
-                             c("rye")~"ry",
-                             c("weeds")~"wd",
-                             c("residue")~"rs",
-                             c("alfalfa")~"al",
-                             c("red_clover")~"rc",
-                             c("berseem_clover")~"bc",
-                             c("oats")~"ot",
-                             c("pasture")~"pt",
-                             .default = "xx")
+                             c("rye")~"RY",
+                             c("weeds")~"WD",
+                             c("residue")~"RS",
+                             c("alfalfa")~"AL",
+                             c("red_clover")~"RC",
+                             c("berseem_clover")~"BC",
+                             c("oats", "oat")~"OT",
+                             c("pasture")~"PT",
+                             c("wheat_straw")~"WS", 
+                             .default = "XX")
   
   return(glue("B{year}_{site}{plot}{section}{coordinate}_{biomass}_{cut}",
               section = section_code,
               coordinate = coordinate_code,
               biomass = biomass_code))
+}
+
+get_canopeo_id <- function(year, plot, section, coordinate, biomass = "XX", cut = 1, site = "A") {
+  # is it the main plot, or is it subplot for the EI experiments
+  section_code <- case_match(section,
+                             c("s", "S", "south", "South") ~ "SS",
+                             c("w", "W", "west", "West") ~ "WW",
+                             c("n", "N", "north", "North") ~ "NN",
+                             c("e", "E", "east", "East") ~ "EE",
+                             c("NW") ~ "NW",
+                             c("NE") ~ "NE",
+                             c("SW") ~ "SW",
+                             c("SE") ~ "SE",
+                             c("Main", "main", "MAIN") ~ "MM",
+                             .default = "XX")
+  
+  # where in the plots
+  coordinate_code <- case_match(coordinate,
+                                c("South", "S", "SOUTH")~"S",
+                                c("Central", "Center", "C", "CENTRAL")~"C",
+                                c("North", "N", "NORTH")~"N",
+                                c("Paddock 1", "paddock 1", "1")~"1",
+                                c("Paddock 2", "paddock 2", "2")~"2",
+                                c("Paddock 3", "paddock 3", "3")~"3",
+                                c("Paddock 4", "paddock 4", "4")~"4",
+                                c("Paddock 5", "paddock 5", "5")~"5",
+                                c("Paddock 6", "paddock 6", "6")~"6",
+                                c("Paddock 7", "paddock 7", "7")~"7",
+                                .default = "X")
+  biomass_code <- case_match(biomass,
+                             c("rye")~"RY",
+                             c("weeds")~"WD",
+                             c("residue")~"RS",
+                             c("alfalfa")~"AL",
+                             c("red_clover")~"RC",
+                             c("berseem_clover")~"BC",
+                             c("oats", "oat")~"OT",
+                             c("pasture")~"PT",
+                             c("wheat_straw")~"WS", 
+                             .default = "XX")
+  
+  return(glue("C{year}_{site}{plot}{section}{coordinate}_{biomass}_{cut}",
+              section = section_code,
+              coordinate = coordinate_code,
+              biomass = "XX", # fill in later?
+              cut = "X"))
 }
 
 stitch_notes <- function(notes, ml_notes) {
@@ -180,6 +233,26 @@ get_yield <- function(dat, product = NULL) {
     corrected_bu_per_acre = corrected_bu / acre_frac)
 }
 
+get_biomass <- function(dat, biomass = NULL) {
+  
+  # if percent_moisture is missing, can assume that biomass_grams was dried
+  cols_needed <- c("biomass_grams", "biomass_area")
+  cols_optional <- c("percent_moisture")
+  missing_cols <- cols_needed[!(cols_needed %in% names(dat))]
+  
+  if(!is_empty(missing_cols)) {
+    rlang::abort(message = glue("`dat` missing columns: {str_flatten(missing_cols, collapse = ', ')}"),
+                 missing_cols = missing_cols)
+  }
+  
+  # if percent_moisture is missing, can assume that biomass_grams was dried
+  dat |> mutate(
+    biomass_lbs_dm = biomass_grams / 1000 * kg_to_lbs * (100 - coalesce(percent_moisture, 0)) / 100,
+    biomass_tons_dm = biomass_lbs_dm / 2000,
+    acre_frac = biomass_area / acre_to_ft2,
+    biomass_tons_dm_per_acre = biomass_tons_dm / acre_frac)
+}
+
 
 harvesting_cols <- c("harvesting_id", "harvest_date", 
                      "plot", "crop",
@@ -188,6 +261,11 @@ harvesting_cols <- c("harvesting_id", "harvest_date",
 
 ei_harvesting_cols <- c("harvesting_id", "harvest_date", 
                         "subplot", "crop",
+                        "harvest_area", "percent_moisture",
+                        "harvest_lbs")
+
+cs_harvesting_cols <- c("harvesting_id", "harvest_date", 
+                        "sideplot", "crop",
                         "harvest_area", "percent_moisture",
                         "harvest_lbs")
 
@@ -204,6 +282,7 @@ supp_harvesting_cols <- c("harvesting_id",
 supp_ei_harvesting_cols <- c("harvesting_id", 
                           "harvest_length", "harvest_width", # dimensions
                           "rrl_id",
+                          "bucket_lbs",
                           "bag_weight", "wet_bag_weight", "dry_bag_weight", # weights of bag themselves
                           "wet_weight_w_bag", "dry_weight_w_bag", # grab sample with the bag
                           "wet_weight_no_bag", "dry_weight_no_bag", # grab sample without bag
@@ -211,16 +290,52 @@ supp_ei_harvesting_cols <- c("harvesting_id",
                           "wagon_weight", "wagon_color",
                           "comments")
 
+supp_cs_harvesting_cols <- c("harvesting_id", 
+                             "harvest_length", "harvest_width", # dimensions
+                             "rrl_id",
+                             # "bag_weight", "wet_bag_weight", "dry_bag_weight", # weights of bag themselves
+                             # "wet_weight_w_bag", "dry_weight_w_bag", # grab sample with the bag
+                             # "wet_weight_no_bag", "dry_weight_no_bag", # grab sample without bag
+                             # "num_bales",
+                             # "wagon_weight", "wagon_color",
+                             "comments")
+
 loss_harvesting_cols <- c("harvesting_id", "plot", "section_description",
                           "loss_width", "loss_length", "loss_area", 
                           "loss_reason")
 
 loss_details_cols <- c("harvesting_")
 
-biomassing_cols <- c("biomassing_id","biomass_date","biomass_area",
-                     "plot", "coordinate","cut", 
+biomassing_cols <- c("biomassing_id","biomass_date","biomass_area", # ft^2
+                     "plot", "coordinate","cut", "percent_moisture",
                      "biomass", "biomass_grams")
 
-supp_biomassing_cols <- c("biomassing_id", "biomass_length", "biomass_width",
-                          "bag_weight", "comments")
+ei_biomassing_cols <- c("biomassing_id","biomass_date","biomass_area", # ft^2
+                        "subplot", "coordinate","cut", "percent_moisture",
+                        "biomass", "biomass_grams")
 
+supp_biomassing_cols <- c("biomassing_id", "biomass_length", "biomass_width",
+                          "rrl_id",
+                          "bucket_lbs",
+                          "bag_weight", "wet_bag_weight", "dry_bag_weight", # weights of bag themselves
+                          "wet_weight_w_bag", "dry_weight_w_bag", # grab sample with the bag
+                          "wet_weight_no_bag", "dry_weight_no_bag", # grab sample without bag
+                          "comments")
+
+
+supp_ei_biomassing_cols <- c("biomassing_id", "biomass_length", "biomass_width",
+                          "rrl_id",
+                          "bucket_lbs",
+                          "bag_weight", "wet_bag_weight", "dry_bag_weight", # weights of bag themselves
+                          "wet_weight_w_bag", "dry_weight_w_bag", # grab sample with the bag
+                          "wet_weight_no_bag", "dry_weight_no_bag", # grab sample without bag
+                          "comments")
+
+canopeo_cols <- c("canopeo_id", "coverage_date", "plot", "coordinate", 
+                  # "biomass", # probably should be tracked... some design decision tbd
+                  "percent_cover")
+
+ei_canopeo_cols <- c("canopeo_id", "coverage_date", "subplot", "coordinate", "percent_cover")
+
+# supp canopeo
+# there was some info about height of photos and such... maybe in supp
