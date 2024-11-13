@@ -724,20 +724,26 @@ tbl(con, "treatment_grid")
 
 ```{r}
 library(DatabaseConnector)
+library(DBI)
 connectionDetails <- createConnectionDetails(dbms="sql server", 
                                              server="carrington.doit.wisc.edu",
                                              user="WEIR_dbo",
                                              password="Ty&xJUmh!X*AYp")
 conn <- connect(connectionDetails)
-pak::pak("odbc")
+
 con <- DBI::dbConnect(odbc::odbc(),
                       driver = "ODBC Driver 18 for SQL Server", 
                       server = "carrington.doit.wisc.edu",
                       uid = "WEIR_dbo",
                       database = "WEIR",
                       pwd = "Ty&xJUmh!X*AYp",
+                      TrustServerCertificate = "yes", 
                       port = 1433)
-library(odbc)
-odbcListDrivers()
+DBI::dbListTables(con, )
+dbWriteTable(con, "mtcars", mtcars)
+
+library(dbplyr)
+library(dplyr)
+tbl(con, "mtcars")
 ```
 

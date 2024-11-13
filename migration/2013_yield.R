@@ -1,8 +1,9 @@
 
 
+
 # corn --------------------------------------------------------------------
 
-# source("migration/yield_prep.R")
+source("migration/yield_prep.R")
 
 raw_2013_c <- xl_snap$`2013_harvest_corn` |> clean_names()
 
@@ -199,7 +200,7 @@ pre_2013_past <- raw_2013_past |>
     harvest_lbs = plot_wt_lbs,
     wet_weight_no_bag = ml_grab_wet_no_bag,
     dry_weight_w_bag = ml_grab_dry_with_bag,
-    percent_moisture = ml_moisture,
+    percent_moisture = ml_moisture * 100,
     # rrl_id = rrl_id,
     harvest_length = plot_length_ft,
     harvest_width = plot_width_ft,
@@ -220,9 +221,20 @@ supp_2013_past <- pre_2013_past |> select(any_of(supp_harvesting_cols))
 # wheat straw --------------------------------------------------------------
 
 
+tbl_2013_past |> get_yield("pasture") |> View()
 
 
+# anpp pasture ------------------------------------------------------------
 
+#HOLD: until we figure 
+raw_2013_past <- xl_snap$`2013_anpp_pasture`
 
-
+# assume sample weights. unknown are IN bag = 50
+raw_2013_past |> 
+  mutate(dry_wt = ml_dry_wbag_weight_g - ml_bag_weight,
+         wet_wt = coalesce(ml_wet_nobag_weight_g, ml_wet_wbag_weight_g - ml_bag_weight),
+         mst = (wet_wt -dry_wt) / wet_wt,
+         frac_acre = ml_harvest_area / acre_to_ft2,
+         yield =ml_harvest_weight_lbs * (1 - mst) /2000 / frac_acre) |> 
+  select(wet_wt, dry_wt, mst,frac_acre, yield)
 

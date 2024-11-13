@@ -7,7 +7,7 @@ library(purrr)
 library(tidyr)
 library(rlang)
 
-load("data/wip_20241104.Rdata")
+load("data/wip_20241112.Rdata")
 load("data/master_20240926.Rdata")
 load("data/core_20241104.Rdata")
 
@@ -21,6 +21,7 @@ ws_ideal_percent_moisture = 13
 ws_bushel = 60
 b_ideal_percent_moisture = 14.5
 b_bushel = 48
+# barley straw ideal moisture?/bushel?
 kg_to_lbs = 2.2046226
 acre_to_ft2 = 43560
 m2_to_ft2 = 10.7639
@@ -66,10 +67,9 @@ get_harvest_id <- function(year, plot, section, product, cut = 1, site = "A") {
   product_code <- case_match(product,
                              c("corn")~"CN",
                              c("corn silage")~"CS",
-                             c("wheat")~"WG",
+                             c("wheat", "wheat grain")~"WG",
                              c("soybean")~"SB",
                              c("wheat straw")~"WS",
-                             c("wheat grain")~"WG",
                              c("barley")~"BY",
                              c("alfalfa", "dsA", "A1", "A2", "o/A", "ORG A1")~"AF",
                              c("red_clover")~"RC",
@@ -102,9 +102,9 @@ get_biomassing_id <- function(year, plot, section, coordinate, biomass, cut = 1,
   
   # where in the plots
   coordinate_code <- case_match(coordinate,
-                                c("South", "S", "SOUTH")~"S",
-                                c("Central", "Center", "C", "CENTRAL")~"C",
-                                c("North", "N", "NORTH")~"N",
+                                c("South", "S", "SOUTH", "south")~"S",
+                                c("Central", "Center", "C", "CENTRAL", "center", "central")~"C",
+                                c("North", "N", "NORTH", "north")~"N",
                                 c("Paddock 1", "paddock 1", "1")~"1",
                                 c("Paddock 2", "paddock 2", "2")~"2",
                                 c("Paddock 3", "paddock 3", "3")~"3",
@@ -147,9 +147,9 @@ get_canopeo_id <- function(year, plot, section, coordinate, biomass = "XX", cut 
   
   # where in the plots
   coordinate_code <- case_match(coordinate,
-                                c("South", "S", "SOUTH")~"S",
-                                c("Central", "Center", "C", "CENTRAL")~"C",
-                                c("North", "N", "NORTH")~"N",
+                                c("South", "S", "SOUTH", "south")~"S",
+                                c("Central", "Center", "C", "CENTRAL", "center")~"C",
+                                c("North", "N", "NORTH", "north")~"N",
                                 c("Paddock 1", "paddock 1", "1")~"1",
                                 c("Paddock 2", "paddock 2", "2")~"2",
                                 c("Paddock 3", "paddock 3", "3")~"3",
@@ -168,8 +168,8 @@ get_canopeo_id <- function(year, plot, section, coordinate, biomass = "XX", cut 
                              c("wheat grain")~"WG",
                              c("barley")~"BY",
                              c("alfalfa", "dsA", "A1", "A2", "o/A", "ORG A1")~"AF",
-                             c("red_clover")~"RC",
-                             c("berseem_clover")~"BC",
+                             c("red_clover", "red clover")~"RC",
+                             c("berseem_clover", "berseem clover")~"BC",
                              c("rye")~"RY",
                              c("weeds")~"WD",
                              c("residue")~"RS",
@@ -181,18 +181,19 @@ get_canopeo_id <- function(year, plot, section, coordinate, biomass = "XX", cut 
   return(glue("C{year}_{site}{plot}{section}{coordinate}_{biomass}_{cut}",
               section = section_code,
               coordinate = coordinate_code,
-              biomass = "XX", # fill in later? biomass_code
-              cut = "X"))
+              biomass = biomass_code, # fill in later? biomass_code
+              cut = cut))
 }
 
 # coordinate shouldn't be relevant for harvests
 # loss_num can have multiple losses for each cut, i.e. over multiple alfalfa cuts, maybe different reasons for many areas
+# share harvesting loss id between systematic and direct
 get_harvestingloss_id <- function(year, plot, section,
                                   coordinate = "X", 
                                   product = "XX",
                                   cut = 1,
                                   site = "A",
-                                  loss_num = 1) { 
+                                  loss_num = 1) {
   # is it the main plot, or is it subplot for the EI experiments
   section_code <- case_match(section,
                              c("s", "S", "south", "South") ~ "SS",
@@ -208,9 +209,9 @@ get_harvestingloss_id <- function(year, plot, section,
   
   # where in the plots
   coordinate_code <- case_match(coordinate,
-                                c("South", "S", "SOUTH")~"S",
-                                c("Central", "Center", "C", "CENTRAL")~"C",
-                                c("North", "N", "NORTH")~"N",
+                                c("South", "S", "SOUTH", "south")~"S",
+                                c("Central", "Center", "C", "CENTRAL", "center")~"C",
+                                c("North", "N", "NORTH", "north")~"N",
                                 c("Paddock 1", "paddock 1", "1")~"1",
                                 c("Paddock 2", "paddock 2", "2")~"2",
                                 c("Paddock 3", "paddock 3", "3")~"3",
@@ -242,19 +243,10 @@ get_harvestingloss_id <- function(year, plot, section,
               section = section_code,
               coordinate = "X", # fill in later?
               product = product_code, 
-              cut = cut, # maybe relevant?
+              cut = cut, # it should be relevant, but none seen yet
               loss_num = loss_num))
 }
 
-
-stitch_notes <- function(notes, ml_notes) {
-  ifelse(is.na(notes),
-         NA, 
-         glue('General: "{notes}"{other_notes}',
-              other_notes = ifelse(is.na(ml_notes),
-                                   "",
-                                   paste0(" | ", ml_notes))))
-}
 
 stitch_notes <- function(notes, ml_notes) {
   case_when(
@@ -320,7 +312,7 @@ get_biomass <- function(dat, biomass = NULL) {
   
   # if percent_moisture is missing, can assume that biomass_grams was dried
   dat |> mutate(
-    biomass_lbs_dm = biomass_grams / 1000 * kg_to_lbs * (100 - coalesce(percent_moisture, 0)) / 100,
+    biomass_lbs_dm = biomass_grams / 1000 * kg_to_lbs * (100 - get0("percent_moisture", ifnotfound = 0)) / 100,
     biomass_tons_dm = biomass_lbs_dm / 2000,
     acre_frac = biomass_area / acre_to_ft2,
     biomass_tons_dm_per_acre = biomass_tons_dm / acre_frac)
@@ -349,7 +341,7 @@ supp_harvesting_cols <- c("harvesting_id",
                           "wet_weight_w_bag", "dry_weight_w_bag", # grab sample with the bag
                           "wet_weight_no_bag", "dry_weight_no_bag", # grab sample without bag
                           "num_bales",
-                          "wagon_weight", "wagon_color",
+                          "wagon_weight", "wagon_color", "trailer_weight",
                           "comments")
 
 supp_ei_harvesting_cols <- c("harvesting_id", 
@@ -360,7 +352,7 @@ supp_ei_harvesting_cols <- c("harvesting_id",
                           "wet_weight_w_bag", "dry_weight_w_bag", # grab sample with the bag
                           "wet_weight_no_bag", "dry_weight_no_bag", # grab sample without bag
                           "num_bales",
-                          "wagon_weight", "wagon_color",
+                          "wagon_weight", "wagon_color", "trailer_weight",
                           "comments")
 
 supp_cs_harvesting_cols <- c("harvesting_id", 
@@ -373,37 +365,37 @@ supp_cs_harvesting_cols <- c("harvesting_id",
                              # "wagon_weight", "wagon_color",
                              "comments")
 
-
 loss_cols <- c( "harvestingloss_id", "harvesting_id",
                 "loss_area") # direct loss
 
 supp_loss_cols <- c("harvestingloss_id",
-                       "assessment_total_area","assessment_loss_area",
-                       "assessment_loss_length","assesssment_loss_width", # ft
-                       "assessment_loss_rows",
+                    # area is the main attibute
                        "loss_width", "loss_length", # ft
-                       "loss_rows", 
-                       "comments")
+                       "loss_rows", "loss_location", "loss_reason",
+                       "loss_comments")
 
-# thus far loss is the same
-ei_loss_cols <- c( "harvestingloss_id", "harvesting_id",
-                "loss_area") # direct loss
+# systematic loss, may decide to aggregate by loss category for 1 fraction
+sysloss_cols <- c("systematicharvestingloss_id", "harvesting_id", "loss_fraction", "loss_category")
 
-supp_ei_loss_cols <- c("harvestingloss_id",
-                    "assessment_total_area","assessment_loss_area",
-                    "assessment_loss_length","assesssment_loss_width", # ft
-                    "assessment_loss_rows",
-                    "loss_width", "loss_length", # ft
-                    "loss_rows", 
-                    "comments")
+supp_sysloss_cols <- c("systematicharvestingloss_id",
+                        "assessment_total_area", "assessment_loss_area",
+                        # "assessment_date", # not used yet but possibly important
+                        "assessment_loss_length","assesssment_loss_width", # ft
+                        "assessment_loss_rows", "sysloss_location", "sysloss_reason",
+                        "sysloss_comments")
+
+# thus far loss is the same between main and ei
+ei_loss_cols <- loss_cols
+supp_ei_loss_cols <- supp_loss_cols
+ei_sysloss_cols <- sysloss_cols
+supp_ei_sysloss_cols <- supp_sysloss_cols
+
 
 biomassing_cols <- c("biomassing_id","biomass_date","biomass_area", # ft^2
                      "plot", "coordinate","cut", "percent_moisture",
-                     "biomass", "biomass_grams")
+                     "biomass", "biomass_grams", "method", "component")
 
-ei_biomassing_cols <- c("biomassing_id","biomass_date","biomass_area", # ft^2
-                        "subplot", "coordinate","cut", "percent_moisture",
-                        "biomass", "biomass_grams")
+ei_biomassing_cols <- str_replace(biomassing_cols, "plot", "subplot")
 
 supp_biomassing_cols <- c("biomassing_id", 
                           "biomass_length", "biomass_width", # ft
@@ -423,11 +415,92 @@ supp_ei_biomassing_cols <- c("biomassing_id", "biomass_length", "biomass_width",
                           "wet_weight_no_bag", "dry_weight_no_bag", # grab sample without bag
                           "comments")
 
-canopeo_cols <- c("canopeo_id", "coverage_date", "plot", "coordinate", 
-                  # "biomass", # probably should be tracked... some design decision tbd
+canopeo_cols <- c("canopeo_id", "coverage_date",
+                  "plot", "coordinate", 
+                  "biomass", 
                   "percent_cover")
 
-ei_canopeo_cols <- c("canopeo_id", "coverage_date", "subplot", "coordinate", "percent_cover")
+ei_canopeo_cols <- c("canopeo_id", "coverage_date",
+                     "subplot", "coordinate", 
+                     "biomass", # probably should be tracked... some design decision tbd because complicated mix of lots
+                     "percent_cover")
 
 # supp canopeo
+supp_canopeo_cols <- c("canopeo_id", "comments")
+supp_ei_canopeo_cols <- c("canopeo_id", "comments")
 # there was some info about height of photos and such... maybe in supp
+
+# priarie tables
+
+fuel_harvesting_cols <- c("harvesting_id", "harvest_date", 
+               "fuel_plot", "crop",
+               "harvest_area", "percent_moisture",
+               "harvest_lbs")
+
+supp_fuel_harvesting_cols <- c("harvesting_id", 
+                               "harvest_length", "harvest_width", # dimensions
+                               "rrl_id",
+                               "bag_weight", "wet_bag_weight", "dry_bag_weight", # weights of bag themselves
+                               "wet_weight_w_bag", "dry_weight_w_bag", # grab sample with the bag
+                               "wet_weight_no_bag", "dry_weight_no_bag", # grab sample without bag
+                               "num_bales",
+                               "wagon_weight", "wagon_color", "trailer_weight",
+                               "comments")
+
+# Template Section --------------------------------------------------------
+
+# # Assemble Tables ---------------------------------------------------------
+# 
+# ## Core --------------------------------------------------------------------
+# 
+# # harvests
+# tbl_2021_harvests <- bind_rows()
+# supp_2021_harvests <- bind_rows()
+# 
+# # biomassings
+# tbl_2021_bio <- bind_rows()
+# supp_2021_bio <- bind_rows()
+# 
+# # canopeo
+# tbl_2021_can <- bind_rows()
+# supp_2021_can <- bind_rows()
+# 
+# # losses
+# tbl_2021_loss <- bind_rows()
+# supp_2021_loss <- bind_rows()
+# tbl_2021_sysloss <- bind_rows()
+# supp_2021_sysloss <- bind_rows()
+# 
+# ## EI ----------------------------------------------------------------------
+# 
+# # harvests
+# tbl_2021_ei_harvests <- bind_rows()
+# supp_2021_ei_harvests <- bind_rows()
+# 
+# # biomassings
+# tbl_2021_ei_bio <- bind_rows()
+# supp_2021_ei_bio <- bind_rows()
+# 
+# # canopeo
+# tbl_2021_ei_can <- bind_rows()
+# supp_2021_ei_can <- bind_rows()
+# 
+# # losses
+# tbl_2021_ei_loss <- bind_rows()
+# supp_2021_ei_loss <- bind_rows()
+# tbl_2021_ei_sysloss <- bind_rows()
+# supp_2021_ei_sysloss <- bind_rows()
+# 
+# ## Silage ------------------------------------------------------------------
+# 
+# # harvests
+# tbl_2021_silage <- bind_rows()
+# supp_2021_silage <- bind_rows()
+# 
+# ## Biofuel -----------------------------------------------------------------
+# 
+# # harvests
+# tbl_2021_prairie <- bind_rows()
+# supp_2021_prairie <- bind_rows()
+
+

@@ -255,7 +255,10 @@ pre_2023_bio_past <- raw_2023_past |>
     plot = plot,
     cut = cut,
     section = "Main",
-    coordinate = "paddock 4",
+    # 207 switched to 3 in 2023, and 4 in 2022 everything else same
+    coordinate = if_else(plot == 207,  
+                         "paddock 3",
+                         "paddock 4"),
     biomass = "pasture",
     crop = crop,
     subplot = str_c(plot, section),
@@ -418,10 +421,8 @@ pre_2023_prairie <- raw_2023_prairie |>
     section = subplot |> case_match("Main"~"Macro",
                                     "Micro"~"Micro"),
     crop = crop,
+    fuel_plot = str_c(plot, section),
     # subplot = str_c(plot, section),
-    sideplot = str_c(plot, case_match(section,
-                                      "West 15'"~"WS",
-                                      "East 15'"~"ES")),
     harvesting_id = get_harvest_id(year = 2023,
                                    plot = plot,
                                    section = section,
@@ -442,9 +443,9 @@ pre_2023_prairie <- raw_2023_prairie |>
     .before = 1,
   )
 
-tbl_2023_prairie <- pre_2023_prairie |> select(any_of(harvesting_cols))
+tbl_2023_prairie <- pre_2023_prairie |> select(any_of(fuel_harvesting_cols))
 dupe_2023_prairie <- tbl_2023_prairie |> get_yield()
-supp_2023_prairie <- pre_2023_prairie |> select(any_of(supp_harvesting_cols))
+supp_2023_prairie <- pre_2023_prairie |> select(any_of(supp_fuel_harvesting_cols))
 
 
 # wheat biomassing --------------------------------------------------------
@@ -643,6 +644,7 @@ pre_2023_can_alf <- raw_2023_can_alf |>
   )
 
 tbl_2023_can_alf <- pre_2023_can_alf |> 
+  filter(section == "Main") |>
   select(any_of(canopeo_cols))
 
 # Assemble tables ---------------------------------------------------------

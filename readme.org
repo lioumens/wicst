@@ -144,7 +144,8 @@ wicst_raw |>
 H2023_A204MMS_CS_1
 - H...._......._.._. (action)
   - H :: harvest
-  - L :: Harvest Loss?
+  - L :: direct harvest Loss?
+  - G :: global harvest loss
   - B :: biomassing
   - C :: Canopeo?
   - S :: plantings/seedings
@@ -178,9 +179,11 @@ H2023_A204MMS_CS_1
 - description: holds information relevant to where research plots are and experiments are happening
 ** plots
 - system should be a property of plots... but the lakeland plots are an excepttion to that requirement what to do here...
-** subplots
-** sideplots
+** SubPlots
+** SidePlots
 for corn silaging. ID will be
+** Fuelplots
+captures the macro and micro size plots for the prairie location
 ** Plantings
 ** Manurings
 - include just source
@@ -214,8 +217,67 @@ separate out the types of pesticides here, and more detailed information about t
 **** plot
 **** coordinate
 **** percent_cover
-** harvestings
+** Harvestings
 - "Collecting a product off the field, no matter the form"
+*** Fields
+**** plot
+**** harvest_date
+**** harvest_area
+**** product
+**** product_description
+** biomassings
+it looks like 1 evaluation per season for everything except pasture. In the datasheets,even at a single date, there are multiple "bags", if we record the bag weight for those instances, each row in the table is a bagging. I'd say it should be a cut evaluation or something. plot -> cut ->
+- the length of plot changes for each plot cutting... so if pasture and anpp go into the same table, each cut by definition can't be the same quadrant because they will have different areas. we should consider plot(cut x quadrat)
+*** Questions
+- [X] how important is % moisture when evaluating this... it seems pasture its recorded, but anpp like alfalfa is not.
+- [X] alfalfa is harvested, but then also evaluated later in the season?
+- Does the cutting in a field season happen in the exact same quadrant?
+- Do the cuts on N, C, S happen at the same time? can we assume that they might be different?
+*** Fields
+**** plot (subplot)
+"section", main, e1, e2, e3, e4 should be captured or implied by the plot and the table, so doesn't need duplication in this column
+**** sample_date
+**** coordinate
+  we need this because for the canopeo measurements, even within small EI plots with SW, there are 3 measurements being taken, one for south, central and north. Furthermore, the locations in the main plots are also sometimes 3 measurements, though often the sampling itself is just "center".
+  For pasture, there's multiple locations that rotate for biomassing
+  multiple locations are captured _sometimes_, idk if default should be center if only 1?
+  - south
+  - central
+  - north
+  - paddock 1
+  - paddock 2
+  - paddock 3
+  - paddock 4
+  - paddock 5
+  - paddock 6
+  - paddock 7
+  - paddock 8
+**** cut
+- pastures need a cut column
+**** biomassing_area
+**** method
+there's the above ground quadrat methodology, which is normally .5m2 or 1m2 quadrats, and the below ground stuff was .3
+- quadrat
+- undercutting
+**** crop_component
+- shoots
+- roots
+- both
+**** crop
+- alfalfa
+- weeds
+- oats
+- berseem clover
+- red clover
+- residue
+  - dead stuff, but different than weeds.
+- pasture
+** BiomassingDetails
+*** Fields
+**** biomassing_id
+**** biomass_width
+**** biomass_length
+**** bag_weight
 ** HarvestPlantings
 - linkage table
 - resolves many to many relationship between Harvests and Plantings because multiple crops can be involved in a harvest (oats/alfalfa). Multiple harvests can be made of a single crop (alfalfa).
@@ -247,7 +309,7 @@ TBD: do we really need wet -> dry -> bag?
 - link to harvesting_id, where there's plot info and such
 **** harvest_loss_area
 - the direct loss to the harvesting area, most important
-** HarvestLossDetails
+** DirectLossDetails
 - If "direct loss" is not known, the details will contain how much was damaged and the proportional factor. Unfortunately this normally happens when
 *** Fields
 **** harvestingloss_id
@@ -269,7 +331,7 @@ TBD: do we really need wet -> dry -> bag?
 **** loss_location?
 - free text for describing where?
 **** comments
-** HarvestSystematicLosses
+** SystematicHarvestLossDetails
 *Nah, still no. We can make this a game time decision if we just track assessment area and damage.*
 - a reason for SPLITTING these losses, is that we MUST make the assumption by default that every loss in harvest losses is mutually exclusive.
 I think there needs to be a different table for systematic changes, because all of this needs to be combined into a multiplicative factor for harvest area lost. That means there's multiple fractions like 1/5 for water loss, 1/7 for lodging, etc, but there's multiple things you could do for each fraction, i.e. assume they're independent! in which case it's not the simple sum, but you need inclusion exclusion formula for calculating loss.
@@ -281,58 +343,6 @@ TBD: maybe merged with details table
 - plot
 - harvest_length
 - harvest_width
-** biomassings
-it looks like 1 evaluation per season for everything except pasture. In the datasheets,even at a single date, there are multiple "bags", if we record the bag weight for those instances, each row in the table is a bagging. I'd say it should be a cut evaluation or something. plot -> cut ->
-- the length of plot changes for each plot cutting... so if pasture and anpp go into the same table, each cut by definition can't be the same quadrant because they will have different areas. we should consider plot(cut x quadrat)
-*** Questions
-- [X] how important is % moisture when evaluating this... it seems pasture its recorded, but anpp like alfalfa is not.
-- [X] alfalfa is harvested, but then also evaluated later in the season?
-- Does the cutting in a field season happen in the exact same quadrant?
-- Do the cuts on N, C, S happen at the same time? can we assume that they might be different?
-*** Fields
-**** plot (subplot)
-"section", main, e1, e2, e3, e4 should be captured or implied by the plot and the table, so doesn't need duplication in this column
-**** sample_date
-**** coordinate
-  we need this because for the canopeo measurements, even within small EI plots with SW, there are 3 measurements being taken, one for south, central and north. Furthermore, the locations in the main plots are also sometimes 3 measurements, though often the sampling itself is just "center".
-  For pasture, there's multiple locations that rotate for biomassing
-  multiple locations are captured _sometimes_, idk if default should be center if only 1?
-  - south
-  - central
-  - north
-  - paddock 1
-  - paddock 2
-  - paddock 3
-  - paddock 4
-  - paddock 5
-  - paddock 6
-  - paddock 7
-  - paddock 8
-**** cut
-**** biomassing_area
-**** method
-there's the above ground quadrat methodology, which is normally .5m2 or 1m2 quadrats, and the below ground stuff was .3
-- quadrat
-- undercutting
-**** crop_component
-- shoots
-- roots
-- both
-**** crop
-- alfalfa
-- weeds
-- oats
-- berseem clover
-- red clover
-- residue
-  - dead stuff, but different than weeds.
-- pasture
-** BiomassingDetails
-*** Fields
-**** biomassing_id
-**** biomass_width
-**** biomass_length
-**** bag_weight
 ** Undercutting?
 they were using underccuts to measure biomassings... maybe ignore?
 *** using the undercuts
@@ -407,6 +417,14 @@ HOMEBREW_ACCEPT_EULA=Y brew install msodbcsql18 mssql-tools18
   the following command:
     odbcinst -u -d -n "ODBC Driver 18 for SQL Server"
   #+end_quote
+*** sas access
+#+begin_quote
+libname mssql sqlsvr complete="DRIVER={SAS ACCESS to SQL Server};
+HOST='sqlserverdb.mycompany.com';DB=mydb;PORT=1433;
+AuthenticationMethod=4;
+EncryptionMethod=0;"
+user=mydom\myuserid password='MyPassword1!';
+#+end_quote
 *** Firewall
 * Notes
 ** dflkjdf
