@@ -589,8 +589,17 @@
 - attach rrl from other spreadsheet
 ** IGNORED 2020_harvests_oat_grain
 - same as wheat grain
-** 2020_harvests_pasture
-- shed as direct loss
+** DONE 2020_harvests_pasture
+- shed as direct loss? makes sense
+** DONE 2020_harvests_corn_silage_ei
+** REVIEW [#C] 2020_anpp
+- [ ] shoots for component?
+- [ ] assumed all dry matter?
+- combined with previous harvests for cut for biomassing
+** IGNORED 2020_biofuels
+- there are bcse and mle data that's ignored here
+- no harvest data
+** TODO 2019_harvests_oat_straw
 ** 2019_harvests_forage
 ** 2019_harvests_forage_all
 - these are related to previous, need to assemble

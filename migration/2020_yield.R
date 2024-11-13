@@ -301,8 +301,153 @@ dupe_2020_cs <- tbl_2020_cs |> get_yield("corn silage")
 
 # corn silage ei ----------------------------------------------------------
 
-raw_2020_ei_cs <- xl_snap$`2020_harvests_corn_silage_ei` |>
-  
+raw_2020_ei_cs <- xl_snap$`2020_harvests_corn_silage_ei` |> clean_names()
+
+pre_2020_ei_cs <- raw_2020_ei_cs |> mutate(
+  plot = plot,
+  section = subplot,
+  subplot = str_c(plot, subplot),
+  harvesting_id = get_harvest_id(year = 2020,
+                                 plot = plot,
+                                 section = section,
+                                 product = "corn silage"),
+  harvest_date = harvest_date,
+  harvest_length = length_ft,
+  harvest_width = width_ft,
+  harvest_area = plot_area_ft,
+  harvest_lbs = harvest_lbs,
+  bag_weight = bag_wt_g,
+  wet_weight_w_bag = wet_bag_wt_g,
+  wet_weight_no_bag = wet_wt_bag_g
+)
+
+tbl_2020_ei_cs <- pre_2020_ei_cs |> 
+  select(any_of(ei_harvesting_cols))
+supp_2020_ei_cs <- pre_2020_ei_cs |> 
+  select(any_of(supp_ei_harvesting_cols))
+
+
+
+
+# alfalfa oats bio --------------------------------------------------------
+
+raw_2020_oat <- xl_snap$`2020_anpp` |> clean_names()
+
+tmp_2020_harvests <- bind_rows(
+  tbl_2020_c,
+  tbl_2020_sb,
+  tbl_2020_wg,
+  tbl_2020_ws,
+  tbl_2020_alf,
+  tbl_2020_past
+)
+tmp_2020_ei_harvests <- bind_rows(
+  tbl_2020_ei_c,
+  tbl_2020_ei_sb,
+  tbl_2020_ei_wg,
+  tbl_2020_ei_cs
+)
+
+common_2020_prevcuts <- bind_rows(
+  tmp_2020_harvests |> count(plot) |>
+    filter(plot %in% unique(raw_2020_oat$plot)) |> 
+    mutate(subplot = str_c(plot, "main"), .keep = "unused", .before = 1),
+  tmp_2020_ei_harvests |> count(subplot)
+)
+
+common_2020_oat <- raw_2020_oat |> 
+  mutate(
+    plot = plot,
+    section = section,
+    subplot = str_c(plot, section),
+    coordinate = na_if(sub_sample, "--")
+  ) |> left_join(common_2020_prevcuts, by = "subplot") |> 
+  mutate(cut = n + 1)
+
+pre_2020_can_oat <- common_2020_oat |>
+  drop_na(canopeo) |> 
+  mutate(
+    coverage_date = date,
+    percent_cover = canopeo,
+    canopeo_id = get_canopeo_id(year = 2020,
+                                    plot = plot,
+                                    section = section,
+                                    coordinate = coordinate,
+                                    biomass = biomass,
+                                    cut = cut)
+  )
+
+pre_2020_bio_oat <- common_2020_oat |> mutate(
+  biomass = biomass,
+  biomass_date = date,
+  biomassing_id = get_biomassing_id(year = 2020,
+                                    plot = plot,
+                                    section = section,
+                                    biomass = biomass,
+                                    coordinate = coordinate,
+                                    cut = cut),
+  biomass_length = m_to_ft,
+  biomass_width = m_to_ft,
+  biomass_grams = weight_g,
+  biomass_area = m2_to_ft2,
+  percent_moisture = 0, #TODO: verify all dry matter
+  method = "quadrat",
+  component = "shoots",
+  comments = stitch_notes(note, NA)
+  )
+
+tbl_2020_can_oat <- pre_2020_can_oat |> 
+  filter(section == "main") |> 
+  select(any_of(canopeo_cols))
+# no canopeo comments
+
+tbl_2020_ei_can_oat <- pre_2020_can_oat |> 
+  filter(section != "main") |> 
+  select(any_of(ei_canopeo_cols))
+# no canopeo comments
+
+tbl_2020_bio_oat <- pre_2020_bio_oat |> 
+  filter(section == "main") |> 
+  select(any_of(biomassing_cols))
+
+supp_2020_bio_oat <- pre_2020_bio_oat |> 
+  filter(section == "main") |> 
+  select(any_of(supp_biomassing_cols))
+
+tbl_2020_ei_bio_oat <- pre_2020_bio_oat |> 
+  filter(section != "main") |> 
+  select(any_of(ei_biomassing_cols))
+
+supp_2020_ei_bio_oat <- pre_2020_bio_oat |> 
+  filter(section != "main") |> 
+  select(any_of(supp_ei_biomassing_cols))
+
+dupe_2020_bio_oat <- tbl_2020_bio_oat |> get_biomass()
+
+
+# prairie -----------------------------------------------------------------
+
+# no associated data in these sheets
+# raw_2020_prairie <- xl_snap$`2020_biofuels` |> clean_names() |>
+#   filter(experiment  == "WICST")
+# 
+# pre_2020_prairie <- raw_2020_prairie |> 
+#   mutate(
+#     plot = plot,
+#     section = case_match(sub_plot,
+#                          "main"~"Macro",
+#                          "micro"~"Micro"),
+#     fuel_plot = str_c(plot,section),
+#     harvest_date = NA, #TODO
+#     harvesting_id = get_harvest_id(year = 2020,
+#                                    plot = plot,
+#                                    section = section,
+#                                    product = "prairie",
+#                                    cut = 1),
+#     
+#   )
+# 
+# fuel_harvesting_cols |>
 
 
 # Arrange Tables ----------------------------------------------------------
@@ -328,11 +473,17 @@ supp_2020_harvests <- bind_rows(
 )
 
 # biomassings
-tbl_2020_bio <- bind_rows()
-supp_2020_bio <- bind_rows()
+tbl_2020_bio <- bind_rows(
+  tbl_2020_bio_oat
+)
+supp_2020_bio <- bind_rows(
+  supp_2020_bio_oat
+)
 
 # canopeo
-tbl_2020_can <- bind_rows()
+tbl_2020_can <- bind_rows(
+  tbl_2020_can_oat
+)
 supp_2020_can <- bind_rows()
 
 # losses
@@ -351,20 +502,28 @@ supp_2020_sysloss <- bind_rows()
 tbl_2020_ei_harvests <- bind_rows(
   tbl_2020_ei_c,
   tbl_2020_ei_sb,
-  tbl_2020_ei_wg
+  tbl_2020_ei_wg,
+  tbl_2020_ei_cs
 )
 supp_2020_ei_harvests <- bind_rows(
   supp_2020_ei_c,
   supp_2020_ei_sb,
-  supp_2020_ei_wg
+  supp_2020_ei_wg,
+  supp_2020_ei_cs
 )
 
 # biomassings
-tbl_2020_ei_bio <- bind_rows()
-supp_2020_ei_bio <- bind_rows()
+tbl_2020_ei_bio <- bind_rows(
+  tbl_2020_ei_bio_oat
+)
+supp_2020_ei_bio <- bind_rows(
+  supp_2020_ei_bio_oat
+)
 
 # canopeo
-tbl_2020_ei_can <- bind_rows()
+tbl_2020_ei_can <- bind_rows(
+  tbl_2020_ei_can_oat
+)
 supp_2020_ei_can <- bind_rows()
 
 # losses

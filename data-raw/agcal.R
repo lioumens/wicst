@@ -24,7 +24,7 @@ tbl_plantings <- pre_plantings |>
   select(-`...8`)
 
 # limings
-pre_limings <- read_xlsx(limings_fp |> |> |> , sheet = "Sheet1", na = "-")
+pre_limings <- read_xlsx(limings_fp, sheet = "Sheet1", na = "-")
 tbl_limings <- pre_liming
 
 pre_fertilizings <- read_xlsx(fertilizers_fp, sheet = "Sheet1", na = "-")

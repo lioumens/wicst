@@ -1,11 +1,15 @@
-# wicst ------------------------------------------------------------------
-## core ------------------------------------------------------------------
 
+# source files
+source("migration/2023_yield.R")
+
+# wicst ------------------------------------------------------------------
 
 ## harvestings -------------------------------------------------------------
 tbl_harvests <- bind_rows(
   tbl_2023_harvests |> mutate(plot = glue("A{plot}")),
-  tbl_2022_harvests |> mutate(plot = glue("A{plot}"))
+  tbl_2022_harvests |> mutate(plot = glue("A{plot}")),
+  tbl_2021_harvests |> mutate(plot = glue("A{plot}")),
+  tbl_2020_harvests |> mutate(plot = glue("A{plot}"))
 )
 
 supp_harvests <- bind_rows(
