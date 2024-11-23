@@ -7,9 +7,10 @@ library(purrr)
 library(tidyr)
 library(rlang)
 
-load("data/wip_20241112.Rdata")
+load("data/wip_20241122.Rdata")
 load("data/master_20240926.Rdata")
 load("data/core_20241104.Rdata")
+load("data/agcal_20241119.Rdata")
 
 c_ideal_percent_moisture = 15.5
 c_bushel = 56
@@ -22,6 +23,8 @@ ws_bushel = 60
 b_ideal_percent_moisture = 14.5
 b_bushel = 48
 # barley straw ideal moisture?/bushel?
+oat_ideal_percent_moisture = 14
+oat_bushel = 32 # ? is this right? 2019 oat harvest uses this
 kg_to_lbs = 2.2046226
 acre_to_ft2 = 43560
 m2_to_ft2 = 10.7639
@@ -61,21 +64,22 @@ get_harvest_id <- function(year, plot, section, product, cut = 1, site = "A") {
                              c("West 15'") ~ "WS", # Corn Silage
                              c("Macro") ~ "MA",
                              c("Micro") ~ "MI",
-                             c("Main", "main") ~ "MM",
+                             c("Main", "main", "MAIN") ~ "MM",
                              .default = "XX")
   
   product_code <- case_match(product,
                              c("corn")~"CN",
                              c("corn silage")~"CS",
-                             c("wheat", "wheat grain")~"WG",
+                             c("wheat", "wheat grain", "w/cl")~"WG",
                              c("soybean")~"SB",
                              c("wheat straw")~"WS",
                              c("barley")~"BY",
-                             c("alfalfa", "dsA", "A1", "A2", "o/A", "ORG A1")~"AF",
+                             c("alfalfa", "dsA", "A1", "A2", "o/A", "ORG A1", "Ai", "Aii", "a", "o/a", "O/A")~"AF",
                              c("red_clover")~"RC",
                              c("berseem_clover")~"BC",
                              c("oats")~"OT",
-                             c("pasture")~"PT",
+                             c("oat straw")~"OS",
+                             c("pasture", "P")~"PT",
                              c("prairie")~"PR",
                              .default = "XX")
   
@@ -86,7 +90,8 @@ get_harvest_id <- function(year, plot, section, product, cut = 1, site = "A") {
               product = product_code))
 }
 
-get_biomassing_id <- function(year, plot, section, coordinate, biomass, cut = 1, site = "A") {
+get_biomassing_id <- function(year, plot, section, coordinate, biomass,
+                              cut = 1, site = "A", method = "quadrat",component = "shoots") {
   # is it the main plot, or is it subplot for the EI experiments
   section_code <- case_match(section,
                              c("s", "S", "south", "South") ~ "SS",
@@ -100,7 +105,7 @@ get_biomassing_id <- function(year, plot, section, coordinate, biomass, cut = 1,
                              c("Main", "main", "MAIN") ~ "MM",
                              .default = "XX")
   
-  # where in the plots
+  # where in the plot
   coordinate_code <- case_match(coordinate,
                                 c("South", "S", "SOUTH", "south")~"S",
                                 c("Central", "Center", "C", "CENTRAL", "center", "central")~"C",
@@ -115,20 +120,41 @@ get_biomassing_id <- function(year, plot, section, coordinate, biomass, cut = 1,
                                 .default = "X")
   biomass_code <- case_match(biomass,
                              c("rye")~"RY",
-                             c("weeds")~"WD",
+                             c("wheat")~"WT",
+                             c("weeds", "weed")~"WD",
                              c("residue")~"RS",
-                             c("alfalfa")~"AF",
-                             c("red_clover")~"RC",
-                             c("berseem_clover", "berseem clover")~"BC",
+                             c("alfalfa", "dsA", "A1", "A2", "o/A", "ORG A1")~"AF",
+                             c("red_clover", "red clover")~"RC",
+                             c("clover")~"CV",
+                             c("berseem_clover", "berseem clover", "bc")~"BC",
                              c("oats", "oat")~"OT",
                              c("pasture")~"PT",
-                             c("wheat_straw")~"WS", 
+                             c("prairie")~"PR",
+                             c("wheat straw", "wheat_straw")~"WS", 
+                             c("quack")~"QK",
                              .default = "XX")
   
-  return(glue("B{year}_{site}{plot}{section}{coordinate}_{biomass}_{cut}",
+  cut_code <- case_when(is.numeric(cut)~as.character(cut),
+                        is.na(cut)~"X",
+                        .default = as.character(cut))
+  
+  method_code <- case_when(method %in% c("exclosure") | biomass_code == "PT"~"EX",
+                           method %in% c("quadrat")~"QT",
+                           method %in% c("undercutting")~"UC",
+                           .default = "XX")
+  
+  component_code <- case_match(component,
+                               "shoots"~"ST",
+                               "roots"~"RT",
+                               .default = "XX")
+  
+  return(glue("B{year}_{site}{plot}{section}{coordinate}_{biomass}_{cut}_{method}{component}",
               section = section_code,
               coordinate = coordinate_code,
-              biomass = biomass_code))
+              biomass = biomass_code,
+              cut = cut_code,
+              method = method_code,
+              component = component_code))
 }
 
 get_canopeo_id <- function(year, plot, section, coordinate, biomass = "XX", cut = 1, site = "A") {
@@ -168,6 +194,7 @@ get_canopeo_id <- function(year, plot, section, coordinate, biomass = "XX", cut 
                              c("wheat grain")~"WG",
                              c("barley")~"BY",
                              c("alfalfa", "dsA", "A1", "A2", "o/A", "ORG A1")~"AF",
+                             c("clover")~"CV",
                              c("red_clover", "red clover")~"RC",
                              c("berseem_clover", "berseem clover")~"BC",
                              c("rye")~"RY",
@@ -204,6 +231,10 @@ get_harvestingloss_id <- function(year, plot, section,
                              c("NE") ~ "NE",
                              c("SW") ~ "SW",
                              c("SE") ~ "SE",
+                             c("East 15'") ~ "ES", # Corn Silage
+                             c("West 15'") ~ "WS", # Corn Silage
+                             c("Macro") ~ "MA",
+                             c("Micro") ~ "MI",
                              c("Main", "main", "MAIN") ~ "MM",
                              .default = "XX")
   
@@ -265,6 +296,7 @@ get_yield <- function(dat, product = NULL) {
   wheat_straws <- c("wheat_straw", "wheat straw")
   soybeans <- c("soybean") 
   barleys <- c("barley")
+  oats <- c("oat", "oats", "oat grain")
   
   cols_needed <- c("percent_moisture", "harvest_lbs", "harvest_area")
   missing_cols <- cols_needed[!(cols_needed %in% names(dat))]
@@ -284,13 +316,15 @@ get_yield <- function(dat, product = NULL) {
                                 wheat_grains~wg_ideal_percent_moisture,
                                 wheat_straws~ws_ideal_percent_moisture,
                                 soybeans~sb_ideal_percent_moisture,
-                                barleys~b_ideal_percent_moisture),
+                                barleys~b_ideal_percent_moisture,
+                                oats~oat_ideal_percent_moisture),
     bushel_lbs = case_match(product %||% str_to_lower(crop),
                             corn_grains~c_bushel,
                             wheat_grains~wg_bushel,
                             wheat_straws~ws_bushel,
                             soybeans~sb_bushel,
-                            barleys~b_bushel),
+                            barleys~b_bushel,
+                            oats~oat_bushel),
     corrected_lbs = harvest_lbs * ((100 - percent_moisture) / (100 - ideal_moisture)),
     corrected_bu = corrected_lbs / bushel_lbs,
     corrected_lbs_per_acre = corrected_lbs / acre_frac,
@@ -336,7 +370,7 @@ cs_harvesting_cols <- c("harvesting_id", "harvest_date",
 
 supp_harvesting_cols <- c("harvesting_id", 
                           "harvest_length", "harvest_width", # dimensions
-                          "rrl_id",
+                          "rrl_id", "bushel_lbs",
                           "bag_weight", "wet_bag_weight", "dry_bag_weight", # weights of bag themselves
                           "wet_weight_w_bag", "dry_weight_w_bag", # grab sample with the bag
                           "wet_weight_no_bag", "dry_weight_no_bag", # grab sample without bag
@@ -344,16 +378,7 @@ supp_harvesting_cols <- c("harvesting_id",
                           "wagon_weight", "wagon_color", "trailer_weight",
                           "comments")
 
-supp_ei_harvesting_cols <- c("harvesting_id", 
-                          "harvest_length", "harvest_width", # dimensions
-                          "rrl_id",
-                          "bucket_lbs",
-                          "bag_weight", "wet_bag_weight", "dry_bag_weight", # weights of bag themselves
-                          "wet_weight_w_bag", "dry_weight_w_bag", # grab sample with the bag
-                          "wet_weight_no_bag", "dry_weight_no_bag", # grab sample without bag
-                          "num_bales",
-                          "wagon_weight", "wagon_color", "trailer_weight",
-                          "comments")
+supp_ei_harvesting_cols <- supp_harvesting_cols
 
 supp_cs_harvesting_cols <- c("harvesting_id", 
                              "harvest_length", "harvest_width", # dimensions
@@ -446,6 +471,14 @@ supp_fuel_harvesting_cols <- c("harvesting_id",
                                "num_bales",
                                "wagon_weight", "wagon_color", "trailer_weight",
                                "comments")
+
+fuel_115_harvesting_cols <- c("harvest_date", 
+                              "plot", "section", 
+                              "crop","percent_moisture",
+                              "harvest_area", "harvest_lbs")
+
+supp_fuel_115_harvesting_cols <- supp_fuel_harvesting_cols |> 
+  discard(\(x) x %in% c("harvesting_id", "rrl_id"))
 
 # Template Section --------------------------------------------------------
 

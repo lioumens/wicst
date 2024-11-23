@@ -53,7 +53,7 @@ tbl_2021_sysloss_c <- pre_2021_c |> filter(!is.na(loss_fraction)) |>
   select(any_of(sysloss_cols))
 
 supp_2021_sysloss_c <- pre_2021_c |> filter(!is.na(loss_fraction)) |> 
-  select(any_of(supp_loss_cols))
+  select(any_of(supp_sysloss_cols))
 
 # ei harvest
 tbl_2021_ei_c <- pre_2021_c |> 
@@ -329,9 +329,10 @@ pre_2021_cs <- raw_2021_cs |>
                                                         loss_num = 1),
     harvest_date = harvest_date,
     crop = "corn silage",
-    harvest_area = plot_area_ft,
     harvest_length = length_ft,
-    harvest_width = width_ft,
+    harvest_width = case_when(plot_2 == "Main"~5,   # main plots should be 5'
+                              plot_2 != "Main"~15), # ei plots are 15'
+    harvest_area = harvest_length * harvest_width,
     harvest_lbs = harvest_lbs,
     rrl_id = rrl_id,
     percent_moisture = ml_moisture * 100,
@@ -342,7 +343,7 @@ pre_2021_cs <- raw_2021_cs |>
     loss_category = if_else(!is.na(area_excluding_potential_loss), "weeds", NA),
     # 109SW rounded incorrectly
     ml_notes = case_when(subplot == "109SW" ~ "Michael Liou: \"harvest acreage crudely rounded resulting in final yield change, changed during db migration .02 -> 0.01721763 (calculated)\"",
-                         plot_2 == "Main" ~ glue('Michael Liou: "conflicting data, using handwritten harvest lbs {orig_values}->{new_values} from pdf in db, confirmed and corroborated with Gregg and Mark, plot width also assumed 5\'->15\', changes final yield numbers. Using original moisture values."',
+                         plot_2 == "Main" ~ glue('Michael Liou: "conflicting data, using handwritten harvest lbs {orig_values}->{new_values} from pdf in db, confirmed and corroborated with Gregg and Mark, plot width also assumed 5\'. Using original moisture values."',
                                                orig_values = plot_wt_lbs,
                                                new_values = harvest_lbs),
                          .default = ml_notes),
@@ -379,6 +380,8 @@ supp_2021_ei_sysloss_cs <- pre_2021_cs |>
 dupe_2021_ei_cs <- tbl_2021_ei_cs |> left_join(tbl_2021_ei_sysloss_cs, by = "harvesting_id") |> 
   mutate(harvest_area = harvest_area * (1 - coalesce(loss_fraction, 0))) |> 
   get_yield("corn silage")
+
+dupe_2021_cs <- tbl_2021_cs |> get_yield("corn silage")
 
 
 # wheat straw -------------------------------------------------------------
@@ -680,7 +683,9 @@ supp_2021_bio <- bind_rows(
 tbl_2021_can <- bind_rows(
   tbl_2021_can_alf
 )
-supp_2021_can <- bind_rows()
+supp_2021_can <- bind_rows(
+  # supp_2021_can_alf, # empty
+)
 
 # losses
 tbl_2021_loss <- bind_rows()

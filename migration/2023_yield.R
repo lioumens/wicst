@@ -370,7 +370,7 @@ supp_2023_ei_cs <- pre_2023_ei_cs |> select(any_of(supp_ei_harvesting_cols))
 # prairie 115 -------------------------------------------------------------
 
 raw_2023_115_prairie <- xl_snap$`2023_harvests_prairie_115` |> clean_names()
-raw_2023_115_prairie |> names()
+# raw_2023_115_prairie |> names()
 
 pre_2023_115_prairie <- raw_2023_115_prairie |>
   mutate(
@@ -404,9 +404,9 @@ pre_2023_115_prairie <- raw_2023_115_prairie |>
   )
 
 # no harvesting id's b/c not part of Wicst
-tbl_2023_115_prairie <- pre_2023_115_prairie |> select(any_of(harvesting_cols))
+tbl_2023_115_prairie <- pre_2023_115_prairie |> select(any_of(fuel_115_harvesting_cols))
 dupe_2023_115_prairie <- tbl_2023_115_prairie |> get_yield()
-supp_2023_115_prairie <- pre_2023_115_prairie |> select(any_of(supp_harvesting_cols))
+supp_2023_115_prairie <- pre_2023_115_prairie |> select(any_of(supp_fuel_115_harvesting_cols))
 
 
 # Biofuels ----------------------------------------------------------------
@@ -501,13 +501,13 @@ pre_2023_bio_wheat <- raw_2023_bio_wheat |>
 tbl_2023_bio_wheat <- pre_2023_bio_wheat |> 
   filter(section == "Main") |>
   select(any_of(biomassing_cols))
-tbl_2023_bio_ei_wheat <- pre_2023_bio_wheat |> 
+tbl_2023_ei_bio_wheat <- pre_2023_bio_wheat |> 
   filter(section != "Main") |>
   select(any_of(ei_biomassing_cols))
 supp_2023_bio_wheat <- pre_2023_bio_wheat |> 
   filter(section == "Main") |>
   select(any_of(supp_biomassing_cols))
-supp_2023_bio_ei_wheat <- pre_2023_bio_wheat |> 
+supp_2023_ei_bio_wheat <- pre_2023_bio_wheat |> 
   filter(section != "Main") |>
   select(any_of(supp_ei_biomassing_cols))
 
@@ -649,6 +649,8 @@ tbl_2023_can_alf <- pre_2023_can_alf |>
 
 # Assemble tables ---------------------------------------------------------
 
+
+## Core Tables -------------------------------------------------------------
 # harvests
 tbl_2023_harvests <- bind_rows(
   tbl_2023_c, 
@@ -667,6 +669,29 @@ supp_2023_harvests <- bind_rows(
   supp_2023_alf
 )
 
+# Biomassings
+tbl_2023_bio <- bind_rows(
+  tbl_2023_bio_past,
+  tbl_2023_bio_wheat,
+  tbl_2023_bio_alf
+)
+
+supp_2023_bio <- bind_rows(
+  supp_2023_bio_past,
+  supp_2023_bio_wheat,
+  supp_2023_bio_alf
+)
+
+# canopeo
+tbl_2023_can <- bind_rows(
+  tbl_2023_can_wheat,
+  tbl_2023_can_alf
+) |> mutate(
+  plot = as.numeric(plot)
+)
+
+## ei tables ---------------------------------------------------------------
+
 # EI tables
 tbl_2023_ei_harvests <- bind_rows(
   tbl_2023_ei_c,
@@ -684,39 +709,43 @@ supp_2023_ei_harvests <- bind_rows(
   supp_2023_ei_cs
 )
 
-# Biomassings
-tbl_2023_biomassing <- bind_rows(
-  tbl_2023_bio_past,
-  tbl_2023_bio_wheat,
-  tbl_2023_bio_alf
+# biomassings
+tbl_2023_ei_bio <- bind_rows(
+  tbl_2023_ei_bio_wheat
 )
-
-supp_2023_biomassing <- bind_rows(
-  supp_2023_bio_past,
-  supp_2023_bio_wheat,
-  supp_2023_bio_alf
+supp_2023_ei_bio <- bind_rows(
+  supp_2023_ei_bio_wheat
 )
-
-# corn silaging exp
-# tbl_2023_cs
-# supp_2023_cs
-
-# biofuels
-# tbl_2023_prairie
-# tbl_2023_115_prairie
-# supp_2023_prairie
-# supp_2023_115_prairie # no id yet
-
+# biolosses, none
 
 # canopeo
-tbl_2023_can <- bind_rows(
-  tbl_2023_can_wheat,
-  tbl_2023_can_alf
-)
-
 tbl_2023_ei_can <- bind_rows(
   tbl_2023_can_ei_wheat
 )
+# no supp info
+
+
+## Silage ------------------------------------------------------------------
+
+# corn silaging exp
+tbl_2023_silage <- tbl_2023_cs
+supp_2023_silage <- supp_2023_cs
+
+## Prairie -----------------------------------------------------------------
+
+# biofuels
+tbl_2023_prairie <- tbl_2023_prairie
+supp_2023_prairie <- supp_2023_prairie
+
+## 115 ---------------------------------------------------------------------
+
+tbl_2023_115_prairie <- tbl_2023_115_prairie
+supp_2023_115_prairie <- supp_2023_115_prairie # no id yet
+
+
+
+
+
 
 # no losses
 

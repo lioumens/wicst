@@ -225,16 +225,16 @@
 *** DONE Perennials
 **** DONE Perennial_Biomass_Grab_Samples.xlsx
 - just copied it all =2020_biofuels=, but doesn't seem any useful info
-** 2019 [10/14]
+** 2019 [11/14]
 *** Biomass
 **** DONE WICST_2019_Oat_Straw_Yields.xlsx
 - copied with comments
 *** Forages
 **** REVIEW 2019_All_Forage_Data_Arlington.xlsx
 - fill in the pasture forage yields with this datasheeet
-**** REVISIT 2019_WICST_corn_silage_yields.xlsx
+**** DONE 2019_WICST_corn_silage_yields.xlsx
 - easy copy
-- [ ] 415'? or 510' for that weird plot
+- [X] 415'? or 510' for that weird plot
   - confirmed for 415' w/ greg in his handwritten book!
   - also confirmed all the new yields, found 1 different for plot 203W
 **** DONE 2019_WICST_forage_yields.xlsx
@@ -599,20 +599,122 @@
 ** IGNORED 2020_biofuels
 - there are bcse and mle data that's ignored here
 - no harvest data
-** TODO 2019_harvests_oat_straw
-** 2019_harvests_forage
+** 2019_harvests_pasture
+- [ ] should i label method as "exclosure" instead of quadrat?
+- [ ] shoots?
+** 2019_harvests_oat_straw
+** IGNORED 2019_harvests_forage
+- pasture info is in [[2019_harvests_pasture]]
+- and alfalfa is duplicated in [[*2019_harvests_forage_all][2019_harvests_forage_all]]
+- the alf uses the chop date in the date,but
 ** 2019_harvests_forage_all
 - these are related to previous, need to assemble
+- [ ] verify using cut date? [[*2019_harvests_forage][2019_harvests_forage]] uses the chop date
+- there's just one value of supplemental bag weight in forage used, in the left join.
+** REVIEW 2019_anpp_oats
+- [ ] assume these are dry weights? it's unknown i guess, left as NA
+** 2019_anpp_alfalfa
+- these are bio massings
+** 2019_undercutting
+- added method and component to the biomassing id, need to rethink it since harvest and biomassings should have yielding_id
+** DONE 2018_harvests_corn
+- straight forward, added comments
+** DONE 2018_harvests_soybean
+- soybeans in 115, saved
+** REVIEW [#C] 2018_harvests_wheat_straw
+- [ ] no comments for harvest loss, just the area
+- bales calcualted from average of trailer bales
+- recorded as a commment, the calculation trail
+** DONE 2018_biofuels
+- nothing tricky
+- widths are probably a little different
+** REVIEW 2018_undercutting
+** REVIEW 2018_harvests_alfalfa
+- some direct losses recorded
+** DONE 2018_harvests_pasture
+- copied no trouble, exclosure
+** DONE 2018_harvests_corn_silage
+- sys loss as lodging
+** IGNORED 2017_harvests_corn_silage_micro
+- ignored since it's a side experiment, moved to finder folder
+** DONE 2017_harvests_corn_silage
+- copied dates from agcal calendar
+- comments from rotation grid, 2017 was not randomized, they were all east strips
+** DONE 2017_harvests_corn
+- general copy, saved test weights
+** DONE 2017_harvests_soybean
+- general copy, saved test weights
+** DONE 2017_harvests_wheat
+- weirdly missing length and width, possibly missing a harvest loss. areas very specific
+** DONE 2017_harvests_wheat_straw
+- bale adjustment adjustment changed, doesn't change yield that much
+** TODO 2017_harvests_alfalfa
+** TODO 2017_harvests_pasture
+- missing grab weight, but split into harvest and biomassing
+** DONE 2016_harvests_wheat
+- "2 separate sections due to removal of canada thistle (312x27.25 and 119x27.5)" should be loss?
+- from agcal calendar
+** TODO 2016_harvests_straw
 ** 2016_harvests_pasture
-- two harvests, rest anpp?
+- two harvests, rest anpp
 - missing coordinate
-** 2015_harvests_forage
-** 2015_harvests_forage_moisture
-- has supplemental data from forage
+** REVIEW [#C] 2015_harvests_forage
+eventually all these are accounted for.
+went with master, and deleted moisture, master used .6. grabbed bale information from [[*2015_harvests_forage_moisture][2015_harvests_forage_moisture]]
+- Date
+  - agcal calendar has 6/17/2015
+  - 2015_harvests_forage has 6/17 and 6/1
+  - grab sample date was 6/3
+  - hay yields use 6/3 6/19
+- Yields (can't figure)
+  - 112: 4400
+  - 207: 4600
+  - 302: 6580
+  - 405: 6240 or 6380 (master uses 6240)
+- Moistures from master
+  - 112: 80.8
+  - 207: 82.9
+  - 302: 82.2
+  - 405: 75.7
+- mositures from 2015_harvests_forage_moisture
+  - 112: 22.6
+  - 207: 32.6
+  - 302: 23.1
+  - 405: 20.2
+- this sheet has .6 moistures input
+- num_bales for t14
+*** Alfalfa/Oat data
+- the oats harvest file only has the dry weight, and the percent moisture in master uses .5
+- some of the moistures only appear in this file, so using the ones I found. If multiple, they all correspond well.
+*** Wheat Straw
+- there's a conflict with the straw file, but num bales match up, its "SM STRAW", but this file looks more legit,so I used these values
+** DONE 2015_anpp_pasture
+used cuts 2-4 from here, see [[*2015_harvests_forage][2015_harvests_forage]] for harvests
+** DONE 2015_harvests_forage_moisture
+- has supplemental data from forage, mixes all the pasture, and alfalfa and bales
+** DONE 2015_harvests_pasture
+- copied data in, joined with forage data sheets because the cuts also appear there.
+** 2015_harvests_
+** REVIEW [#B] 2015_harvests_corn
+- [ ] confirm what the east micro plots are doing
+** DONE 2015_harvests_soybean
+- nothing unusual
+** DONE 2015_harvests_wheat
+- averaging width of plot
+** REVIEW [#C] 2015_harvests_wheat_straw
+- loss cols wihtout supplement
+- plot 411 has conflict with [[*2015_harvests_forage][2015_harvests_forage]], 2670 vs 2660
+- moistures also look slightly different from master, but only marginally, final yield not affected that much
+** REVIEW 2015_harvests_rye
+- [ ] biomass length/width/area
+- supp info?
 * Tables
 ** tbl_2023_biomassing
 - [ ] moistures should be zero?
 - [ ] how to think about "cut" for pastures vs anpp... it's just left in the field
+* QA Process
+1. Clean excel sheets directly, fill in unknowns with Nolan
+2. 
 * Local Variables
 # Local Variables:
 # org-todo-keyword-faces: (("REVISIT" . warning) ("REVIEW" . error) ("STARTED" . success))

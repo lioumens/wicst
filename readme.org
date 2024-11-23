@@ -425,8 +425,12 @@ AuthenticationMethod=4;
 EncryptionMethod=0;"
 user=mydom\myuserid password='MyPassword1!';
 #+end_quote
+*** scrollable cursors?
+- "As a best practice, set the EnableScrollableCursors ODBC driver option to 3." [[https://documentation.sas.com/doc/en/pgmsascdc/9.4_3.5/acreldb/p02o7pdhah9nusn1dgqjgo66ibgs.htm][sas access mssql]]
 *** Firewall
 * Notes
+** Fertilizings with Nolan
+Phosphorus and Potassium HAS to be preplant, about 1 week before planting date for Corn, soy, wheat
 ** dflkjdf
 josh passed away, 2013 can you continue this,janet was the one that
 ** [2024-10-18 Fri] NSCR Kristin Foehringer

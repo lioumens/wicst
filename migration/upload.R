@@ -16,7 +16,6 @@ library(here)
 # data --------------------------------------------------------------------
 
 load("data/core_20241104.Rdata")
-load("data/agcal_20241005.Rdata")
 load("data/agcal_20241108.Rdata")
 
 # connect -----------------------------------------------------------------
@@ -41,8 +40,6 @@ dplyr::tbl(con, "treatment_grid")
 
 # Source Files --------------------------------------------------
 
-if (!exists("tbl_2023_harvests")) source(here("migration/2023_yield.R"))
-if (!exists("tbl_2022_harvests")) source(here("migration/2022_yield.R"))
 if (!exists("tbl_harvests")) source(here("migration/collect.R"))
 
 # wicst ------------------------------------------------------------------
@@ -72,7 +69,6 @@ dbWriteTable(con, Id(schema = "ei", table = "harvestingdetails"), supp_ei_harves
 ## Direct Harvest Losses ----------------------------------------------------------
 
 ## Systematic Harvest Losses ---------------------------------------------------
-
 
 ## canopeo -----------------------------------------------------------------
 

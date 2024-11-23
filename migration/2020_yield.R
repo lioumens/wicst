@@ -266,6 +266,9 @@ pre_2020_cs <- raw_2020_cs |>
                          "West"~"West 15'",
                          "East"~"East 15'"),
     crop = "corn silage",
+    sideplot = str_c(plot, case_match(section,
+                                      "West 15'"~"WS",
+                                      "East 15'"~"ES")),
     harvesting_id = get_harvest_id(year = 2020,
                                    plot = plot,
                                    section = section,
@@ -281,10 +284,10 @@ pre_2020_cs <- raw_2020_cs |>
   )
 
 tbl_2020_cs <-  pre_2020_cs |> 
-  select(any_of(harvesting_cols))
+  select(any_of(fuel_harvesting_cols))
 
 supp_2020_cs <-  pre_2020_cs |> 
-  select(any_of(supp_harvesting_cols))
+  select(any_of(supp_fuel_harvesting_cols))
 
 dupe_2020_cs <- tbl_2020_cs |> get_yield("corn silage")
 # # dupe for 415/510 difference
@@ -470,7 +473,7 @@ supp_2020_harvests <- bind_rows(
   supp_2020_ws,
   supp_2020_alf,
   supp_2020_past
-)
+) |> mutate(rrl_id = as.numeric(rrl_id))
 
 # biomassings
 tbl_2020_bio <- bind_rows(
@@ -484,7 +487,9 @@ supp_2020_bio <- bind_rows(
 tbl_2020_can <- bind_rows(
   tbl_2020_can_oat
 )
-supp_2020_can <- bind_rows()
+supp_2020_can <- bind_rows(
+  # supp_2020_can_oat, # empty
+)
 
 # losses
 tbl_2020_loss <- bind_rows(
@@ -510,7 +515,7 @@ supp_2020_ei_harvests <- bind_rows(
   supp_2020_ei_sb,
   supp_2020_ei_wg,
   supp_2020_ei_cs
-)
+) |> mutate(rrl_id = as.numeric(rrl_id))
 
 # biomassings
 tbl_2020_ei_bio <- bind_rows(

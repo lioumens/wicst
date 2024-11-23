@@ -746,7 +746,7 @@ supp_2022_prairie <- pre_2022_prairie |> select(any_of(supp_fuel_harvesting_cols
 # 115 Prairie -------------------------------------------------------------
 
 raw_2022_115_prairie <- xl_snap$`2022_harvests_prairie_115` |> clean_names()
-raw_2022_115_prairie |> names()
+# raw_2022_115_prairie |> names()
 pre_2022_115_prairie <- raw_2022_115_prairie |>
   mutate(
     harvest_date = date_harvested,
@@ -780,9 +780,9 @@ pre_2022_115_prairie <- raw_2022_115_prairie |>
     .before = 1,
   )
 
-tbl_2022_115_prairie <- pre_2022_115_prairie |> select(any_of(fuel_harvesting_cols))
+tbl_2022_115_prairie <- pre_2022_115_prairie |> select(any_of(fuel_115_harvesting_cols))
 dupe_2022_115_prairie <- tbl_2022_115_prairie |> get_yield()
-supp_2022_115_prairie <- pre_2022_115_prairie |> select(any_of(supp_fuel_harvesting_cols))
+supp_2022_115_prairie <- pre_2022_115_prairie |> select(any_of(supp_fuel_115_harvesting_cols))
 
 
 # Assemble 2022 Tables ----------------------------------------------------
@@ -802,8 +802,8 @@ supp_2022_harvests <- bind_rows(supp_2022_c,
   select(where(\(x)!all(is.na(x))))
 
 # loss tables
-tbl_2022_loss <- bind_rows(tbl_2022_loss_c)
-supp_2022_loss <- bind_rows(supp_2022_loss_c)
+tbl_2022_loss <- bind_rows()
+supp_2022_loss <- bind_rows()
 tbl_2022_sysloss <- bind_rows(tbl_2022_sysloss_c)
 supp_2022_sysloss <- bind_rows(supp_2022_sysloss_c)
 
@@ -847,34 +847,34 @@ supp_2022_ei_harvests <- bind_rows(supp_2022_ei_c,
 
 
 # Loss Tables
-tbl_2022_ei_loss <- bind_rows(tbl_2022_ei_loss_c)
-supp_2022_ei_loss <- bind_rows(supp_2022_ei_loss_c)
+tbl_2022_ei_loss <- bind_rows()
+supp_2022_ei_loss <- bind_rows()
 tbl_2022_ei_sysloss <- bind_rows(tbl_2022_ei_sysloss_c)
 supp_2022_ei_sysloss <- bind_rows(supp_2022_ei_sysloss_c)
 
 # Biomassing Tables
-tbl_2022_bio_ei  <- bind_rows(tbl_2022_bio_ei_o, 
+tbl_2022_ei_bio  <- bind_rows(tbl_2022_bio_ei_o, 
                               tbl_2022_bio_ei_r_o)
 
-supp_2022_bio_ei <- bind_rows(supp_2022_bio_ei_o,
+supp_2022_ei_bio <- bind_rows(supp_2022_bio_ei_o,
                               supp_2022_bio_ei_r_o)
 
 
 # canopeo supp
-tbl_2022_can_ei <- bind_rows(
+tbl_2022_ei_can <- bind_rows(
   tbl_2022_can_ei_o,
   tbl_2022_can_ei_r_o
 )
 
-supp_2022_can_ei <- bind_rows(
+supp_2022_ei_can <- bind_rows(
   supp_2022_can_ei_o
 )
 
 ## Corn Silage ------------------------------------------------------------
 
 # corn silage
-# tbl_2022_cs
-# supp_2022_cs
+tbl_2022_silage <- tbl_2022_cs
+supp_2022_silage <- supp_2022_cs
 
 
 ## Biofuels ----------------------------------------------------------------
