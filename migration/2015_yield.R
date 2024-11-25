@@ -3,10 +3,7 @@ if (!exists("harvesting_cols")) source("migration/yield_prep.R")
 
 
 # moisture
-
 raw_2015_forage_moisture <- xl_snap$`2015_harvests_forage_moisture` |> clean_names()
-raw_2015_forage_moisture
-
 
 # Pasture -----------------------------------------------------------------
 

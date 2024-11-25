@@ -284,10 +284,10 @@ pre_2020_cs <- raw_2020_cs |>
   )
 
 tbl_2020_cs <-  pre_2020_cs |> 
-  select(any_of(fuel_harvesting_cols))
+  select(any_of(cs_harvesting_cols))
 
 supp_2020_cs <-  pre_2020_cs |> 
-  select(any_of(supp_fuel_harvesting_cols))
+  select(any_of(supp_cs_harvesting_cols))
 
 dupe_2020_cs <- tbl_2020_cs |> get_yield("corn silage")
 # # dupe for 415/510 difference
