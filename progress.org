@@ -409,6 +409,7 @@
 **** DONE WICST_CS3_Corn_Main_Plot_Harvest_10_20_2015.xlsx
 - combined with [[*WICST_CS1_CS2_CS4_CS5_2015_Harvest.xlsx][WICST_CS1_CS2_CS4_CS5_2015_Harvest.xlsx]] into =2015_harvests_corn=
 **** DONE WICST_CS3_T6_soybean_harvest.xlsx
+- attached to other soybeans
 **** REVIEW [#C] WICST_Main_Plot_Wheat_Harvest_Grabs_(7_31_15).xlsx
 - not sure what this is... just grabbed along with the harvest? I think these are just used for calculating the moisture. Not worth saving, maybe wet + bag? don't know how large a section even
 - [ ] confirm ignore, or supp data
@@ -559,6 +560,7 @@
 ** DONE 2021_harvests_wheat_grain
 ** DONE 2021_harvests_alfalfa
 ** DONE 2021_harvests_pasture
+- theres a mislabel for 2019 here, documented in data anomolies. I think they copied the moisture from 2019, grab data, but the date of sampling should actually be 2021.
 ** REVIEW [#A] 2021_harvests_corn_silage_ei
 - [ ] 15 or 5'? corn silage main used here
 ** IGNORED 2021_harvests_corn_silage_main
@@ -708,6 +710,12 @@ used cuts 2-4 from here, see [[*2015_harvests_forage][2015_harvests_forage]] for
 ** REVIEW 2015_harvests_rye
 - [ ] biomass length/width/area
 - supp info?
+** REVIEW [#B] 2014_harvests_pasture
+- [ ] should moisture be dropped? .6 was used in master, .18 was found in moistures sheet
+  - currently left in
+** REVIEW 2014_moistures_pasture
+* ARL
+- left off on 2013, comments/loss not explicitly coded
 * Tables
 ** tbl_2023_biomassing
 - [ ] moistures should be zero?

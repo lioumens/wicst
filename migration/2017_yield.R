@@ -189,7 +189,7 @@ pre_2017_past <- raw_2017_past |> mutate(
   harvest_date = date,
   biomass_date = date,
   harvest_lbs = coalesce(plot_wt_kg * kg_to_lbs, plot_wt_lbs),
-  biomass_grams = plot_wt_kg / 1000,
+  biomass_grams = plot_wt_kg * 1000,
   harvest_width = plot_width_ft,
   biomass_width = plot_width_ft,
   harvest_length = plot_length_ft,

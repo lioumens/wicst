@@ -101,7 +101,7 @@ tbl_bio <- bind_rows(
   tbl_2017_bio,
   tbl_2016_bio,
   tbl_2015_bio,
-)
+) |> mutate(plot = glue("A{plot}"))
 
 supp_bio <- bind_rows(
   supp_2023_bio,

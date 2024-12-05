@@ -39,6 +39,7 @@ BEGIN
 			WHEN 'barley' THEN 14.5
 			WHEN 'wheat' THEN 13.5
 			WHEN 'wheat grain' THEN 13.5
+			WHEN 'wheat straw' THEN 13
 			WHEN 'oat' THEN 14
 			else NULL
 		END;
@@ -57,16 +58,16 @@ AS
 BEGIN
 	DECLARE @IDEAL_BUSHEL REAL
 	SET @IDEAL_BUSHEL = 
-	CASE @product
-	WHEN 'corn' THEN 56
-	WHEN 'soybean' THEN 60
-	WHEN 'barley' THEN 48
-	WHEN 'wheat' THEN 60
-	WHEN 'wheat grain' THEN 60
-	WHEN 'wheat straw' THEN 60
-	WHEN 'oat' THEN 32
-	else 0
-	END;
+		CASE @product
+			WHEN 'corn' THEN 56
+			WHEN 'soybean' THEN 60
+			WHEN 'barley' THEN 48
+			WHEN 'wheat' THEN 60
+			WHEN 'wheat grain' THEN 60
+			WHEN 'wheat straw' THEN 60
+			WHEN 'oat' THEN 32
+			else 0
+		END;
 RETURN @IDEAL_BUSHEL
 END;
 

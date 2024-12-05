@@ -7,10 +7,11 @@ library(purrr)
 library(tidyr)
 library(rlang)
 
-load("data/wip_20241122.Rdata")
+load("data/wip_20241205.Rdata")
 load("data/master_20240926.Rdata")
 load("data/core_20241104.Rdata")
 load("data/agcal_20241119.Rdata")
+load("data/arl_20241127.Rdata")
 
 c_ideal_percent_moisture = 15.5
 c_bushel = 56
@@ -74,7 +75,7 @@ get_harvest_id <- function(year, plot, section, product, cut = 1, site = "A") {
                              c("soybean")~"SB",
                              c("wheat straw")~"WS",
                              c("barley")~"BY",
-                             c("alfalfa", "dsA", "A1", "A2", "o/A", "ORG A1", "Ai", "Aii", "a", "o/a", "O/A")~"AF",
+                             c("alfalfa", "direct seeded alfalfa", "dsA", "A1", "A2", "o/A", "ORG A1", "Ai", "Aii", "a", "o/a", "O/A")~"AF",
                              c("red_clover")~"RC",
                              c("berseem_clover")~"BC",
                              c("oats")~"OT",

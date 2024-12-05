@@ -268,9 +268,6 @@ supp_2015_oat <- pre_2015_oat |> select(any_of(supp_harvesting_cols))
 # dry and percent moistures all match up
 
 
-  select(plot, cut, matches("^wet_weight_g|dry_weight_g|percent_moisture"))
-
-
 raw_2015_alf <- xl_snap$`2015_harvests_alf` |> 
   clean_names()
 

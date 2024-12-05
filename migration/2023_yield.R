@@ -270,6 +270,8 @@ pre_2023_bio_past <- raw_2023_past |>
                                       cut = cut),
     percent_moisture = moisture,
     biomass_grams = plot_wt_kg * 1000,
+    method = "exclosure",
+    component = "shoots",
     # bag_weight = bag_weight_g,
     # wet_weight_w_bag = bag_wet_weight_g,
     # dry_weight_w_bag = bag_dry_weight_g,

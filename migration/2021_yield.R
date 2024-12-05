@@ -243,7 +243,9 @@ pre_2021_past <- raw_2021_past |>
                                    section = "main",
                                    product = "pasture",
                                    cut = cut),
-    harvest_date = harvest_date,
+    # not relevant here, but its a biomassing
+    harvest_date = case_when(year(harvest_date) == 2019 ~ as.POSIXct("2021-06-21", tz = "UTC"),
+                             .default = harvest_date),
     plot = plot,
     crop = crop,
     harvest_area = plot_area_ft,
@@ -251,6 +253,7 @@ pre_2021_past <- raw_2021_past |>
     harvest_width = plot_width_ft,
     harvest_lbs = plot_wt_lbs,
     rrl_id = rrl_id,
+    num_bales = ml_num_bales,
     percent_moisture = moisture * 100,
     # loss_area = ml_harvest_loss_m2 * m2_to_ft2,
     comments = stitch_notes(notes, ml_notes)
@@ -261,21 +264,26 @@ pre_2021_bio_past <- raw_2021_past |>
   filter(notes != "square bale") |>  # one row removed, not considered biomassing
   mutate(
     plot = plot,
+    cut = cut,
     biomassing_id = get_biomassing_id(year = 2021,
                                       plot = plot,
                                       section = "main",
                                       coordinate = "2", # from yellow binder
                                       biomass = "pasture",
                                       cut = cut),
-    biomass_date = harvest_date,
+    # mislabelled date, case in which this moisture was actually using the 2019 moisture, but the date didn't get changed when copied? the yield should actually be 2021
+    biomass_date = case_when(year(harvest_date) == 2019 ~ as.POSIXct("2021-06-21", tz = "UTC"),
+                             .default = harvest_date),
     biomass = crop,
     biomass_area = plot_area_ft,
     biomass_length = plot_length_ft,
     biomass_width = plot_width_ft,
     biomass_grams = plot_wt_lbs / kg_to_lbs * 1000,
     rrl_id = rrl_id,
+    wet_weight_no_bag = grab_wet_wt_g,
+    dry_weight_no_bag = grab_dry_wt_g,
     percent_moisture = moisture * 100,
-    method = "quadrat",
+    method = "exclosure",
     component = "shoots",
     comments = stitch_notes(notes, ml_notes)
   )

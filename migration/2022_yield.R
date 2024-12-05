@@ -409,6 +409,8 @@ pre_2022_past <- raw_2022_past |>
     plot = plot,
     biomass_date = harvest_date,
     biomass = "pasture",
+    method = "exclosure",
+    component = "shoots",
     cut = cut,
     # 207 switched to 3 in 2023, and 4 in 2022 everything else same
     coordinate = if_else(plot == 207,

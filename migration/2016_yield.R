@@ -139,7 +139,7 @@ pre_2016_past <- raw_2016_past |> mutate(
   biomass_length = harvest_length,
   biomass_area = harvest_area,
   biomass = crop,
-  biomass_grams = harvest_lbs / kg_to_lbs / 1000,
+  biomass_grams = harvest_lbs / kg_to_lbs * 1000,
   biomass_date = harvest_date,
   method = "exclosure",
   component = "shoots",
@@ -163,10 +163,10 @@ pre_2016_past <- raw_2016_past |> mutate(
 
 # harvests
 tbl_2016_past <- pre_2016_past |>
-  filter(harvest_area >= 10000) |>
+  filter(harvest_area >= 10000 | is.na(harvest_area)) |> # include 302 harvest, but unknown amount and area
   select(any_of(harvesting_cols))
 supp_2016_past <- pre_2016_past |>
-  filter(harvest_area >= 10000) |>
+  filter(harvest_area >= 10000 | is.na(harvest_area)) |> # include 302 harvest, but unknown amount and area
   select(any_of(supp_harvesting_cols))
 
 tbl_2016_bio_past <- pre_2016_past |>

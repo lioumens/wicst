@@ -198,7 +198,7 @@ pre_2018_past <- raw_2018_past |> mutate(
                                     cut = cut,
                                     biomass = biomass,
                                     coordinate = "X"),
-  biomass_grams = plot_wt_kg / 1000,
+  biomass_grams = plot_wt_kg * 1000,
   method = "exclosure",
   component = "shoots",
   biomass_length = plot_length_ft, 
@@ -333,24 +333,24 @@ tbl_2018_harvests <- bind_rows(
   tbl_2018_sb,
   tbl_2018_wg,
   tbl_2018_ws,
-  tbl_2018_alf,
-  tbl_2018_past
+  tbl_2018_alf
 )
 supp_2018_harvests <- bind_rows(
   supp_2018_c,
   supp_2018_sb,
   supp_2018_wg,
   supp_2018_ws,
-  supp_2018_alf,
-  supp_2018_past
+  supp_2018_alf
 )
 
 # biomassings
 tbl_2018_bio <- bind_rows(
-  tbl_2018_under
+  tbl_2018_under,
+  tbl_2018_past
 )
 supp_2018_bio <- bind_rows(
   # supp_2018_under, # empty
+  supp_2018_past
 )
 
 # canopeo

@@ -60,7 +60,9 @@ pre_2020_sb <- raw_2020_sb |>
                                        "plot_section" == "section")) |>
   mutate(
   plot = plot,
-  section = plot_section,
+  section = case_match(plot_section,
+                       "NA"~"main", # the non EI plots were labeled NA
+                       .default = plot_section),
   subplot = str_c(plot, section),
   crop = crop,
   harvesting_id = get_harvest_id(year = 2020,
