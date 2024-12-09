@@ -198,7 +198,7 @@ pre_2020_alf <- raw_2020_alf |>
     harvest_length = plot_length_ft,
     harvest_width = plot_width_ft,
     harvest_area = plot_area,
-    percent_moisture = ml_percent_moisture,
+    percent_moisture = ml_percent_moisture * 100,
     comments = stitch_notes(notes, ml_notes)
   )
 
@@ -312,10 +312,11 @@ pre_2020_ei_cs <- raw_2020_ei_cs |> mutate(
   plot = plot,
   section = subplot,
   subplot = str_c(plot, subplot),
+  crop = "corn silage",
   harvesting_id = get_harvest_id(year = 2020,
                                  plot = plot,
                                  section = section,
-                                 product = "corn silage"),
+                                 product = crop),
   harvest_date = harvest_date,
   harvest_length = length_ft,
   harvest_width = width_ft,
@@ -323,15 +324,14 @@ pre_2020_ei_cs <- raw_2020_ei_cs |> mutate(
   harvest_lbs = harvest_lbs,
   bag_weight = bag_wt_g,
   wet_weight_w_bag = wet_bag_wt_g,
-  wet_weight_no_bag = wet_wt_bag_g
+  wet_weight_no_bag = wet_wt_bag_g,
+  # percent moisture is missing because dry weights are missing
 )
 
 tbl_2020_ei_cs <- pre_2020_ei_cs |> 
   select(any_of(ei_harvesting_cols))
 supp_2020_ei_cs <- pre_2020_ei_cs |> 
   select(any_of(supp_ei_harvesting_cols))
-
-
 
 
 # alfalfa oats bio --------------------------------------------------------

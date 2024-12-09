@@ -1,6 +1,31 @@
 #+TITLE: Wicst Data Organization
 #+TODO: TODO(t) REVISIT(r) REVIEW(v) | DONE(d) IGNORED(i)
 
+* General Todo
+** create custom logins for gregg and adam?
+** cut as grouped increment of sequence in table?
+- not sure this is a good idea, as for pastures, suppose 1 greenchop, then 3 biomassings. Is the exclosure cut numbered 1-4 or 1, 1, 2, 3?
+  - i think it should be 1123... its easier to maintain. It should also be nested within coordinate though.
+- You need to code this as a trigger, not in the table definition
+#+begin_src sql
+CREATE TRIGGER trg_GroupSequence
+ON Sales
+AFTER INSERT
+AS
+BEGIN
+    WITH cte AS (
+        SELECT
+            SaleID,
+            ROW_NUMBER() OVER (PARTITION BY Region ORDER BY SaleID) AS GroupSequence
+        FROM
+            Sales
+    )
+    UPDATE s
+    SET GroupSequence = cte.GroupSequence
+    FROM Sales s
+    INNER JOIN cte ON s.SaleID = cte.SaleID;
+END;
+#+end_src
 * Project Design
 The project can be split up into a three-tier architecture of Presentation/Logical/Physical. This is similar to business intelligence "[[https://docs.oracle.com/en/middleware/bi/analytics-server/datamodel-oas/semantic-models-architecture.html][semantic architecture]]" or web design's three-tier architecture. I like to think of it in analogy to statistical contexts as: Raw Data -> Modeling -> Results
 
@@ -366,6 +391,12 @@ CREATE TABLE IF NOT EXISTS `myagg`.`EIHarvests?` (
 )
 ENGINE = InnoDB
   #+end_quote
+** BioDetails -> Bio <- Yieldings
+- why doesn't this work
+- it's backward, because now you're trying to say yield_id is a foreign key from two places, and that same field can't point to two different places
+  - bio.id <- yield.id -> harvest.id (incorrect)
+  - bio.id -> yield.id <- harvest.id
+- I think you have to implement it as Bio -> Yieldings... can you implement it as a check?
 * Business Rules
 * Style Guide
 ** Table Names
@@ -400,6 +431,8 @@ Prod:
 WEIR_dbo  PASSWORD= @Dd8jGMSfyJ%P$
 WEIR_User PASSWORD= 0xt&j8nZ!WSDGh
 WEIR_Read PASSWORD= 8R*BCYGY$ms1a@
+** Custom Login
+gregg_read PASSWORD=
 ** Install
 *** ODBC drivers
 Need to install [[from ][odbc drivers]]
@@ -429,6 +462,9 @@ user=mydom\myuserid password='MyPassword1!';
 - "As a best practice, set the EnableScrollableCursors ODBC driver option to 3." [[https://documentation.sas.com/doc/en/pgmsascdc/9.4_3.5/acreldb/p02o7pdhah9nusn1dgqjgo66ibgs.htm][sas access mssql]]
 *** Firewall
 * Notes
+** Db Design Review
+- have to feed rye with manure, but originally did not need manure because just harvesting soybean. It's wasting manure because legumess fix nitrogen. But needed a LOT of rye biomass
+- why barley? roller crimp before soybean, but delays the process too long, but then you can't plant a winter wheat. Barley becomes the small grain so that we can get an earlier harvest, in order to have the cover crop. corn -> soybean -> small grain
 ** Fertilizings with Nolan
 Phosphorus and Potassium HAS to be preplant, about 1 week before planting date for Corn, soy, wheat
 ** dflkjdf

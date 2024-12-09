@@ -457,7 +457,10 @@ pre_2022_anpp_r_o <- raw_2022_bio_r_o |>
   pivot_longer(cols = rye_dm_g:residue_dm_g, names_to = "biomass", values_to = "biomass_grams") |> 
   separate_wider_delim(biomass, names = c("biomass", NA, NA), delim = "_") |>
   filter(!is.na(biomass_grams)) |>
-  mutate(biomassing_id = get_biomassing_id(year = 2022, plot = plot,
+  mutate(
+    method = "quadrat",
+    component = "shoots",
+    biomassing_id = get_biomassing_id(year = 2022, plot = plot,
                                            section = section, 
                                            coordinate = "X",
                                            biomass = biomass, cut = 1))
@@ -539,6 +542,8 @@ pre_2022_bio_alfalfa <- raw_2022_bio_alfalfa |>
     dry_weight_w_bag = with_bag,
     bag_weight = bag_weight,
     cut = num_cuts + 1,
+    method = "quadrat",
+    component = "shoots",
     biomassing_id = get_biomassing_id(year = 2022,
                                            plot = plot, section = "Main",
                                            biomass = biomass,
@@ -618,6 +623,8 @@ pre_2022_bio_o <- raw_2022_bio_o |>
       .default = notes
     ),
     cut = 3, # wg -> ws -> anpp
+    method = "quadrat",
+    component = "shoots",
     biomassing_id = get_biomassing_id(year = 2022, 
                                       plot = plot, 
                                       section = section, 

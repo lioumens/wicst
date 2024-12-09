@@ -491,7 +491,7 @@ pre_2021_bio_alf <- cut_2021_bio_alf |>
     dry_bag_weight = if_else(wet == 0, NA, dry_bag_g),
     percent_moisture = if_else(wet == 0,
                                NA,
-                               ((wet - wet_bag_weight) - (dry - dry_bag_weight)) / (wet - wet_bag_weight)),
+                               100 * ((wet - wet_bag_weight) - (dry - dry_bag_weight)) / (wet - wet_bag_weight)),
     method = "quadrat",
     component = "shoots",
     comments = if_else(!is.na(ml_notes) & biomass == "rye",
@@ -543,8 +543,9 @@ pre_2021_ei_bio_rye <- raw_2021_ei_bio_rye |>
     coordinate = coordinate,
     biomass = biomass,
     biomass_date = date,
+    cut = 2,
     biomassing_id = get_biomassing_id(year = 2021, plot = plot, section = section, coordinate = coordinate,
-                                      biomass = biomass, cut = 2),
+                                      biomass = biomass, cut = cut),
     method = "quadrat",
     component = "shoots",
     biomass_length = m_to_ft,
@@ -591,8 +592,9 @@ pre_2021_ei_bio_clover <- common_2021_ei_bio_clover |>
   mutate(
     biomass = biomass,
     biomass_date = date,
+    cut = 2, 
     biomassing_id = get_biomassing_id(year = 2021, plot = plot, section = section, coordinate = coordinate,
-                                      biomass = biomass, cut = 2),
+                                      biomass = biomass, cut = cut),
     method = "quadrat",
     component = "shoots",
     biomass_length = m_to_ft,
@@ -638,6 +640,10 @@ pre_2021_prairie <- raw_2021_prairie_lengths |>
                                    section = section,
                                    product = "prairie",
                                    cut = 1),
+    crop = case_match(plot,
+                      c(501, 504, 508)~"switchgrass",
+                      c(502, 506, 509)~"high diversity prairie",
+                      c(503, 505, 507)~"low diversity prairie"),
     harvest_date = as.POSIXct("2021-11-08", tz = "UTC"), #TODO: 11/8/2021 from agcal? verify
     fuel_plot = str_c(plot, section),
     harvest_length = length,
@@ -646,7 +652,7 @@ pre_2021_prairie <- raw_2021_prairie_lengths |>
     bag_weight = bag_weight_g,
     wet_weight_w_bag = bag_wet_weight_g,
     dry_weight_w_bag = bag_dry_weight_g,
-    percent_moisture = (wet_weight_w_bag - dry_weight_w_bag) / (wet_weight_w_bag - bag_weight),
+    percent_moisture = (wet_weight_w_bag - dry_weight_w_bag) / (wet_weight_w_bag - bag_weight) * 100,
     harvest_lbs = plot_weight_lbs
   )
 

@@ -1,5 +1,6 @@
 # 2018 yield
 
+if(!exists("xl_snap")) source("migration/yield_prep.R")
 
 # Corn --------------------------------------------------------------------
 
@@ -66,34 +67,39 @@ supp_2018_115_sb <- pre_2018_sb |>
 
 raw_2018_wg <- xl_snap$`2018_harvests_wheat` |> clean_names()
 
-pre_2018_wg <- raw_2018_wg |> mutate(
+pre_2018_wg <- raw_2018_wg |>
+  # single row from alfalfa sheet that is wheatlage to remove, and process separately
+  mutate(
   plot = plot,
   harvest_date = ml_date,
   section = "Main",
   harvest_lbs = harvest_weight_lbs,
   percent_moisture = percent_moisture,
-  crop = "wheat grain",
+  crop = if_else(notes == "WHEATLAGE", "wheatlage", NA, "wheat grain"),
   harvesting_id = get_harvest_id(year = 2018,
                                  plot = plot,
                                  section = section,
-                                 product = "wheat grain"),
+                                 product = crop),
   harvestingloss_id = get_harvestingloss_id(year = 2018,
                                             plot = plot,
                                             section = section,
-                                            product = "wheat grain"),
+                                            product = crop),
   harvest_width = plot_width_ft,
   harvest_length = plot_length_ft,
   harvest_area = whole_plot,
   loss_area = gaps_to_exclude,
+  loss_reason = if_else(notes == "WHEATLAGE", "weeds", NA, NA),
   bushel_lbs = as.numeric(na_if(test_wt_lbs_bu, "N/A")),
   num_bales = ml_num_bales,
-  comments = stitch_notes(notes, NA)
+  # comments = stitch_notes(notes, NA)
 )
 
-tbl_2018_wg <- pre_2018_wg |> select(any_of(harvesting_cols))
-supp_2018_wg <- pre_2018_wg |> select(any_of(supp_harvesting_cols))
+# take out the wheatlage one
+tbl_2018_wg <- pre_2018_wg |> filter(is.na(notes)) |> select(any_of(harvesting_cols))
+supp_2018_wg <- pre_2018_wg |> filter(is.na(notes)) |> select(any_of(supp_harvesting_cols))
 
-tbl_2018_loss_wg <- pre_2018_wg |> select(any_of(loss_cols))
+tbl_2018_loss_wg <- pre_2018_wg |> filter(is.na(notes)) |> select(any_of(loss_cols))
+# pre_2018_wg |> filter(is.na(notes)) |> select(any_of(supp_loss_cols)) # empty
 
 # Wheat straw -------------------------------------------------------------
 
@@ -149,12 +155,13 @@ pre_2018_alf <- raw_2018_alf |> mutate(
   cut = cut,
   harvest_lbs = plot_wt_tons * 2000,
   section = "Main",
-  crop = if_else(harvest_type == "Wheatlage", "wheat", "alfalfa"), # lumping wheatlage with wheat
+  crop = if_else(harvest_type == "Wheatlage", "wheatlage", "alfalfa"),
   percent_moisture = moisture_percent * 100,
   harvesting_id = get_harvest_id(year = 2018,
                                  plot = plot,
                                  section = section,
-                                 product = crop),
+                                 product = crop,
+                                 cut = cut),
   harvestingloss_id = get_harvestingloss_id(year = 2018,
                                              plot = plot,
                                              section = section,
@@ -168,17 +175,33 @@ pre_2018_alf <- raw_2018_alf |> mutate(
   num_bales = ml_num_bales
 )
 
-tbl_2018_alf <- pre_2018_alf |> select(any_of(harvesting_cols))
+# remove wheatlage from alfalfa and process separate
+tbl_2018_alf <- pre_2018_alf |> filter(crop != "wheatlage") |> select(any_of(harvesting_cols))
 
-supp_2018_alf <- pre_2018_alf |> select(any_of(supp_harvesting_cols))
+supp_2018_alf <- pre_2018_alf |> filter(crop != "wheatlage") |> select(any_of(supp_harvesting_cols))
 
-tbl_2018_loss_alf <- pre_2018_alf |>
+tbl_2018_loss_alf <- pre_2018_alf |> filter(crop != "wheatlage") |>
   drop_na(loss_area) |>
   select(any_of(loss_cols))
   
-supp_2018_loss_alf <- pre_2018_alf |>
+supp_2018_loss_alf <- pre_2018_alf |> filter(crop != "wheatlage") |>
   select(any_of(supp_loss_cols)) |> 
   drop_na(loss_reason)
+
+
+# Wheatlage ---------------------------------------------------------------
+
+
+tbl_2018_wl <- pre_2018_wg |> filter(crop == "wheatlage") |> select(any_of(harvesting_cols))
+supp_2018_wl <- pre_2018_wg |> filter(crop == "wheatlage") |> 
+  select(any_of(supp_harvesting_cols)) |> 
+  left_join(pre_2018_alf |>
+              filter(crop == "wheatlage") |>
+              select(harvesting_id, comments), by = "harvesting_id")
+
+tbl_2018_loss_wl <- pre_2018_wg |> filter(crop == "wheatlage") |> select(any_of(loss_cols))
+supp_2018_loss_wl <- pre_2018_wg |> filter(crop == "wheatlage") |> select(any_of(supp_loss_cols))
+
 
 
 # Pasture -----------------------------------------------------------------
@@ -259,7 +282,7 @@ pre_2018_under <- raw_2018_under |> mutate(
   percent_moisture = 0,
   coordinate = station,
   method = sample_event,
-  component = case_match(top_bottom,
+  component = case_match(ml_top_bottom,
                          "top"~"shoots",
                          "bottom"~"roots"),
   biomassing_id = get_biomassing_id(year = 2018,
@@ -271,6 +294,7 @@ pre_2018_under <- raw_2018_under |> mutate(
                                     component = component),
   biomass_area = sample_area_ft2,
   cut = 1, #TODO: cut is ill defined throughout
+  comments = ml_notes,
   # harvest_area = start_area,
   # loss_area = gaps,
   # wet_weight_no_bag = wet_grab_wt,
@@ -280,8 +304,13 @@ pre_2018_under <- raw_2018_under |> mutate(
 )
 
 tbl_2018_under <- pre_2018_under |> select(any_of(biomassing_cols))
-# no supp
-# supp_2018_under <- pre_2018_under |> select(any_of(supp_biomassing_cols))
+# only comments
+supp_2018_under <- pre_2018_under |> select(any_of(supp_biomassing_cols)) |> 
+  drop_na(comments)
+
+# biomassing something duplicated
+# tbl_2018_under |> filter(biomassing_id == "B2018_A308MMC_WD_1_UCRT")
+# pre_2018_under |> filter(plot == 308) |> count(station, top_bottom, sample_type) |> complete(station, top_bottom, sample_type)
 
 
 # corn silage -------------------------------------------------------------
@@ -333,14 +362,16 @@ tbl_2018_harvests <- bind_rows(
   tbl_2018_sb,
   tbl_2018_wg,
   tbl_2018_ws,
-  tbl_2018_alf
+  tbl_2018_alf,
+  tbl_2018_wl,
 )
 supp_2018_harvests <- bind_rows(
   supp_2018_c,
   supp_2018_sb,
   supp_2018_wg,
   supp_2018_ws,
-  supp_2018_alf
+  supp_2018_alf,
+  supp_2018_wl,
 )
 
 # biomassings
@@ -349,7 +380,7 @@ tbl_2018_bio <- bind_rows(
   tbl_2018_past
 )
 supp_2018_bio <- bind_rows(
-  # supp_2018_under, # empty
+  supp_2018_under, # empty
   supp_2018_past
 )
 
@@ -362,11 +393,13 @@ tbl_2018_loss <- bind_rows(
   tbl_2018_loss_wg,
   tbl_2018_loss_ws,
   tbl_2018_loss_alf,
+  tbl_2018_loss_wl
 )
 supp_2018_loss <- bind_rows(
   # supp_2018_loss_wg, # empty
   # supp_2018_loss_ws, # empty
   supp_2018_loss_alf,
+  supp_2018_loss_wl
 )
 tbl_2018_sysloss <- bind_rows()
 supp_2018_sysloss <- bind_rows()

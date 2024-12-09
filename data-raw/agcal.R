@@ -16,25 +16,29 @@ fertilizers_fp <- "~/OneDrive - UW-Madison/Database development/WICST agcal data
 
 # plantings
 raw_plantings <- read_xlsx(plantings_fp, sheet = "Sheet1", na = "-", 
-                           col_types = c("guess", "guess", "guess", "guess", "guess", "guess", "guess", "text"))
+                           col_types = c("guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "text"))
 
-pre_plantings <- raw_plantings |> 
-  mutate(comments = if_else(!is.na(`...8`),
-                                   glue("Nolan Majerowski: \"{note}\"", 
-                                        note = `...8`),
+pre_plantings <- raw_plantings |> clean_names() |> 
+  mutate(comments = if_else(!is.na(notes),
+                                   glue("Nolan Majerowski: \"{notes}\"", 
+                                        notes = notes),
                                    NA)) |> 
-  select(-`...8`)
+  select(-notes) |> 
+  rename(plot_id = plot)
 
 # limings
 raw_limings <- read_xlsx(limings_fp, sheet = "Sheet1", na = "-")
-pre_limings <- raw_limings
+pre_limings <- raw_limings |> rename(plot_id = plot)
 
 raw_fertilizings <- read_xlsx(fertilizers_fp, sheet = "Sheet1", na = "-")
-pre_fertilizings <- raw_fertilizings |> mutate(comments = if_else(!is.na(Notes),
+pre_fertilizings <- raw_fertilizings |> clean_names() |> 
+  mutate(comments = if_else(!is.na(notes),
                                         glue("Nolan Majerowski: \"{note}\"",
-                                             note = Notes),
+                                             note = notes),
                                         NA)) |>
-  select(-Notes)
+  select(-notes) |>
+  rename(plot_id = plot,
+         fertilizing_date = date)
 
 # all_sheets <- excel_sheets(agcal)
 # xl_agcal <- all_sheets |> 
@@ -48,9 +52,9 @@ xl_agcal <- list(
 )
 
 xl_agcal_raw <- list(
+  plantings = raw_plantings,
   limings = raw_limings,
-  fertilizings = raw_fertilizings,
-  plantings = raw_plantings
+  fertilizings = raw_fertilizings
 )
 
 

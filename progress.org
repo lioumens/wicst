@@ -631,6 +631,7 @@
 - nothing tricky
 - widths are probably a little different
 ** REVIEW 2018_undercutting
+- duplicated bottom, 308, weeds, bottom. CHanged one to top
 ** REVIEW 2018_harvests_alfalfa
 - some direct losses recorded
 ** DONE 2018_harvests_pasture
@@ -720,6 +721,11 @@ used cuts 2-4 from here, see [[*2015_harvests_forage][2015_harvests_forage]] for
 ** tbl_2023_biomassing
 - [ ] moistures should be zero?
 - [ ] how to think about "cut" for pastures vs anpp... it's just left in the field
+* SQL Scripts
+** Constants
+** Tables - definitions
+** FK - foreign keys left as separate
+** Views
 * QA Process
 1. Clean excel sheets directly, fill in unknowns with Nolan
 2. 

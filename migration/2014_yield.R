@@ -30,7 +30,6 @@ supp_2014_past <- pre_2014_past |> select(any_of(supp_harvesting_cols))
 # Bio Pasture -------------------------------------------------------------
 
 raw_2014_bio_past <- xl_snap$`2014_moistures_pasture` |> clean_names()
-raw_2014_bio_past |> names()
 
 pre_2014_bio_past <- raw_2014_bio_past |> 
   filter(!str_detect(description,"entire")) |>
@@ -136,8 +135,6 @@ supp_arl_2014_bio <- pre_arl_2014_bio |> select(any_of(supp_biomassing_cols))
 xtb <- tbl_2014_bio_past |> select(biomassing_id, biomass_date, percent_moisture, biomass_grams)
 tbl_arl_2014_bio |> left_join(xtb, by = "biomassing_id") |> 
   View()
-
-
 
 
 

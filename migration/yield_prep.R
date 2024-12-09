@@ -74,11 +74,13 @@ get_harvest_id <- function(year, plot, section, product, cut = 1, site = "A") {
                              c("wheat", "wheat grain", "w/cl")~"WG",
                              c("soybean")~"SB",
                              c("wheat straw")~"WS",
+                             c("wheatlage")~"WL",
                              c("barley")~"BY",
+                             c("barley straw")~"BS",
                              c("alfalfa", "direct seeded alfalfa", "dsA", "A1", "A2", "o/A", "ORG A1", "Ai", "Aii", "a", "o/a", "O/A")~"AF",
                              c("red_clover")~"RC",
                              c("berseem_clover")~"BC",
-                             c("oats")~"OT",
+                             c("oats", "oat grain")~"OT",
                              c("oat straw")~"OS",
                              c("pasture", "P")~"PT",
                              c("prairie")~"PR",
@@ -126,6 +128,7 @@ get_biomassing_id <- function(year, plot, section, coordinate, biomass,
                              c("residue")~"RS",
                              c("alfalfa", "dsA", "A1", "A2", "o/A", "ORG A1")~"AF",
                              c("red_clover", "red clover")~"RC",
+                             c("wheatlage")~"WL",
                              c("clover")~"CV",
                              c("berseem_clover", "berseem clover", "bc")~"BC",
                              c("oats", "oat")~"OT",
@@ -259,6 +262,7 @@ get_harvestingloss_id <- function(year, plot, section,
                              c("soybean")~"SB",
                              c("wheat straw", "wheat_straw")~"WS",
                              c("wheat grain")~"WG",
+                             c("wheatlage")~"WL",
                              c("barley")~"BY",
                              c("alfalfa", "dsA", "A1", "A2", "o/A", "ORG A1")~"AF",
                              c("red_clover")~"RC",
@@ -293,11 +297,12 @@ stitch_notes <- function(notes, ml_notes) {
 
 get_yield <- function(dat, product = NULL) {
   corn_grains <- c("corn")
-  wheat_grains <- c("wheat", "wheat_grain")
+  wheat_grains <- c("wheat", "wheat_grain", "wheat grain")
   wheat_straws <- c("wheat_straw", "wheat straw")
   soybeans <- c("soybean") 
   barleys <- c("barley")
   oats <- c("oat", "oats", "oat grain")
+  oat_straws <- c("oat straw")
   
   cols_needed <- c("percent_moisture", "harvest_lbs", "harvest_area")
   missing_cols <- cols_needed[!(cols_needed %in% names(dat))]
@@ -417,9 +422,10 @@ ei_sysloss_cols <- sysloss_cols
 supp_ei_sysloss_cols <- supp_sysloss_cols
 
 
-biomassing_cols <- c("biomassing_id","biomass_date","biomass_area", # ft^2
-                     "plot", "coordinate","cut", "percent_moisture",
-                     "biomass", "biomass_grams", "method", "component")
+biomassing_cols <- c("biomassing_id","biomass_date", "plot", "coordinate",
+                     "method", "biomass", "component",
+                     "cut", "biomass_area", # ft^2
+                     "percent_moisture", "biomass_grams")
 
 ei_biomassing_cols <- str_replace(biomassing_cols, "plot", "subplot")
 

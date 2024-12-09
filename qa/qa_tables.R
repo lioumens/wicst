@@ -44,7 +44,6 @@ xl_agcal$plantings |> group_by(year(planting_date), plot) |>
 
 # with rotation info
 
-xl_agcal$plantings 
 xl_agcal$plantings |> count(year(planting_date), plot) |>
   mutate(plot = factor(plot, levels = c(plots_by_treatment, "A501", "A504", "A508"))) |> 
   
@@ -133,8 +132,122 @@ pasture_yields |> filter(year == 2019, plot == "A112") |>
 pasture_yields |> filter(year == 2021,plot == "A112") |> 
   get_biomass("past") |> View()
 
-supp_harvests |> filter(harvesting_id == "H2019_A112MMX_PT_1")
+# duplicate harvesting ids
+tbl_harvests |> count(harvesting_id) |> arrange(desc(n))
+# unique!
+supp_harvests |> count(harvesting_id) |> arrange(desc(n))
+# unique!
+tbl_bio |> count(biomassing_id) |> arrange(desc(n))
+supp_bio |>  count(biomassing_id) |> arrange(desc(n))
+# unique!
 
+supp_loss |>  count(harvestingloss_id) |> arrange(desc(n))
+tbl_sysloss |> count(systematicharvestingloss_id) # unique!
+supp_sysloss |> count(systematicharvestingloss_id) # unique!
+tbl_loss |> count(harvestingloss_id) |> arrange(desc(n))
+
+
+tbl_can |> count(canopeo_id) |> arrange(desc(n))
+supp_can |> count(canopeo_id) |> arrange(desc(n))
+
+tbl_ei_harvests |> count(harvesting_id) |> arrange(desc(n))
+supp_ei_harvests |> count(harvesting_id) |> arrange(desc(n))
+tbl_ei_bio |> count(biomassing_id) |> arrange(desc(n))
+
+tbl_ei_sysloss |> count(systematicharvestingloss_id) # unique!
+tbl_prairie |> count(harvesting_id) |> arrange(desc(n))
+
+# Yield Comparison --------------------------------------------------------
+
+master_yield_for_qa <- master_yield |> filter(between(year, 2015, 2023),
+                                              !is.na(bu_t_ac) & bu_t_ac != 0) |> 
+  mutate(plot = factor(str_c("A", plot), levels = plots_by_treatment),
+         cut = as.numeric(cut),
+         product = case_match(crop,
+                           "fc"~"filler corn",
+                           "c"~"corn",
+                           "sb"~"soybean",
+                           c("a0", "a1", "a2", "dsa")~"alfalfa",
+                           c("of")~"oatlage",
+                           c("os")~"oat straw",
+                           c("og")~"oat grain",
+                           c("past")~"pasture",
+                           c("rc")~"red clover", 
+                           c("wg")~"wheat grain",
+                           c("wheatlage")~"wheatlage",
+                           c("ws")~"wheat straw",
+                           c("c silage", "c_silage")~"corn silage",
+                           .default = crop),
+         mst_dm = case_when(product %in% c("oatlage", "wheat straw", "wheatlage", "alfalfa", "oat straw", "pasture") ~ (100 - as.numeric(mst_dm)),
+                            .default = as.numeric(mst_dm))) |> 
+  arrange(year, plot, cut) |> 
+  select(-rfv, -rfq)
+
+
+# not robust the way it's implemented now, but still valid
+db_adj_harvestings <- db_harvestings |> left_join(
+  db_directlosses |>
+    summarize(direct_loss = sum(loss_area), .by = harvesting_id),
+  by = "harvesting_id"
+) |> left_join(
+  db_systematiclosses |>
+    summarize(sys_loss = sum(loss_fraction), .by = c(harvesting_id, loss_category)),
+  by = "harvesting_id"
+) |> mutate(harvest_area = (harvest_area - coalesce(direct_loss, 0)) * (1 - coalesce(sys_loss, 0))) |> 
+  get_yield(product)
+
+harvest_for_qa <- bind_rows(db_adj_harvestings,
+                            db_biomassings |> get_biomass(),
+                            db_silage_harvestings |> get_yield()) |> 
+  mutate(
+    id =  coalesce(harvesting_id, biomassing_id),
+    product = coalesce(product, biomass),
+    year = coalesce(year(harvest_date), year(biomass_date)),
+    plot_id = coalesce(factor(plot_id, levels = plots_by_treatment), str_c("A", str_sub(sideplot, 1, 3)))) |> 
+  group_by(year, plot_id) |> 
+  mutate(cut = if_else(product == "corn silage", 1, coalesce(cut, row_number()))) |>
+  select(id, year, plot_id, product, cut, percent_moisture, harvest_tons_dm_per_acre, corrected_bu_per_acre,
+         biomass_tons_dm_per_acre, harvest_lbs, biomass_grams)
+
+# harvest_for_qa |> filter(year == 2017, product == "corn silage")
+# db_harvestings |> filter( product == "oatlage")
+# harvest_for_qa |> filter(product == "corn silage")
+db_biomassings |> filter(year(biomass_date) == 2017, plot_id == "A311") |> get_biomass() |> View()
+
+yield_compare <- master_yield_for_qa |> full_join(harvest_for_qa,
+                                 by = join_by("year" == "year", "plot" == "plot_id",
+                                              "cut" == "cut", "product" == "product")) |> 
+  select(id, site, year, block, system, phase, cycle, plot, cut, crop, product, mst_dm, percent_moisture,
+         bu_t_ac, everything()) |> 
+  mutate(plot = factor(plot, levels = plots_by_treatment)) |> 
+  arrange(year, plot, product, cut) |>
+  mutate(
+    # for excel coloring
+    bu_t_ac = as.numeric(bu_t_ac),
+    delta = coalesce(if_else(product != "wheat straw", abs(corrected_bu_per_acre - bu_t_ac), NA),
+                     abs(harvest_tons_dm_per_acre - bu_t_ac),
+                     abs(biomass_tons_dm_per_acre - bu_t_ac), 
+                     Inf),
+    delta = case_when(delta < .001 ~ NA,
+                      .default = delta),
+    relative_delta = coalesce(if_else(product != "wheat straw", abs(corrected_bu_per_acre - bu_t_ac) / bu_t_ac, NA),
+                              abs(harvest_tons_dm_per_acre - bu_t_ac) / (bu_t_ac),
+                              abs(biomass_tons_dm_per_acre - bu_t_ac) / (bu_t_ac), 
+                              Inf),
+    relative_delta = case_when(relative_delta < .01 ~ NA,
+                               .default = relative_delta)
+  ) 
+
+# temp for  
+yield_compare |> 
+  filter(relative_delta > , relative_delta != Inf) |> View()
+  pull(relative_delta) |>
+  na_if(Inf) |> 
+  quantile(probs = seq(.1, .9, .1), na.rm = TRUE)
+  
+db_harvestings |> count(product)
+
+harvest_for_qa |> filter(year == 2017, plot_id == "A311")
 
 
 
