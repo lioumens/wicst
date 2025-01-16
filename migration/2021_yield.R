@@ -1,6 +1,7 @@
 
 source("migration/yield_prep.R")
 
+
 # corn --------------------------------------------------------------------
 
 raw_2021_c <- xl_snap$`2021_harvests_corn` |> clean_names()
@@ -18,25 +19,25 @@ pre_2021_c <- raw_2021_c |>
     harvestingloss_id  = get_harvestingloss_id(year = 2021, plot = plot, section = section,
                                                product = "corn", cut = 1, loss_num = 1),
     systematicharvestingloss_id = harvestingloss_id,
-  harvest_area = area,
-  harvest_lbs = harvest_lbs,
-  percent_moisture = percent_moisture,
-  # losses are treated as systematic in original sheet calculations
-  # loss_area = ml_harvest_loss_m2 * m2_to_ft2, # ft2
-  assessment_total_area = case_when(plot %in% ei_plots & section == "Main"~12600,
-                                    !(plot %in% ei_plots) & section == "Main"~30600,
-                                    .default = 30 * 50),
-  assessment_loss_area = ml_harvest_loss_m2 * m2_to_ft2,
-  loss_fraction = assessment_loss_area / assessment_total_area,
-  loss_category = case_when(
-    !is.na(ml_harvest_loss_m2) ~ "weeds",
-    .default = NA
-  ),
-  harvest_length = length_ft,
-  harvest_width = width_ft,
-  comments = if_else(is.na(loss_fraction), stitch_notes(notes, ml_notes), NA),
-  loss_comments = if_else(is.na(loss_fraction), NA, stitch_notes(notes, ml_notes))
-)
+    harvest_area = area,
+    harvest_lbs = harvest_lbs,
+    percent_moisture = percent_moisture,
+    # losses are treated as systematic in original sheet calculations
+    # loss_area = ml_harvest_loss_m2 * m2_to_ft2, # ft2
+    assessment_total_area = case_when(plot %in% ei_plots & section == "Main"~12600,
+                                      !(plot %in% ei_plots) & section == "Main"~30600,
+                                      .default = 30 * 50),
+    assessment_loss_area = ml_harvest_loss_m2 * m2_to_ft2,
+    loss_fraction = assessment_loss_area / assessment_total_area,
+    loss_category = case_when(
+      !is.na(ml_harvest_loss_m2) ~ "weeds",
+      .default = NA
+    ),
+    harvest_length = length_ft,
+    harvest_width = width_ft,
+    comments = if_else(is.na(loss_fraction), stitch_notes(notes, ml_notes), NA),
+    loss_comments = if_else(is.na(loss_fraction), NA, stitch_notes(notes, ml_notes))
+  )
 
 # harvest
 tbl_2021_c <- pre_2021_c |> 
@@ -67,8 +68,8 @@ supp_2021_ei_c <- pre_2021_c |>
 # no ei direct loss
 # the only ei loss was corn silage, not in this sheet
 # tbl_2021_ei_sysloss_c <- pre_2021_c |>
-  # filter(section != "Main", !is.na(loss_fraction)) |>
-  # select(any_of(ei_sysloss_cols))
+# filter(section != "Main", !is.na(loss_fraction)) |>
+# select(any_of(ei_sysloss_cols))
 
 # soybean -----------------------------------------------------------------
 
@@ -202,13 +203,17 @@ pre_2021_alf <- raw_2021_alf |>
   mutate(
     plot = plot,
     section = "Main",
+    cut = cut,
+    # call oatlage on first cut, and "alfalfa otherwise"
+    crop = case_when(crop == "o/A" & cut == 1 ~ "oatlage",
+                     crop == "o/A" & cut == 2 ~ "alfalfa",
+                     .default = crop),
     harvesting_id = get_harvest_id(year = 2021,
                                    plot = plot,
                                    section = section,
-                                   product = "alfalfa",
+                                   product = crop,
                                    cut = cut),
     harvest_date = harvest_date,
-    crop = crop,
     harvest_area = plot_area,
     harvest_length = plot_length_ft,
     harvest_width = plot_width_ft,
@@ -244,7 +249,7 @@ pre_2021_past <- raw_2021_past |>
                                    product = "pasture",
                                    cut = cut),
     # not relevant here, but its a biomassing
-    harvest_date = case_when(year(harvest_date) == 2019 ~ as.POSIXct("2021-06-21", tz = "UTC"),
+    harvest_date = case_when(lubridate::year(harvest_date) == 2019 ~ as.POSIXct("2021-06-21", tz = "UTC"),
                              .default = harvest_date),
     plot = plot,
     crop = crop,
@@ -272,7 +277,7 @@ pre_2021_bio_past <- raw_2021_past |>
                                       biomass = "pasture",
                                       cut = cut),
     # mislabelled date, case in which this moisture was actually using the 2019 moisture, but the date didn't get changed when copied? the yield should actually be 2021
-    biomass_date = case_when(year(harvest_date) == 2019 ~ as.POSIXct("2021-06-21", tz = "UTC"),
+    biomass_date = case_when(lubridate::year(harvest_date) == 2019 ~ as.POSIXct("2021-06-21", tz = "UTC"),
                              .default = harvest_date),
     biomass = crop,
     biomass_area = plot_area_ft,
@@ -352,8 +357,8 @@ pre_2021_cs <- raw_2021_cs |>
     # 109SW rounded incorrectly
     ml_notes = case_when(subplot == "109SW" ~ "Michael Liou: \"harvest acreage crudely rounded resulting in final yield change, changed during db migration .02 -> 0.01721763 (calculated)\"",
                          plot_2 == "Main" ~ glue('Michael Liou: "conflicting data, using handwritten harvest lbs {orig_values}->{new_values} from pdf in db, confirmed and corroborated with Gregg and Mark, plot width also assumed 5\'. Using original moisture values."',
-                                               orig_values = plot_wt_lbs,
-                                               new_values = harvest_lbs),
+                                                 orig_values = plot_wt_lbs,
+                                                 new_values = harvest_lbs),
                          .default = ml_notes),
     comments = stitch_notes(NA, ml_notes), # the general note is incorrect, move to loss comments and modify to be correct
     sysloss_comments = if_else(!is.na(notes), "Lexi Schank: \"corn loss by weed\"", NA)
@@ -384,7 +389,7 @@ supp_2021_ei_sysloss_cs <- pre_2021_cs |>
   drop_na(loss_fraction) |> 
   filter(!(section %in% c("East 15'", "West 15'"))) |> 
   select(any_of(supp_ei_sysloss_cols))
-  
+
 dupe_2021_ei_cs <- tbl_2021_ei_cs |> left_join(tbl_2021_ei_sysloss_cs, by = "harvesting_id") |> 
   mutate(harvest_area = harvest_area * (1 - coalesce(loss_fraction, 0))) |> 
   get_yield("corn silage")
@@ -405,7 +410,8 @@ pre_2021_ws <- raw_2021_ws |>
     harvesting_id = get_harvest_id(year = 2021,
                                    plot = plot,
                                    section = section,
-                                   product = "wheat straw"),
+                                   product = "wheat straw",
+                                   cut = 2),
     harvest_date = date,
     crop = "wheat straw",
     harvest_area = area_sf,
@@ -419,7 +425,8 @@ pre_2021_ws <- raw_2021_ws |>
     wet_weight_no_bag = ml_wet_grab_no_bag_g,
     dry_weight_w_bag = ml_dry_grab_bag_g,
     dry_weight_no_bag = ml_dry_grab_no_bag_g,
-    percent_moisture = (ml_wet_grab_no_bag_g - (ml_dry_grab_bag_g - ml_wet_bag)) / ml_wet_grab_no_bag_g * 100, # recalculate with wet bag weight, not the dried bag
+    grab_bag_moisture = (ml_wet_grab_no_bag_g - (ml_dry_grab_bag_g - ml_wet_bag)) / ml_wet_grab_no_bag_g * 100, # recalculate with wet bag weight, not the dried bag
+    percent_moisture = coalesce(ml_rrl_mst, grab_bag_moisture),
     num_bales = ml_num_bales,
     # loss_area = ml_harvest_loss_m2 * m2_to_ft2,
     comments = stitch_notes(NA, ml_notes)
@@ -432,7 +439,6 @@ tbl_2021_ws <-  pre_2021_ws |>
 supp_2021_ws <- pre_2021_ws |> 
   filter(section == "main") |> 
   select(any_of(supp_harvesting_cols))
-
 
 tbl_2021_ei_ws <-  pre_2021_ws |> 
   filter(section != "main") |> 

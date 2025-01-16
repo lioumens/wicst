@@ -115,11 +115,13 @@ pre_2018_ws <- raw_2018_ws |> mutate(
   harvesting_id = get_harvest_id(year = 2018,
                                  plot = plot,
                                  section = section,
-                                 product = "wheat straw"),
+                                 product = "wheat straw",
+                                 cut = 2),
   harvestingloss_id = get_harvestingloss_id(year = 2018,
                                             plot = plot,
                                             section = section,
-                                            product = "wheat straw"),
+                                            product = "wheat straw",
+                                            cut = 2),
   harvest_width = 510,
   harvest_length = 60,
   harvest_area = start_area, # harvest area
@@ -155,7 +157,9 @@ pre_2018_alf <- raw_2018_alf |> mutate(
   cut = cut,
   harvest_lbs = plot_wt_tons * 2000,
   section = "Main",
-  crop = if_else(harvest_type == "Wheatlage", "wheatlage", "alfalfa"),
+  crop = case_when(harvest_type == "Wheatlage"~"wheatlage",
+                   plot %in% c(103, 213, 314, 410) & cut == 1 ~ "oatlage",
+                   .default = "alfalfa"),
   percent_moisture = moisture_percent * 100,
   harvesting_id = get_harvest_id(year = 2018,
                                  plot = plot,
@@ -191,6 +195,7 @@ supp_2018_loss_alf <- pre_2018_alf |> filter(crop != "wheatlage") |>
 
 # Wheatlage ---------------------------------------------------------------
 
+# should be cut 1 in plot 307 because no previous cuts, just mislabelled in master
 
 tbl_2018_wl <- pre_2018_wg |> filter(crop == "wheatlage") |> select(any_of(harvesting_cols))
 supp_2018_wl <- pre_2018_wg |> filter(crop == "wheatlage") |> 

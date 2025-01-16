@@ -40,7 +40,7 @@ BEGIN
 			WHEN 'barley' THEN 14.5
 			WHEN 'wheat' THEN 13.5 -- combine into wheat grain
 			WHEN 'wheat grain' THEN 13.5
-			WHEN 'wheat straw' THEN 13
+			WHEN 'wheat straw' THEN 13 -- should be 100 dm
 			WHEN 'oat grain' THEN 14
 			else NULL
 		END
@@ -68,7 +68,7 @@ BEGIN
 		WHEN 'barley' THEN 48
 		WHEN 'wheat' THEN 60
 		WHEN 'wheat grain' THEN 60
-		WHEN 'wheat straw' THEN 60
+		WHEN 'wheat straw' THEN 60 -- seems error
 		WHEN 'oat grain' THEN 32
 		else NULL
 	END;

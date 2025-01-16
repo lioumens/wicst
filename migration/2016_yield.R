@@ -73,7 +73,8 @@ pre_2016_ws <- raw_2016_ws |> mutate(
   harvesting_id = get_harvest_id(year = 2016,
                                  plot = plot,
                                  section = section,
-                                 product = "wheat straw"),
+                                 product = "wheat straw",
+                                 cut = 2),
   harvest_lbs = total_bale_weight_lbs,
   harvest_length = plot_length,
   harvest_width = plot_width,
@@ -97,7 +98,12 @@ pre_2016_alf <- raw_2016_alf |> mutate(
   plot = plot_number,
   harvest_date = date,
   section = "Main",
-  crop = crop,
+  # QA: in master, 2016 cut is labelled as oatlage for these 4 plots,
+  crop = case_when(plot == 114 & cut == 1 ~ "oatlage",
+                   plot == 211 & cut == 1 ~ "oatlage",
+                   plot == 312 & cut == 1 ~ "oatlage",
+                   plot == 403 & cut == 1 ~ "oatlage",
+                   .default = "alfalfa"),
   cut = cut,
   harvest_width = 60,
   harvest_length = 510,
@@ -108,7 +114,7 @@ pre_2016_alf <- raw_2016_alf |> mutate(
                                  plot = plot,
                                  section = section,
                                  cut = cut,
-                                 product = "alfalfa"),
+                                 product = crop),
   comments = stitch_notes(NA, ml_notes)
 )
 

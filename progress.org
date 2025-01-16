@@ -657,6 +657,8 @@
 ** DONE 2016_harvests_wheat
 - "2 separate sections due to removal of canada thistle (312x27.25 and 119x27.5)" should be loss?
 - from agcal calendar
+** DONE 2016_harvests_alfalfa
+- QA: in master, 2016 cut is labelled as oatlage for these 4 plots, manally corrected
 ** TODO 2016_harvests_straw
 ** 2016_harvests_pasture
 - two harvests, rest anpp
@@ -697,7 +699,6 @@ used cuts 2-4 from here, see [[*2015_harvests_forage][2015_harvests_forage]] for
 - has supplemental data from forage, mixes all the pasture, and alfalfa and bales
 ** DONE 2015_harvests_pasture
 - copied data in, joined with forage data sheets because the cuts also appear there.
-** 2015_harvests_
 ** REVIEW [#B] 2015_harvests_corn
 - [ ] confirm what the east micro plots are doing
 ** DONE 2015_harvests_soybean
@@ -712,11 +713,91 @@ used cuts 2-4 from here, see [[*2015_harvests_forage][2015_harvests_forage]] for
 - [ ] biomass length/width/area
 - supp info?
 ** REVIEW [#B] 2014_harvests_pasture
-- [ ] should moisture be dropped? .6 was used in master, .18 was found in moistures sheet
-  - currently left in
-** REVIEW 2014_moistures_pasture
+- [X] should moisture be dropped? .6 was used in master, .18 was found in moistures sheet
+  - dropped
+** DONE 2014_moistures_pasture
+- added bag information to alfalfa and pastures, combined with arl yields data
+** DONE 2013_harvests_corn
+- used the losses here, there 4 plots with losses here vs the 3 plots in ARL comments. The comments also
+** DONE 2013_harvests_wheat
+- nothing too weird, just pretty large area lost in plot 407 due to weeds
+** DONE 2013_harvests_straw
+** DONE 2013_harvests_pasture
+- There's a missing plot number here, and some conflicting data files. I think =WICST CS6 Hay Exclosure Harvests 2013= gives the best picture of what happenend, on the =Full plot= sheet.
+- Originally I was told to split just the 5620 (wagon 1), but i think itmakes more sense to do all three wagons, as the numbers look more reasonable
+- It looks like they chopped everything from all 4 plots, and measured everything into 3 wagons. Master only shows the first measurement from wagon 1. Then I think they took only 1 grab sample from plot 405, and the row got mislabeled in the sheet. That's why they calculate the average the way they do.
+** REVIEW [#A] 2013_anpp_clover
+- unfortunatlely not confident enough in these to use at all,
+** REVIEW [#A] 2013_undercutting_wheat
+- unfortunatlely not confident enough in these to use at all,
+** REVIEW 2013_anpp_alfalfa
+- unfortunatlely not confident enough in these to use at all,
+** REVIEW 2013_harvests_corn_micro
+- not sure what this experiement is atm
 * ARL
-- left off on 2013, comments/loss not explicitly coded
+** 2010
+- pasture harvests are duplicated with excosures
+- [ ] harvest dates for hay exclosures are missing
+- [ ] plot 302 doesn't have a harvest date on the ag cal (pasture), but it has lbs. while 112 does have a line on the agcal but missing lbs? are these real?
+** REVIEW [#A] 2009
+- [ ] extra corn for plot 409? what is this value? do i include?
+- [ ] sattelite experiments are ignored in this sheet too
+** REVIEW 2006
+- [ ] missing pasture information, only have yields and no dates
+** DONE 2004
+- pastures have both exclosures and harvests. using 50 for areas because comment says so. harvest has a date attached.
+** DONE 2003
+- pasture dates from cs6 hay yields file
+- 12 losses implied
+** TODO 2002
+- pasture harvest dates pulled from [[https://wicst.webhosting.cals.wisc.edu/wp-content/uploads/sites/107/2017/07/WICST_9th_report.pdf][technical report]], table 2, pg 42 of pdf
+- one of the plots in pasture has moisture but no lbs harvest. copied 405 plot for 0 harvests.
+** 2001
+- pasture harvest dates pulled from [[https://wicst.webhosting.cals.wisc.edu/wp-content/uploads/sites/107/2017/07/WICST_9th_report.pdf][technical report]], table 2, pg 42 of pdf
+** 2000
+- the two pasture cuts are expalined in cs6 hay yields, two plots wer different time
+- just put 0s for non pastures, and copied over date
+- pretty easy other wise.
+** 1999
+- [ ] pasture numbers are all missing, i think it's just b/c no harvests. same table 2 technical report claims no harvests.
+** 1998
+- [X] 103/213/314/410 have 4th cut date on agcal but no data in arlingington sheet
+  - cut off last one, they look like first three
+** 1997
+- [X] wicst repot says 4 cuts, ag cal has only 3 for treatments 8 and 9
+- [ ] technical report 9 says there was a harvest on plot 405, missing from hay cuts file and from arlington yields.
+** 1996
+- [ ] pastures should have a biomassing because master has an estimate of TMDM/a. there's no data in arl for it, but somehow
+#+begin_quote
+Gregg Sanford: Based on quadrat samples (Forage Availability)*0.75 to account for FA over estimation (Posner & Hedtcke). See cs6 yld summary 1-5-12.xlsx for details.
+#+end_quote
+
+** 1995
+- plot 409 has all 0s? cant' find details of this in any of the technical reports. There's a note that says partial of plot harvested and the rest grazed. tech report 9 has some details of why these numbers are so low.
+- straw was missing dates
+- pastures have yields
+** 1994
+- pastures are true cuttings, confirmed with [[https://wicst.webhosting.cals.wisc.edu/wp-content/uploads/sites/107/2017/07/WICST_4th_report.pdf][tech report]] on page 137
+- straw was missing dates
+** 1993
+- pastures truly 0 for 207?
+- straw missing dates imputed
+** 1992
+- pastures are labeled as alfalfa, is this correct? should just label pasture, and note no grazing...
+  - pg 31 of tech report
+    #+begin_quote
+During 1990 the oats were harvested as oatlage at both sites.
+During 1990 and 1991, rotation 6 was cut as a hay field, not grazed.
+    #+end_quote
+** REVIEW [#A] 1991
+- the pasture plots here are labeled wiht alfalfa? what's the deal here
+- [ ] can't find harvest dates for corn, fc was 10/3 though
+- [ ] plot 114 was labeled as corn, but all else in t13 was fc.
+- [ ] tech report says pg 31 it was harvested as hay field not grazed, pasture plots. 112 and 302 labeled pasture, 207 ad 405 labelled as alfalfa...?
+** REVIEW 1990
+- [ ] pastures haev an extra date in agcal, no yield though
+- USE 20 x 7', and fill moisture
+- keep 0s if at least 1 pasture cut, but if all missing, just delete all rows.
 * Tables
 ** tbl_2023_biomassing
 - [ ] moistures should be zero?

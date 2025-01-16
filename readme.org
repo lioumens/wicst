@@ -356,6 +356,8 @@ TBD: do we really need wet -> dry -> bag?
 **** loss_location?
 - free text for describing where?
 **** comments
+** SystematicLoss
+- these apply to the HARVEST AREA. i.e. .2 loss fraction means that the area was reduced by 20%. this is important distinction because in the yield calculation the adjustment is in the denominator. For example, 20% systematic loss with 20000 sqft and 1000 dry weight yield means 1000 / (20000 * .8). This is different than saying the yield increased by 20% b/c 1000 / (20000 * .8) != 1000 * 1.2 / 20000.
 ** SystematicHarvestLossDetails
 *Nah, still no. We can make this a game time decision if we just track assessment area and damage.*
 - a reason for SPLITTING these losses, is that we MUST make the assumption by default that every loss in harvest losses is mutually exclusive.
@@ -426,7 +428,6 @@ WEIR_dbo  PASSWORD= Ty&xJUmh!X*AYp
 WEIR_User PASSWORD= gIP#mRoA2t9BAz
 WEIR_Read PASSWORD= 8q4r^W@1^RUJRD
 
-
 Prod:
 WEIR_dbo  PASSWORD= @Dd8jGMSfyJ%P$
 WEIR_User PASSWORD= 0xt&j8nZ!WSDGh
@@ -462,6 +463,22 @@ user=mydom\myuserid password='MyPassword1!';
 - "As a best practice, set the EnableScrollableCursors ODBC driver option to 3." [[https://documentation.sas.com/doc/en/pgmsascdc/9.4_3.5/acreldb/p02o7pdhah9nusn1dgqjgo66ibgs.htm][sas access mssql]]
 *** Firewall
 * Notes
+** Meeting
+- meeting in field, if grain, normally it's just calculated on site with the moisture,
+- if it's oatlage or forage, throw it into a freezer and the deviation is... if it's a biomassing, then there's wet and dry weight,
+- 2016 - 2017
+- 2013-2015 rrl? moisture?
+** [2024-12-12 Thu] yield review
+- 13 and 13.5 transition, for wheat grain.
+** ENTRY anomaly
+- 1993: we believe there was significant winter kill in
+- 1993: pasture was established in 1990, in 92, we interseeded more plants on top of the established pasture, it just takes a while to get going.
+  - 4/30/92 we planted brome, timothy, and orchard grass (NA)
+  - 1993 plots were a struggle to figure out. We believe there might be some mislabels in 1993, as the agcalendar was difficult to interpret.
+- hole and you fill in plant
+- interseed :: you plant and simultaneous
+- interseed replant :: already something established, for example alfalfa, remedy stand issue
+- replant :: we tilled everything up and start over again
 ** Db Design Review
 - have to feed rye with manure, but originally did not need manure because just harvesting soybean. It's wasting manure because legumess fix nitrogen. But needed a LOT of rye biomass
 - why barley? roller crimp before soybean, but delays the process too long, but then you can't plant a winter wheat. Barley becomes the small grain so that we can get an earlier harvest, in order to have the cover crop. corn -> soybean -> small grain

@@ -77,7 +77,10 @@ pre_2020_sb <- raw_2020_sb |>
   harvest_length = length_ft,
   harvest_width = width_ft,
   harvest_area = area_ft,
-  comments = stitch_notes(NA, ml_notes)
+  comments = stitch_notes(NA, ml_notes),
+  comments = if_else(plot == 401 & section == "main", 
+                     paste0(comments, "| Gregg Sanford: \"109.90 - dubious, I am excluding from the master file. See annual file for details\""), 
+                     comments)
 )
 
 
@@ -155,7 +158,7 @@ pre_2020_ws <- raw_2020_ws |>
                                    plot = plot,
                                    section = section,
                                    product = "wheat straw",
-                                   cut = 1),
+                                   cut = 2),
     harvest_lbs = lbs,
     harvest_length = length_f,
     harvest_width = width_f,
@@ -186,13 +189,16 @@ pre_2020_alf <- raw_2020_alf |>
     plot = plot,
     section = "Main",
     subplot = str_c(plot, section),
-    crop = crop,
+    # change 2-4 o/A to "alfalfa", to match master?
+    crop = case_when(plot %in% c(110, 208, 304, 413) & cut == 1 ~ "oatlage",
+                     plot %in% c(110, 208, 304, 413) & cut > 1 ~ "alfalfa",
+                     .default = crop),
     harvest_date = harvest_date,
     cut = cut,
     harvesting_id = get_harvest_id(year = 2020,
                                    plot = plot,
                                    section = section,
-                                   product = "alfalfa",
+                                   product = crop,
                                    cut = cut),
     harvest_lbs = plot_wt_lbs,
     harvest_length = plot_length_ft,
@@ -200,7 +206,8 @@ pre_2020_alf <- raw_2020_alf |>
     harvest_area = plot_area,
     percent_moisture = ml_percent_moisture * 100,
     comments = stitch_notes(notes, ml_notes)
-  )
+  ) |> arrange(sys, factor(crop, levels = c("dsA", "A1", "A2", "oatlage", "alfalfa")), cut)
+# correct, just got out of order during QA because i got rid of cut / numbered by rownumber
 
 tbl_2020_alf <- pre_2020_alf |>
   select(any_of(harvesting_cols))

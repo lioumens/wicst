@@ -10,7 +10,7 @@ if (!exists("tbl_2017_harvests")) source("migration/2017_yield.R")
 if (!exists("tbl_2016_harvests")) source("migration/2016_yield.R")
 if (!exists("tbl_2015_harvests")) source("migration/2015_yield.R")
 
-load("data/agcal_20241206.Rdata")
+load("data/agcal_20241210.Rdata")
 load("data/core_20241206.Rdata")
 
 # wicst ------------------------------------------------------------------
@@ -22,7 +22,7 @@ load("data/core_20241206.Rdata")
 
 ## agcal -------------------------------------------------------------------
 
-db_plantings <- xl_agcal$plantings 
+db_plantings <- xl_agcal$plantings
 db_limings <- xl_agcal$limings 
 db_fertilizings <- xl_agcal$fertilizings
 
@@ -155,9 +155,9 @@ db_can <- tbl_can |>
   mutate(
     plot = str_c("A", plot),
     coordinate = case_match(coordinate,
-                                 c("North", "N")~"North",
-                                 c("Center", "Central", "C")~"Center",
-                                 c("South", "S")~"South"))
+                            c("North", "N")~"North",
+                            c("Center", "Central", "C")~"Center",
+                            c("South", "S")~"South"))
 db_candetails <- supp_can
 
 ## yieldings ---------------------------------------------------------------
@@ -232,9 +232,9 @@ db_biomassingdetails <- supp_bio
 
 # losses
 pre_genlosses <- bind_rows(tbl_loss |> add_column(loss_type = "direct") |> 
-                          rename(directloss_id = harvestingloss_id),
-                        tbl_sysloss |> add_column(loss_type = "systematic") |> 
-                          rename(systematicloss_id = systematicharvestingloss_id)) |> 
+                             rename(directloss_id = harvestingloss_id),
+                           tbl_sysloss |> add_column(loss_type = "systematic") |> 
+                             rename(systematicloss_id = systematicharvestingloss_id)) |> 
   mutate(loss_id = coalesce(directloss_id, systematicloss_id))
 
 db_genlosses <- pre_genlosses |> select(loss_id, loss_type, harvesting_id)
@@ -404,7 +404,7 @@ pre_ei_genlosses <- bind_rows(tbl_ei_loss |> add_column(directloss_id = NA, loss
 
 db_ei_genlosses <- pre_ei_genlosses |> select(loss_id, loss_type, harvesting_id)
 
-# hackish
+# hackish, since empty just filter out all the tables for 0
 db_ei_loss <- tbl_loss |> filter(harvesting_id == "sdlflsdkjfdsf") |> rename(directloss_id = harvestingloss_id)
 db_ei_lossdetails <- supp_loss_cols |> enframe(name = "value", value = "name") |> pivot_wider() |> slice(-1) # empty
 
@@ -434,6 +434,17 @@ supp_silage <- bind_rows(
   supp_2017_silage
 )
 
+#direct losses
+tbl_silage_loss <- bind_rows(
+  tbl_2019_silage_loss,
+  tbl_2018_silage_loss # empty
+)
+
+supp_silage_loss <- bind_rows(
+  supp_2019_silage_loss,
+  supp_2018_silage_loss, # empty
+)
+
 tbl_silage_sysloss <- bind_rows(
   # 2019-2023 empty, 2017 empty too
   tbl_2018_silage_sysloss
@@ -447,8 +458,25 @@ supp_silage_sysloss <- bind_rows(
 db_silage_harvestings <- tbl_silage |> 
   rename(product = crop) |> add_column(product_description = NA)
 db_silage_harvestingdetails <- supp_silage
-db_silage_sysloss <- tbl_silage_sysloss |> rename(systematicloss_id = systematicharvestingloss_id)
-db_silage_syslossdetails <- supp_silage_sysloss |> rename(systematicloss_id = systematicharvestingloss_id)
+
+db_silage_directlosses <- tbl_silage_loss |> 
+  rename(directloss_id = harvestingloss_id) |> 
+  mutate(loss_type = "direct")
+db_silage_directlossdetails <- supp_silage_loss |> 
+  rename(directloss_id = harvestingloss_id)
+db_silage_sysloss <- tbl_silage_sysloss |>
+  rename(systematicloss_id = systematicharvestingloss_id) |> 
+  mutate(loss_type = "systematic")
+db_silage_syslossdetails <- supp_silage_sysloss |> 
+  rename(systematicloss_id = systematicharvestingloss_id)
+
+db_silage_genlosses <- bind_rows(
+  db_silage_directlosses,
+  db_silage_sysloss
+) |> 
+  mutate(loss_id = coalesce(directloss_id, systematicloss_id)) |> 
+  select(loss_id, loss_type, harvesting_id)
+
 
 
 

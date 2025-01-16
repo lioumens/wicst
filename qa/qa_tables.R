@@ -164,21 +164,21 @@ master_yield_for_qa <- master_yield |> filter(between(year, 2015, 2023),
   mutate(plot = factor(str_c("A", plot), levels = plots_by_treatment),
          cut = as.numeric(cut),
          product = case_match(crop,
-                           "fc"~"filler corn",
-                           "c"~"corn",
-                           "sb"~"soybean",
-                           c("a0", "a1", "a2", "dsa")~"alfalfa",
-                           c("of")~"oatlage",
-                           c("os")~"oat straw",
-                           c("og")~"oat grain",
-                           c("past")~"pasture",
-                           c("rc")~"red clover", 
-                           c("wg")~"wheat grain",
-                           c("wheatlage")~"wheatlage",
-                           c("ws")~"wheat straw",
-                           c("c silage", "c_silage")~"corn silage",
-                           .default = crop),
-         mst_dm = case_when(product %in% c("oatlage", "wheat straw", "wheatlage", "alfalfa", "oat straw", "pasture") ~ (100 - as.numeric(mst_dm)),
+                              "fc"~"filler corn",
+                              "c"~"corn",
+                              "sb"~"soybean",
+                              c("a0", "a1", "a2", "dsa")~"alfalfa",
+                              c("of")~"oatlage",
+                              c("os")~"oat straw",
+                              c("og")~"oat grain",
+                              c("past")~"pasture",
+                              c("rc")~"red clover", 
+                              c("wg")~"wheat grain",
+                              c("wheatlage", "wl")~"wheatlage",
+                              c("ws")~"wheat straw",
+                              c("c silage", "c_silage")~"corn silage",
+                              .default = crop),
+         mst_dm = case_when(product %in% c("oatlage", "wheat straw", "wheatlage", "alfalfa", "oat straw", "pasture", "corn silage") ~ (100 - as.numeric(mst_dm)),
                             .default = as.numeric(mst_dm))) |> 
   arrange(year, plot, cut) |> 
   select(-rfv, -rfq)
@@ -196,9 +196,23 @@ db_adj_harvestings <- db_harvestings |> left_join(
 ) |> mutate(harvest_area = (harvest_area - coalesce(direct_loss, 0)) * (1 - coalesce(sys_loss, 0))) |> 
   get_yield(product)
 
+# adj silage for loss
+db_adj_silage_harvestings <- db_silage_harvestings |> left_join(
+  db_silage_directlosses |> 
+    summarize(total_loss = sum(loss_area),
+              .by = harvesting_id),
+  by = "harvesting_id"
+) |>
+  left_join(
+    # works for now since no duplicate loss types
+    db_silage_sysloss |> summarize(total_frac = sum(loss_fraction), .by = c(harvesting_id, loss_type)), by = "harvesting_id"
+  ) |> 
+  mutate(harvest_area = (harvest_area - coalesce(total_loss, 0)) * (1 - coalesce(total_frac, 0))) |> 
+  get_yield("corn silage")
+
 harvest_for_qa <- bind_rows(db_adj_harvestings,
                             db_biomassings |> get_biomass(),
-                            db_silage_harvestings |> get_yield()) |> 
+                            db_adj_silage_harvestings) |> 
   mutate(
     id =  coalesce(harvesting_id, biomassing_id),
     product = coalesce(product, biomass),
@@ -212,11 +226,11 @@ harvest_for_qa <- bind_rows(db_adj_harvestings,
 # harvest_for_qa |> filter(year == 2017, product == "corn silage")
 # db_harvestings |> filter( product == "oatlage")
 # harvest_for_qa |> filter(product == "corn silage")
-db_biomassings |> filter(year(biomass_date) == 2017, plot_id == "A311") |> get_biomass() |> View()
+# db_biomassings |> filter(year(biomass_date) == 2017, plot_id == "A311") |> get_biomass() |> View()
 
 yield_compare <- master_yield_for_qa |> full_join(harvest_for_qa,
-                                 by = join_by("year" == "year", "plot" == "plot_id",
-                                              "cut" == "cut", "product" == "product")) |> 
+                                                  by = join_by("year" == "year", "plot" == "plot_id",
+                                                               "cut" == "cut", "product" == "product")) |> 
   select(id, site, year, block, system, phase, cycle, plot, cut, crop, product, mst_dm, percent_moisture,
          bu_t_ac, everything()) |> 
   mutate(plot = factor(plot, levels = plots_by_treatment)) |> 
@@ -238,19 +252,75 @@ yield_compare <- master_yield_for_qa |> full_join(harvest_for_qa,
                                .default = relative_delta)
   ) 
 
-# temp for  
+# temp for  comparisons
 yield_compare |> 
-  filter(relative_delta > , relative_delta != Inf) |> View()
+  filter(relative_delta > .8, relative_delta != Inf) |> 
+  View()
+yield_compare |> 
   pull(relative_delta) |>
   na_if(Inf) |> 
   quantile(probs = seq(.1, .9, .1), na.rm = TRUE)
+
+# no biomasses
+yield_compare 
   
-db_harvestings |> count(product)
+# db_harvestings |> count(product)
 
-harvest_for_qa |> filter(year == 2017, plot_id == "A311")
-
-
+# harvest_for_qa |> filter(year == 2017, plot_id == "A311")
 
 
+harvest_for_qa_exclosure <- bind_rows(db_adj_harvestings,
+                            db_biomassings |> filter(method == "exclosure") |> get_biomass(),
+                            db_adj_silage_harvestings) |> 
+  mutate(
+    id =  coalesce(harvesting_id, biomassing_id),
+    product = coalesce(product, biomass),
+    year = coalesce(year(harvest_date), year(biomass_date)),
+    plot_id = coalesce(factor(plot_id, levels = plots_by_treatment), str_c("A", str_sub(sideplot, 1, 3)))) |> 
+  group_by(year, plot_id) |> 
+  mutate(cut = if_else(product == "corn silage", 1, coalesce(cut, 
+                                                             suppressWarnings(as.numeric(str_sub(id, start = 18, end = 18))),
+                                                             row_number()))) |>
+  select(id, year, plot_id, product, cut, percent_moisture, harvest_tons_dm_per_acre, corrected_bu_per_acre,
+         biomass_tons_dm_per_acre, harvest_lbs, biomass_grams)
+
+
+yield_compare_no_biomass <- master_yield_for_qa |> full_join(harvest_for_qa_exclosure,
+                                                  by = join_by("year" == "year", "plot" == "plot_id",
+                                                               "cut" == "cut", "product" == "product")) |> 
+  select(id, site, year, block, system, phase, cycle, plot, cut, crop, product, mst_dm, percent_moisture,
+         bu_t_ac, everything()) |> 
+  mutate(plot = factor(plot, levels = plots_by_treatment)) |> 
+  arrange(year, plot, product, cut) |>
+  mutate(
+    # for excel coloring
+    bu_t_ac = as.numeric(bu_t_ac),
+    delta = coalesce(if_else(product != "wheat straw", abs(corrected_bu_per_acre - bu_t_ac), NA),
+                     abs(harvest_tons_dm_per_acre - bu_t_ac),
+                     abs(biomass_tons_dm_per_acre - bu_t_ac), 
+                     Inf),
+    delta = case_when(delta < .001 ~ NA,
+                      .default = delta),
+    relative_delta = coalesce(if_else(product != "wheat straw", abs(corrected_bu_per_acre - bu_t_ac) / bu_t_ac, NA),
+                              abs(harvest_tons_dm_per_acre - bu_t_ac) / (bu_t_ac),
+                              abs(biomass_tons_dm_per_acre - bu_t_ac) / (bu_t_ac), 
+                              Inf),
+    relative_delta = case_when(relative_delta < .01 ~ NA,
+                               .default = relative_delta)
+  ) 
+
+yield_compare_no_biomass |> clipr::write_clip()
+
+yield_compare_no_biomass |> filter(year == 2019, crop == "c silage")
+db_silage_harvestings |> 
+  filter(str_sub(sideplot, 1, 3) == "203") |> 
+  left_join(db_silage_harvestingdetails,
+            by = "harvesting_id") |>
+  View()
+
+db_silage_harvestings |> 
+  filter(year(harvest_date) == 2019 & str_sub(sideplot, 1, 3) == "203")
+
+yield_compare_no_biomass |> nrow()
   
 

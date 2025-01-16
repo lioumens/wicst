@@ -1,4 +1,5 @@
 
+source("migration/yield_prep.R")
 
 # corn silage -------------------------------------------------------------
 
@@ -97,7 +98,20 @@ pre_2017_wg <- raw_2017_wg |> mutate(
   harvest_date = as.POSIXct("2017-07-31", tz = "UTC"),
   percent_moisture = percent_moisture,
   bushel_lbs = test_wt_lbs_bu,
-  harvest_area = harvested_area_ft2,
+  # from arl, but they don't match up with the spreadsheets i found
+  harvest_length = c(
+    "104" = 516, # matches
+    # "201" = 443, # doesn't match
+    "301" = 517, # matches
+    "402" = 518 # matches
+    )[as.character(plot)],
+  harvest_width = c(
+    "104" = 30.5, # matches
+    # "201" = 31.25, # doesn't match
+    "301" = 30.5, # matches
+    "402" = 30.5 # matches
+    )[as.character(plot)],
+  harvest_area = coalesce(harvest_length * harvest_width, harvested_area_ft2),
   comments = stitch_notes(notes, NA)
 )
 
@@ -116,7 +130,8 @@ pre_2017_ws <- raw_2017_ws |> mutate(
   harvesting_id = get_harvest_id(year = 2017,
                                  plot = plot,
                                  section = section,
-                                 product = "wheat straw"),
+                                 product = "wheat straw",
+                                 cut = 2),
   avg_bale_wt = total_bale_weight_lbs / number_of_bales,
   harvest_adj = avg_bale_wt * bale_adjustment_from_plot_left_in_baler,
   num_bales = number_of_bales + bale_adjustment_from_plot_left_in_baler,
@@ -144,11 +159,13 @@ raw_2017_alf <- xl_snap$`2017_harvests_alfalfa` |> clean_names()
 pre_2017_alf <- raw_2017_alf |> mutate(
   plot = plot,
   section = "Main",
-  crop = "alfalfa",
+  # master has oatlage for a0 plots this year, only cut 1
+  crop = case_when(plot %in% c(110, 208, 304, 413) & cut == 1 ~ "oatlage",
+                   .default = "alfalfa"),
   harvesting_id = get_harvest_id(year = 2017,
                                  plot = plot,
                                  section = section,
-                                 product = "alfalfa",
+                                 product = crop,
                                  cut = cut),
   harvest_lbs = plot_wt_tons * 2000,
   harvest_width = 60,

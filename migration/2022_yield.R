@@ -321,7 +321,10 @@ pre_2022_alfalfa <- raw_2022_alfalfa |>
     plot = plot,
     section = "Main",
     cut = cut,
-    crop = crop,
+    # call oatlage on first cut, and "alfalfa otherwise", to match master
+    crop = case_when(crop == "o/A" & cut == 1 ~ "oatlage",
+                     crop == "o/A" & cut == 2 ~ "alfalfa",
+                     .default = crop),
   harvesting_id = get_harvest_id(year = 2022, 
                                  plot = plot, 
                                  section = section,
@@ -798,9 +801,9 @@ supp_2022_115_prairie <- pre_2022_115_prairie |> select(any_of(supp_fuel_115_har
 
 ## Core Tables ------------------------------------------------------------
 tbl_2022_harvests <- bind_rows(tbl_2022_c,
+                               tbl_2022_wg,
                                tbl_2022_ws,
                                tbl_2022_sb,
-                               tbl_2022_wg,
                                tbl_2022_alfalfa)
 # supp harvest
 supp_2022_harvests <- bind_rows(supp_2022_c,
@@ -840,18 +843,20 @@ supp_2022_can <- bind_rows(
 ## EI Tables -------------------------------------------------------------
 
 tbl_2022_ei_harvests <- bind_rows(tbl_2022_ei_c,
+                                  tbl_2022_ei_wg,
                                   tbl_2022_ei_ws,
                                   tbl_2022_ei_sb,
-                                  tbl_2022_ei_cs, # part of ei?
-                                  tbl_2022_ei_wg)
+                                  tbl_2022_ei_cs # part of ei?
+                                  )
 
 
 
 supp_2022_ei_harvests <- bind_rows(supp_2022_ei_c,
-                                  supp_2022_ei_ws,
-                                  supp_2022_ei_sb,
-                                  supp_2022_ei_cs,
-                                  supp_2022_ei_wg) |> 
+                                   supp_2022_ei_wg,
+                                   supp_2022_ei_ws,
+                                   supp_2022_ei_sb,
+                                   supp_2022_ei_cs
+                                  ) |> 
   select(where(\(x)!all(is.na(x))))
 
 

@@ -7,11 +7,12 @@ library(purrr)
 library(tidyr)
 library(rlang)
 
-load("data/wip_20241205.Rdata")
+load("data/wip_20250106.Rdata")
 load("data/master_20240926.Rdata")
 load("data/core_20241104.Rdata")
-load("data/agcal_20241119.Rdata")
-load("data/arl_20241127.Rdata")
+load("data/agcal_20241210.Rdata")
+
+load("data/arl_20250116.Rdata")
 
 c_ideal_percent_moisture = 15.5
 c_bushel = 56
@@ -30,6 +31,19 @@ kg_to_lbs = 2.2046226
 acre_to_ft2 = 43560
 m2_to_ft2 = 10.7639
 m_to_ft = 3.28084
+
+arl_crop_dict <- list("c"~"corn",
+                      "sb"~"soybean",
+                      "w"~"wheat grain",
+                      c("oa", "o")~"oats",
+                      c("o/a")~"oatlage",
+                      "fc"~"filler corn",
+                      "a"~"alfalfa",
+                      c("p", "past")~"pasture",
+                      "s"~"wheat straw",
+                      "dsa"~"direct seeded alfalfa",
+                      c("c silage", "cs")~"corn silage")
+
 
 ei_plots <- xl_core$subplots$plot |> unique() |> str_sub(2) |> as.numeric()
 
@@ -77,7 +91,8 @@ get_harvest_id <- function(year, plot, section, product, cut = 1, site = "A") {
                              c("wheatlage")~"WL",
                              c("barley")~"BY",
                              c("barley straw")~"BS",
-                             c("alfalfa", "direct seeded alfalfa", "dsA", "A1", "A2", "o/A", "ORG A1", "Ai", "Aii", "a", "o/a", "O/A")~"AF",
+                             c("alfalfa", "direct seeded alfalfa", "dsA", "A1", "A2", "ORG A1", "Ai", "Aii", "a")~"AF",
+                             c("oatlage", "o/A", "O/A", "o/a") ~ "OL",
                              c("red_clover")~"RC",
                              c("berseem_clover")~"BC",
                              c("oats", "oat grain")~"OT",
@@ -356,6 +371,19 @@ get_biomass <- function(dat, biomass = NULL) {
     biomass_tons_dm = biomass_lbs_dm / 2000,
     acre_frac = biomass_area / acre_to_ft2,
     biomass_tons_dm_per_acre = biomass_tons_dm / acre_frac)
+}
+
+
+# Arlington cleaning ------------------------------------------------------
+ 
+
+loss_from_mult <- function(x, width = 60) {
+  (43560 - x * 510 * width) / -x
+}
+
+
+deduce_pasture_grams <- function(yield, area = 20 * 7) {
+  yield * area / 43560 * 2000 / kg_to_lbs * 1000
 }
 
 

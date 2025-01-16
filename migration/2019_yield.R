@@ -449,7 +449,10 @@ pre_2019_alf_all <- raw_2019_alf_all |>
     plot = plot,
     section = "main",
     subplot = str_c(plot, section),
-    crop = crop,
+    # 
+    crop = case_when(crop == "o/a" & cut == 1 ~ "oatlage",
+                     crop == "o/a" & cut > 1 ~ "alfalfa",
+                     .default = crop),
     cut = cut,
     harvesting_id = get_harvest_id(year = 2019,
                                    plot = plot,
@@ -468,6 +471,7 @@ pre_2019_alf_all <- raw_2019_alf_all |>
   left_join(pre_2019_alf |> select(harvesting_id, wet_weight_no_bag, dry_weight_no_bag),
             by = "harvesting_id")
 
+# these are the wheat ones that have slight conflict
 tbl_2019_wheat <- pre_2019_alf_all |> 
   filter(crop == "w/cl") |>
   select(any_of(harvesting_cols))
@@ -483,6 +487,7 @@ tbl_2019_alf <- pre_2019_alf_all |>
 supp_2019_alf <- pre_2019_alf_all |> 
   filter(crop != "w/cl") |>
   select(any_of(supp_harvesting_cols))
+
 
 
 
