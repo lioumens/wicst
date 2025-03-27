@@ -62,6 +62,10 @@ supp_1992 <- pre_1992 |> select(any_of(supp_harvesting_cols)) |>
 # no losses
 # no bios
 
+# collect -----------------------------------------------------------------
 
+tbl_1992_harvests <- tbl_1992
+supp_1992_harvests <- supp_1992
 
-
+tbl_1992_loss <- bind_rows()
+supp_1992_loss <- bind_rows()

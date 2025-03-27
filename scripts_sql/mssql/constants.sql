@@ -2,28 +2,28 @@
 -- SCALAR CONSTANTS --
 ----------------------
 
-CREATE FUNCTION dbo.CONST_ACRE_TO_FT2() RETURNS INT AS
+CREATE FUNCTION common.CONST_ACRE_TO_FT2() RETURNS INT AS
 BEGIN 
 	RETURN 43560
 END;
 
-CREATE FUNCTION dbo.CONST_M_TO_FT() RETURNS FLOAT AS
+CREATE FUNCTION common.CONST_M_TO_FT() RETURNS FLOAT AS
 BEGIN
 	RETURN 3.28084
 END;
 
-CREATE FUNCTION dbo.CONST_M2_TO_FT2() RETURNS FLOAT AS
+CREATE FUNCTION common.CONST_M2_TO_FT2() RETURNS FLOAT AS
 BEGIN
-	RETURN POWER(dbo.CONST_M_TO_FT(), 2)
+	RETURN POWER(common.CONST_M_TO_FT(), 2)
 END;
 
-CREATE FUNCTION dbo.CONST_KG_TO_LBS() RETURNS FLOAT AS
-AS BEGIN
+CREATE FUNCTION common.CONST_KG_TO_LBS() RETURNS FLOAT AS
+BEGIN
 	RETURN 2.2046226
 END;
 
---drop function dbo.CONST_IDEAL_MOISTURE;
-CREATE FUNCTION dbo.CONST_IDEAL_MOISTURE (@product VARCHAR(50))
+--drop function common.CONST_IDEAL_MOISTURE;
+CREATE FUNCTION common.CONST_IDEAL_MOISTURE (@product VARCHAR(50))
   /**
    * Returns Ideal Moisture for adjusted yields for products
    * 
@@ -48,8 +48,8 @@ RETURN @IDEAL_MOISTURE
 END;
 
 
---drop function dbo.CONST_IDEAL_BUSHEL;
-CREATE FUNCTION dbo.CONST_IDEAL_BUSHEL (@product VARCHAR(50))
+--drop function common.CONST_IDEAL_BUSHEL;
+CREATE FUNCTION common.CONST_IDEAL_BUSHEL (@product VARCHAR(50))
   /**
    * Returns Ideal pounds per bushel for adjusted yields for products
    * 
@@ -71,8 +71,7 @@ BEGIN
 		WHEN 'wheat straw' THEN 60 -- seems error
 		WHEN 'oat grain' THEN 32
 		else NULL
-	END;
-
+END;
 RETURN @IDEAL_BUSHEL
 END;
 
@@ -80,14 +79,14 @@ END;
 -- HELPER FUNCTIONS  --
 -----------------------
 
---drop function dbo.seq;
-CREATE FUNCTION dbo.SEQ (
+--drop function common.seq;
+CREATE FUNCTION common.SEQ (
 /*
  * Convenience function to generate sequence of numbers. Written as TVF.
  * 
  * Examples
- * select * from dbo.SEQ(10, DEFAULT, DEFAULT); -- return with default values
- * select * from dbo.SEQ(200, .5, 150); -- call with end, start, by specified
+ * select * from common.SEQ(10, DEFAULT, DEFAULT); -- return with default values
+ * select * from common.SEQ(200, .5, 150); -- call with end, start, by specified
  */
 	@end REAL,
     @start REAL = 1,

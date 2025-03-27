@@ -735,13 +735,24 @@ used cuts 2-4 from here, see [[*2015_harvests_forage][2015_harvests_forage]] for
 ** REVIEW 2013_harvests_corn_micro
 - not sure what this experiement is atm
 * ARL
+** 2011
+- right now just exclude the pastures, save for later to resolve
 ** 2010
+- lots of instances of weird multipliers without comments. I will just use this as the harvest area and not try to guess the harvest length
 - pasture harvests are duplicated with excosures
 - [ ] harvest dates for hay exclosures are missing
 - [ ] plot 302 doesn't have a harvest date on the ag cal (pasture), but it has lbs. while 112 does have a line on the agcal but missing lbs? are these real?
+  - master seems to have entries, but from another file comment says "source exclosure hay ylds_2004_2012.xlsx", so mix of exclosure data etc
 ** REVIEW [#A] 2009
-- [ ] extra corn for plot 409? what is this value? do i include?
+- [ ] I suspect a copy paste error with the multipliers from 2008. There _are_ losses there e.g. 1.545 multiplier was 510x60 with 2400 sqft loss. but they appear again in the sheet without any comments. I'm fairly certain that these are incorrect, maybe correct
+- 205, second cut no harvest, no explanation in master/arl/agcal, left as not a harvest
+- [ ] extra corn for plot 409? what is this value? do i include? right now is excluded
 - [ ] sattelite experiments are ignored in this sheet too
+** REVIEW 2008
+- these comments may have carried over to 2009 by accident
+- ignoring all the swg and pasture data right now
+** 2007
+- comments have been added in text, also skipping pastures
 ** REVIEW 2006
 - [ ] missing pasture information, only have yields and no dates
 ** DONE 2004
@@ -798,6 +809,97 @@ During 1990 and 1991, rotation 6 was cut as a hay field, not grazed.
 - [ ] pastures haev an extra date in agcal, no yield though
 - USE 20 x 7', and fill moisture
 - keep 0s if at least 1 pasture cut, but if all missing, just delete all rows.
+* Nutrients
+** 2014
+- first year in which I'm making rrl_id the priority
+- It's probably important to document which moisture value was used.
+* DB Changes
+major.minor.revision
+breaking/table/schema change, constraint/property/column change, small inserts/permissions?
+** v0.1.0
+*** Database Development Narrative
+- we biodata vault ->
+- arlington yields
+- link R code for changes
+*** Yield Changes from Master
+**** 1990
+**** 1991
+- Plots 103, 213, 314, 410 (oat grain) originally used ideal moisture value of 13%, database now uses 14% for consistency, resulting in a 1.2% increase in final yield for all plots.
+**** 1995
+- Plot 409 was noted as missing, but notes in master indicate that these are true 0's. "plot mistakenly killed last fall; missing value". All cuts for this plot are recorded as 0's, with intended harvest dates same as the replicates.
+**** 1998
+- plot 114 (oatlage): Recalculation of yield from raw data results in yield that are half of the original master data sheet. Yield was changed from 3.69 -> 1.846 t dm/acre, a 50% reduction. Original calculation is hypothesized to have accidently used half the harvest area.
+- plot 211 (oatlage): Recalculation of yield from raw data results in yield that are half of the original master data sheet. Yield was changed from 4.938 -> 2.47 t dm/acre, a 50% reduction. Original calculation is hypothesized to have accidently used half the harvest area.
+- plot 312 (oatlage): Recalculation of yield from raw data results in yield that are half of the original master data sheet. Yield was changed from 3.62-> 1.81 t dm/acre, a 50% reduction. Original calculation is hypothesized to have accidently used half the harvest area.
+- plot 403 (oatlage): Recalculation of yield from raw data results in yield that are half of the original master data sheet. Yield was changed from 4.91 -> 2.46 t dm/acre, a 50% reduction. Original calculation is hypothesized to have accidently used half the harvest area.
+**** 1999
+- Plot 106 (soybean): had a yield value of 33 bu/acre without supporting raw data information. Moisture information originally had used the ideal moisture of 13.5, so the value was also deleted. This yield value was not maintained, and is a missing entry with intended harvest date imputed from the replicates.
+**** 2002
+- plot 206 (corn): 3000 additional sqft of loss accounted for, increasing yield from 125.68 -> 156.34 bu/acre, 25% increase
+- plot 204 (corn): 250 additional sqft of loss accounted for, increasing yield from 205.6 -> 209.0 bu/acre, 1.6% increase
+- plot 113 (corn): 1275 harvest area loss accounted for based on comments. Originally, only 682.55 of loss was accounted for (deduced from a yield multiplier of 2.98). Increases yield from 169.72 -> 176.89 bu/acre, 4.2% increase
+**** 2004
+- Plots 106, 202, 307, 411, 110, 208, 304, 413 (snaplage): These plots were harvested as snaplage, and converted to bu/acre with Joe Lauer equations. These are now labeled as snaplage, and saved as t dm/acre with accompanying moisture values.
+**** 2005
+- plot 404 (dsa): new entry is unrounded, and recalculated from raw data. Original value recorded was round to two decimal places originally, and because of low yield, unrounded value is greater than 1.1% decrease in yield.
+**** 2006
+- Plot 206 (corn): moisture and (best guess) of harvest area was restored, but raw data value for harvest lbs of 1780 lbs was not restored because of low confidence in the number being accurate. The yield number would have been 144.36 bu/acre, low compared to other corn reps this year.
+**** 2008
+- plot 204 (corn): originally excluded because plot mostly flooded. Values for moisture and area harvested were restored for record of flood loss, but raw data value of 422 was determined to be too inacurrate to include. The raw data would have resulted in 63.5 bu/acre, too low compared to average of 141 bu/acre of other reps even accounting for estimated loss. Estimated loss is retained for record of flood event.
+**** 2009
+- Plot 307 (wheat grain): Originally considered missing data because of winterkill that did not get reseeded in time. This harvest is now explicitly coded as 0 as it's known there was no yield. Intended harvest date was copied from other reps.
+- Plots 111, 209, 305, 409 (corn): All plots from system 4 phase 1 had misapplied herbicide carryover that killed corn. After replanting, these plots were harvested as corn silage and converted to grain yield. We undo this conversion and instead store the corn silage raw data in the database.
+- Plots 210 (cuts 2-4), 203 (cuts 2-4), 208 (all cuts), alfalfa: There was a suspected copy-paste error for excel formulas that was corrected. Arlington yields used a "yield multiplier" to calculate final yield, but the multipliers used in 2009 were the same as 2008. In 2008, there was a commented 2400 sqft loss (multiplier of 1.545), but the comment does not appear in 2009. The formula multiplier of 1.545 was originally used in the same relative cell positions as the sheet in 2008, but show up in different plots. Oddly, the "master file" and "arlington" already differed for cut 1 in 210 and 203, so there's technically no change to these cuts relative to the master sheet (but relative to the arlington sheet there is).
+- Plot 213 (alfalfa, cut 2): A similar copy-paste error in master sheet. A flood loss of 14400 sqft was recorded in this cell position in 2008 but there is no comment for 2009 of such loss. The arlington sheet here seems correct, and was likely copied into master incorrectly. This changes the final yield from 1.28 -> .68 t dm/acre, a 47% reduction.
+**** 2010
+- Plot 106 (corn): Originally had a yield of 185.55 bu/acre in the master sheet but was unable to reproduce this number with raw data found. Recalculations with raw data found in the arlington sheet gives a final yield of 183.6 bu/acre, a decrease of ~1% in final yield.
+- Plot 305 (alfalfa): Originally labeled as the "second crop" as this plot had to be reseeded due to herbicide. It's now labeled as the "first" crop of the plot for this year since originally the first was non-existent.
+**** 2012
+- plot 102 (soybean): A gap of 325 sqft was originally unaccounted for. The yield changed from 47.47 -> 48.51 bu/acre, an increase of 2.2% after accounting for the planting gap.
+**** 2013
+- plot 206 (soybean): The plot length was adjusted from 514.875 -> 510 for yield calculation for consistency. The yield changed from 57.23 -> 57.86 bu/acre, an increase of 1.1%.
+- plot 310 (soybean): The plot length was adjusted from 515.5 -> 510 for consistency with other years. The yield changed from 58.3 -> 58.9 bu/acre, an increase of 1.1 % after accounting for the planting gap.
+- plot 408 (soybean): The plot length was adjusted from 516.5 -> 510 for consistency with other years. The yield changed from 58.9 -> 59.7 bu/acre, an increase of 1.3 % after accounting for the planting gap.
+- plot 401 (corn): The plot length was adjusted from 518 -> 510 for yield calculation for consistency, resulting in a yield change of 212.7 -> 215.8 bu/acre, a 1.4% change
+- plot 402 (soybean): The plot length was adjusted from 518.875 -> 510 for yield calculation for consistency, resulting in a yield change of 30.9 -> 31.4 bu/acre, a 1.7% change
+- plot 307 (corn): The plot length was adjusted from 516.38 -> 510 for yield calculation for consistency, resulting in a yield change of 176.7 -> 179.1 bu/acre, a 1.4% change
+- plot 212 (wheat grain): The plot length was adjusted from 516.25 -> 510, plot width 31.875 -> 30 for yield calculation for consistency, resulting in a yield change of 58.5 -> 59.6 bu/acre, a 1.8% change
+- plot 313 (wheat straw): The plot length was adjusted from 511.25 -> 510, plot width 31.875 -> 30 for yield calculation for consistency, resulting in a yield change of 1.24 -> 1.27 t dm/acre, a 2.4% change
+- plot 407 (wheat grain): Losses of 2460 and plot dimension changes of length 519.25 -> 510 and width 32.25 -> 30 were accounted for in yield calculation for consistency, resulting in a yield change of 49.3 -> 55.77 bu/acre, a 13% difference.
+- plot 407 (wheat straw): The plot length was adjusted 481.25 -> 510 for yield calculation for consistency, resulting in a yield change of 1.81 -> 1.725, a 5% difference.
+- plot 210 (alfalfa, all cuts): The plot length was adjusted 521.12 -> 510 for yield calculation for consistency, resulting in a yield change of 2.2% for all cuts.
+- plot 311 (alfalfa, all cuts): The plot length was adjusted 518.5 -> 510 for yield calculation for consistency, resulting in a yield change of 1.67% for all cuts.
+- plot 308 (alfalfa, all cuts): The plot length was adjusted 520.12 -> 510 for yield calculation for consistency, resulting in a yield change of 2% for all cuts.
+- plot 406 (alfalfa, all cuts): The plot length was adjusted 524.75 -> 510 for yield calculation for consistency, resulting in a yield change of 2.9% for all cuts.
+- plot 309 (alfalfa): The plot length was adjusted 520.5 -> 510 for yield calculation for consistency, resulting in a yield change of 2% for all cuts.
+- plot 404 (alfalfa): The plot length was adjusted 527.5 -> 510 for yield calculation for consistency, resulting in a yield change of 3.4% for all cuts.
+- plot 314 (alfalfa): Corrected harvest lbs value 10480 -> 10980 and updated yield calculation, resulting in a yield change of 2.25 -> 2.36 t dm / acre, a 4.7% change.
+- plot 211 (oatlage/alfalfa): The plot length was adjusted 521.75->510 for yield calculation for consistency, resulting in a yield increase of 2.3%
+- plot 312 (oatlage/alfalfa): The plot length was adjusted 518.25->510 for yield calculation for consistency, resulting in a yield increase of 1.6%
+- plot 403 (oatlage/alfalfa): The plot length was adjusted 524.62 -> 510 for yield calculation for consistency, resulting in a yield increase of 2.9%.
+**** 2015
+- Plot 209, 305, 409 (cut 1, alfalfa): Copy paste error suspected, moisture values for these plots are from RRL csv. Ordering in RRL export file was 409, 209, 305, and order of moistures may have been swapped. Assuming labeling in RRL export file is correct, the moisture values for these plots were originally swapped. The resulting moisture changes for 209, 305, and 409 are 54.8 -> 53.3, 53.27 -> 49.8, 49.8 -> 54.8 respectively, resulting in a change in final yield of 3.4%, 7.4% and 9.9%.
+- Plot 103, 213, 314, 410 (oatlage):  Moisture values were orginially all imputed at 50%. These have been removed for storage in the database.
+**** 2016
+- Plot 102 (wheat grain): The yield value change 90.1 -> 91.3 bu/acre is a combination of ideal moisture changed in calculation and plot dimensions. (372 x 28) @ 13% moisture, db uses (372 x 27.8) @ 13.5% moisture. This results in 1.3% increase.
+- Plot 313 (wheat grain): The yield value change 77.96 -> 79.84 bu/acre is a combination of ideal moisture changed in calculation and plot dimensions. (377 x 28) @ 13% moisture, db uses (377 x 27.5) @ 13.5% moisture. This results in 2.4% increase.
+- Plot 407 (wheat grain): The yield value change 95.02 -> 97.31 bu/acre is a combination of ideal moisture changed in calculation and plot dimensions. (379 x 28) @ 13% moisture, db uses (379 x 27.5) @ 13.5% moisture. This results in 2.4% increase.
+**** 2017
+- Plots 108, 206, 310, 408 (soybean): plot dimensions were adjusted in calculation. Originally, 510x29.5' was used, but now we use 510x30' for consistency. This results in a 1.7% decrease in yield for all these plots.
+**** 2018
+- Plot 114, east strip (corn silage): A comment about an estimated 25% of the area damaged was found in the spreadsheets, so now we account for this systematic loss. This results in an change in yield from 3.77 -> 5.03 t dm/acre, a 33.3% increase.
+- Plot 312, east strip (corn silage): A comment about an estimated 10% of the area damaged was found in the spreadsheets, so now we account for this systematic loss. This results in an change in yield from 6.39 -> 7.1 t dm/acre, a 33.3% increase.
+- Plot 403, east strip (corn silage): A comment about an estimated 10% of the area damaged was found in the spreadsheets, so now we account for this systematic loss. This results in an change in yield from 6.47 -> 7.2 t dm/acre, a 33.3% increase.
+**** 2019
+- Plot 204 (corn): Moisture percentage was originally averaged across reps for 27.3, this value is removed.
+- Plots 102, 212, 313, 407 (oat grain): Originally, oat grain yields were calculated at ideal moisture of 13, the database currently will default to calculating oat grain yield at 14% ideal moisture, resulting in a 1.2% increase in yield.
+- Plot 203, west strip (corn silage): Mistake found in recorded raw data. Originally lbs was recorded 2834, but correct value should have been 2934, verified with Gregg's handwritten notebook. The resulting change was 10.0 -> 10.36 t dm/acre, a 3.5% increase.
+**** 2020
+- Plot 401 (soybean): Yield value was originally removed because of abnormally high yield, 109.9. The database restores this value with the associated note of suspicion. The moisture value was also restored from raw data sheets.
+- Plots 105, 203, 308, 406 (alfalfa): Originally moisture values used were rounded early resulting in minor changes in final yield, up to 1.1 %. Moisture values are now stored unrounded, recalculated from raw data.
+- Plot 410, west strip (corn silage): A copy-paste error was discovered in the excel spreadsheets, plot dimensions used in previous year were carried over into this year. The change was reverted from 415' -> 510' for plot length, resulting in a decrease in plot yield from 9.75 -> 7.9 t dm/year, a 18% change.
+**** 2021
+- Nearly all plots show somewhat minor changes in yield due to rounding of final yield number in master (up to 5% change). Recalculations from raw data give unrounded numbers for storage.
 * Tables
 ** tbl_2023_biomassing
 - [ ] moistures should be zero?
@@ -807,9 +909,71 @@ During 1990 and 1991, rotation 6 was cut as a hay field, not grazed.
 ** Tables - definitions
 ** FK - foreign keys left as separate
 ** Views
+* Pastures
+- hay might mean yieldings, dbl check
+** 2004-2011
+- there's both FA and HE in these years
+** Strategies
+- HE_JH, should be identical biomass
+** 2013
+- old jari
+** Animals
+- ignored the confined animals currently
+- "Arl_CS6_animal_data:Manure_est_pastured_animals" - has extra columns also currently ignored
+** Final Run
+:PROPERTIES:
+:COLUMNS: %35ITEM %5num_harvests%  %5num_biomassings %7status
+:status_all: TODO ONGOING DONE
+:END:
+*** DONE 1990
+:PROPERTIES:
+:num_harvests: 4
+:STATUS:   DONE
+:NUM_BIOMASSINGS:
+:END:
+- harvests, numbers look good
+*** DONE 1991
+- 3 harvests for all 4 plots
+*** DONE 1992
+:PROPERTIES:
+:NUM_HARVESTS: 8
+:END:
+- 2 harvests per plot
+*** DONE 1993
+:PROPERTIES:
+:num_harvests: 3
+:END:
+- 207 missing, 1 per
+- hays in xl_pasture are accounted for already in harvest
+- 35, 36, 36, 34 biomassings = 141
+*** DONE 1994
+- 148 biomassings, 8 harvests
+*** DONE 1995
+- 56 biomassings, 8 harvests
+*** 1996
+*** 1997
+- 60 biomassings
+*** 1998
+- harvest accounted for
+*** 1999
+- no harvests
+*** 2000
+- two harvests accounted for
+*** 2003
+- 1 harvests accounted for
+*** 2004
+- 1 harvest accounted for, exclosures
+*** 2006
+- can't find harvests, impute from moisture?
+- the exclosures are off by 1.12 * kg_to_lbs as well
+*** 2007
+- pasture date from agcal calendar, other date from the cs6_hay_yield file
+- biomassings, exclosures, and 2 harvests
+- again, the exclosures are off by arl numbers by 1.12
 * QA Process
 1. Clean excel sheets directly, fill in unknowns with Nolan
-2. 
+** ARL QA
+- H2009_A213MMX_AF_2 :: don't
 * Local Variables
 # Local Variables:
 # org-todo-keyword-faces: (("REVISIT" . warning) ("REVIEW" . error) ("STARTED" . success))

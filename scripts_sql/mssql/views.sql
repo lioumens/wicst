@@ -34,7 +34,7 @@ BEGIN
 	        theyear = n
 	    FROM (SELECT TOP (2100 - 1989 + 1) 
 	                 ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) + 1988 AS n
-	          FROM master.dbo.spt_values) AS years
+	          FROM master.common.spt_values) AS years
 	), offs AS (
 		select plot_id, block, theyear, start_year, theyear - (start_year - 1) as offf, system_id, p.treatment_id from yearseq 
 		cross join plots p
@@ -110,7 +110,7 @@ a AS (
 SELECT num as year, 
 	   CAST((num 	- 2017) AS INT) % 4 + 7 as cs4_trt,
 	   CAST((num - 2017 + 1) AS INT) % 3 + 11 as cs5_trt
-	   from dbo.seq(2050, 2018, 1)),
+	   from common.seq(2050, 2018, 1)),
 c as (
 SELECT pivotted.year, cs4_trt, cs5_trt, [1] as "CS4 Rep 1", [2] as "CS4 Rep 2", [3] as "CS4 Rep 3", [4] as "CS4 Rep 4" from a
 left join b
@@ -147,6 +147,7 @@ UNPIVOT
 -----------------
 -- Yield Views --
 -----------------
+select * from wicst.harvesting_summary hs;
 
 -- working to calculate total loss fraction and loss table
 --TODO: will need to change these tables to be yielding ID's
@@ -195,26 +196,31 @@ WITH aggs AS (
 		select harvesting_id, sum(loss_area) as total_loss_area from wicst.directlosses
 		group by harvesting_id
 	)
-	select h.*, s.total_loss_fraction, d.total_loss_area, calc.*  from wicst.harvestings h
+	select wp.block, wp.treatment_id, wt.system_id, h.*, s.total_loss_fraction, d.total_loss_area, calc.* from wicst.harvestings h
 	left join combined_system_losses as s on h.harvesting_id = s.harvesting_id
 	left join combined_direct_losses AS d ON h.harvesting_id = d.harvesting_id
+	left join wicst.plots as wp on h.plot_id = wp.plot_id
+	left join wicst.treatments as wt on wp.treatment_id = wt.treatment_id
 	cross apply (
 	select
+	    year                  = YEAR(harvest_date),
 		adjusted_harvest_area = (harvest_area - coalesce(total_loss_area, 0)) * (1 - coalesce(total_loss_fraction, 0)), -- subtract direct area first, then probabilistic removed.
 		dry_matter_lbs        = (100 - percent_moisture) / 100 * harvest_lbs,
 		dry_matter_tons       = (100 - percent_moisture) / 100 * harvest_lbs / 2000,
-		acre_frac             = (harvest_area / dbo.CONST_ACRE_TO_FT2()),
-		lbs_per_acre          = harvest_lbs / (harvest_area / dbo.CONST_ACRE_TO_FT2()),
-		ideal_moisture        = dbo.CONST_IDEAL_MOISTURE(product),
-		moisture_correction         = (100 - percent_moisture) / (100 - dbo.CONST_IDEAL_MOISTURE(product)),
-		corrected_lbs               = (100 - percent_moisture) / (100 - dbo.CONST_IDEAL_MOISTURE(product)) * harvest_lbs,
-		corrected_lbs_per_acre      = (100 - percent_moisture) / (100 - dbo.CONST_IDEAL_MOISTURE(product)) * harvest_lbs / (harvest_area / dbo.CONST_ACRE_TO_FT2()),
-		corrected_lbs_per_adjusted_acre = (100 - percent_moisture) / (100 - dbo.CONST_IDEAL_MOISTURE(product)) * harvest_lbs / ((harvest_area - coalesce(total_loss_area, 0)) * (1 - coalesce(total_loss_fraction, 0)) / dbo.CONST_ACRE_TO_FT2()),
-		ideal_bushel                = dbo.CONST_IDEAL_BUSHEL(product),
-		ideal_bu_per_acre           = harvest_lbs / (harvest_area / dbo.CONST_ACRE_TO_FT2()) / dbo.CONST_IDEAL_BUSHEL(product),
-		ideal_bu_per_adjusted_acre  = harvest_lbs / ((harvest_area - coalesce(total_loss_area, 0)) * (1 - coalesce(total_loss_fraction, 0)) / dbo.CONST_ACRE_TO_FT2()) / dbo.CONST_IDEAL_BUSHEL(product),
-		ideal_corrected_bu_per_acre = (100 - percent_moisture) / (100 - dbo.CONST_IDEAL_MOISTURE(product)) * harvest_lbs / (harvest_area / dbo.CONST_ACRE_TO_FT2()) / dbo.CONST_IDEAL_BUSHEL(product),
-		ideal_corrected_bu_per_adjusted_acre = (100 - percent_moisture) / (100 - dbo.CONST_IDEAL_MOISTURE(product)) * harvest_lbs / ((harvest_area - coalesce(total_loss_area, 0)) * (1 - coalesce(total_loss_fraction, 0)) / dbo.CONST_ACRE_TO_FT2()) / dbo.CONST_IDEAL_BUSHEL(product),
-		dry_matter_tons_per_acre             = (100 - percent_moisture) / 100 * harvest_lbs / 2000 / (harvest_area / dbo.CONST_ACRE_TO_FT2()),
-		dry_matter_tons_per_aadjusted_acre   = (100 - percent_moisture) / 100 * harvest_lbs / 2000 / ((harvest_area - coalesce(total_loss_area, 0)) * (1 - coalesce(total_loss_fraction, 0)) / dbo.CONST_ACRE_TO_FT2())
+		acre_frac             = (harvest_area / common.CONST_ACRE_TO_FT2()),
+		lbs_per_acre          = harvest_lbs / (harvest_area / common.CONST_ACRE_TO_FT2()),
+		ideal_moisture        = common.CONST_IDEAL_MOISTURE(product),
+		moisture_correction         = (100 - percent_moisture) / (100 - common.CONST_IDEAL_MOISTURE(product)),
+		corrected_lbs               = (100 - percent_moisture) / (100 - common.CONST_IDEAL_MOISTURE(product)) * harvest_lbs,
+		corrected_lbs_per_acre      = (100 - percent_moisture) / (100 - common.CONST_IDEAL_MOISTURE(product)) * harvest_lbs / (harvest_area / common.CONST_ACRE_TO_FT2()),
+		corrected_lbs_per_adjusted_acre = (100 - percent_moisture) / (100 - common.CONST_IDEAL_MOISTURE(product)) * harvest_lbs / ((harvest_area - coalesce(total_loss_area, 0)) * (1 - coalesce(total_loss_fraction, 0)) / common.CONST_ACRE_TO_FT2()),
+		ideal_bushel                = common.CONST_IDEAL_BUSHEL(product),
+		ideal_bu_per_acre           = harvest_lbs / (harvest_area / common.CONST_ACRE_TO_FT2()) / common.CONST_IDEAL_BUSHEL(product),
+		ideal_bu_per_adjusted_acre  = harvest_lbs / ((harvest_area - coalesce(total_loss_area, 0)) * (1 - coalesce(total_loss_fraction, 0)) / common.CONST_ACRE_TO_FT2()) / common.CONST_IDEAL_BUSHEL(product),
+		ideal_corrected_bu_per_acre = (100 - percent_moisture) / (100 - common.CONST_IDEAL_MOISTURE(product)) * harvest_lbs / (harvest_area / common.CONST_ACRE_TO_FT2()) / common.CONST_IDEAL_BUSHEL(product),
+		ideal_corrected_bu_per_adjusted_acre = (100 - percent_moisture) / (100 - common.CONST_IDEAL_MOISTURE(product)) * harvest_lbs / ((harvest_area - coalesce(total_loss_area, 0)) * (1 - coalesce(total_loss_fraction, 0)) / common.CONST_ACRE_TO_FT2()) / common.CONST_IDEAL_BUSHEL(product),
+		dry_matter_tons_per_acre             = (100 - percent_moisture) / 100 * harvest_lbs / 2000 / (harvest_area / common.CONST_ACRE_TO_FT2()),
+		dry_matter_tons_per_adjusted_acre   = (100 - percent_moisture) / 100 * harvest_lbs / 2000 / ((harvest_area - coalesce(total_loss_area, 0)) * (1 - coalesce(total_loss_fraction, 0)) / common.CONST_ACRE_TO_FT2())
 	) as calc
+
+	drop view wicst.harvesting_summary 

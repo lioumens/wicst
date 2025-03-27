@@ -1,73 +1,73 @@
-# from arl yields
 source("migration/yield_prep.R")
 
-raw_1990 <- xl_arl$`1990`
+raw_2009 <- xl_arl$`2009`
 
-pre_1990 <- raw_1990 |> 
+pre_2009 <- raw_2009 |> 
+  filter(crop != "p" & !(crop == "c" & plot == 409)) |> # exclude extra corn plot
   mutate(
-    crop = case_match(crop, !!!arl_crop_dict, .default = crop),
     mydim = case_when(
       yield != 0 & yield_mult == 5.69 ~ "510_15",
-      yield != 0 & yield_mult %in% c(2.847, 2.84706) ~ "510_30",
+      yield != 0 & yield_mult == 2.847 ~ "510_30",
       yield != 0 & yield_mult == 1.898 ~ "510_45",
-      yield != 0 & yield_mult %in% c(1.42353, 1.4235) ~ "510_60",
+      yield != 0 & yield_mult %in% c(1.42353, 1.4235, 1.424) ~ "510_60",
       .default = NA),
-    guess_loss = loss_from_mult(yield_mult, width),
+    crop = case_match(crop, !!!arl_crop_dict, .default = crop),
+    guess_loss = NA,
     # guess_lbs = if_else(crop == "pasture" & yield != 0,
     #                     yield * (20 * 7 / 43560) * 2000 / kg_to_lbs / 1000,
     #                     NA)
   ) |> 
   separate_wider_delim(mydim, delim = "_", names = c("guess_length", "guess_width")) |>
-  mutate(across(c("guess_length", "guess_width"), as.numeric)) |> 
+  mutate(across(c("guess_length", "guess_width"), as.numeric),
+         guess_area = if_else(yield == 0, NA, 43560 / yield_mult)) |> 
   mutate(
     plot = plot,
     section = "Main",
     cut = num,
-    harvesting_id = get_harvest_id(year = 1990,
+    harvesting_id = get_harvest_id(year = 2009,
                                    plot = plot,
                                    section = section,
                                    product = crop,
                                    cut = cut),
-    harvestingloss_id = get_harvestingloss_id(year = 1990,
+    harvestingloss_id = get_harvestingloss_id(year = 2009,
                                               plot = plot,
                                               section = section,
                                               coordinate = "X",
                                               product = crop,
                                               cut = cut),
+    # systematicharvestingloss_id = harvestingloss_id,
     harvest_length = coalesce(length, guess_length),
     harvest_width = coalesce(width, guess_width),
-    harvest_area = harvest_length * harvest_width,
+    harvest_area = coalesce(harvest_length * harvest_width, guess_area),
     harvest_date = date,
     harvest_lbs = if_else(crop == "pasture" & is.na(lbs) & yield == 0, 
                           0,
                           lbs),
     percent_moisture = moisture,
-    loss_area = coalesce(loss, guess_loss),
+    loss_area = loss,
     loss_width = loss_width,
     loss_length = loss_length,
     loss_reason = lossreason,
-    loss_comments = if_else(!is.na(guess_loss) & is.na(loss),
-                            glue("Michael Liou: \"Loss deduced from yield multiplier of {yield_mult}\"",
-                                 yield_mult = yield_mult),
-                            NA),
+    # loss_fraction = sysloss,
+    # loss_category = syslossreason,
+    note = case_when(is.na(harvest_length) & !is.na(yield_mult) & yield != 0 ~ 
+                       glue("Michael Liou: \"harvest area deduced from yield multiplier of {mult}.\"",
+                            mult = yield_mult),
+                     .default = note),
     comments = stitch_notes(NA, note)
   )
 
+# harvests
+tbl_2009 <- pre_2009 |> select(any_of(harvesting_cols))
+supp_2009 <- pre_2009 |> select(any_of(supp_harvesting_cols))
 
+# losses
+tbl_2009_loss <- pre_2009 |> select(any_of(loss_cols)) |> drop_na(loss_area)
+supp_2009_loss <- pre_2009 |> select(any_of(supp_loss_cols)) |> 
+  filter(if_any(-harvestingloss_id, \(x) !is.na(x)))
 
-tbl_1990 <- pre_1990 |> select(any_of(harvesting_cols))
-supp_1990 <- pre_1990 |> select(any_of(supp_harvesting_cols)) |>
-  filter(if_any(c(harvest_length, harvest_width, comments), \(x) !is.na(x)))
-
-# no losses
-# no bios
 
 # collect -----------------------------------------------------------------
 
-tbl_1990_harvests <- tbl_1990
-supp_1990_harvests <- supp_1990
-
-tbl_1990_loss <- bind_rows()
-supp_1990_loss <- bind_rows()
-
-
+tbl_2009_harvests <- tbl_2009
+supp_2009_harvests <- supp_2009

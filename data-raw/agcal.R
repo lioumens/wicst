@@ -8,12 +8,16 @@ library(DBI)
 library(glue)
 library(dplyr)
 library(janitor)
+library(lubridate)
 
 agcal <- "~/OneDrive - UW-Madison/Database development/agcal_db.xlsx"
 
 plantings_fp <- "~/OneDrive - UW-Madison/Database development/WICST agcal data entry/2 - Input Sheet - Plantings.xlsx"
 limings_fp <- "~/OneDrive - UW-Madison/Database development/WICST agcal data entry/3 - Input Sheet - Limings.xlsx"
 fertilizers_fp <- "~/OneDrive - UW-Madison/Database development/WICST agcal data entry/4 - Input Sheet - Fertilizings.xlsx"
+manurings_fp <- "~/OneDrive - UW-Madison/Database development/WICST agcal data entry/5 - Input Sheet - Manurings.xlsx"
+tillings_fp <-  "~/OneDrive - UW-Madison/Database development/WICST agcal data entry/6 - Input Sheet - Tillings.xlsx"
+pesticidings_fp <-  "~/OneDrive - UW-Madison/Database development/WICST agcal data entry/7 - Input Sheet - Pesticidings.xlsx"
 
 # plantings
 raw_plantings <- read_xlsx(plantings_fp, 
@@ -29,8 +33,12 @@ pre_plantings <- raw_plantings |>
 raw_limings <- read_xlsx(limings_fp, sheet = "Sheet1", na = "-")
 pre_limings <- raw_limings |> rename(plot_id = plot)
 
+
+## fertilizings ------------------------------------------------------------
+
 raw_fertilizings <- read_xlsx(fertilizers_fp, sheet = "Sheet1", na = "-")
 pre_fertilizings <- raw_fertilizings |> clean_names() |> 
+  filter(keep_or_remove != "remove" | is.na(keep_or_remove)) |> 
   mutate(comments = if_else(!is.na(notes),
                                         glue("Nolan Majerowski: \"{note}\"",
                                              note = notes),
@@ -40,16 +48,68 @@ pre_fertilizings <- raw_fertilizings |> clean_names() |>
          fertilizing_date = date)
 
 
+## manurings ---------------------------------------------------------------
+raw_manurings <- read_xlsx(manurings_fp, sheet = "Sheet1", na = "-")
+pre_manurings <- raw_manurings |> clean_names() |> 
+  filter(keep_or_remove != "remove" | is.na(keep_or_remove)) |>
+  mutate(comments = if_else(!is.na(notes),
+                            glue("General: {notes}", notes = notes),
+                            NA)) |> 
+  select(-notes) |> 
+  rename(plot_id = plot,
+         manuring_date = date)
+
+# tillings ----------------------------------------------------------------
+raw_tillings <- read_xlsx(tillings_fp, sheet = "Sheet1", na = "-")
+pre_tillings <- raw_tillings |> clean_names() |> 
+  mutate(comments = if_else(!is.na(notes),
+                            glue("General: {notes}", notes = notes),
+                                 NA)) |> 
+  select(-notes) |> 
+  rename(plot_id = plot,
+         tilling_date = date)
+
+# tillings_translate <- read_xlsx("~/Downloads/tillings_translate.xlsx",
+#                                 sheet = "Sheet1")
+# 
+# raw_tillings |> left_join(tillings_translate |>
+#                             distinct(type, implement, pick(starts_with("gregg"))),
+#                           by = c("type", "implement")) |>
+#   mutate(type = gregg_type,
+#          implement = gregg_implement) |> 
+#   mutate(modifier = gregg_modifier, .after = "implement") |>
+#   select(-starts_with("gregg")) |> 
+#   clipr::write_clip()
+
+# pesticidings ----------------------------------------------------------------
+raw_pesticidings <- read_xlsx(pesticidings_fp, sheet = "Sheet1", na = "-",
+                              col_types = c("guess", "guess", "guess", "guess",
+                                            "guess", "guess", "text"))
+pre_pesticidings <- raw_pesticidings |> clean_names() |> 
+  mutate(comments = if_else(!is.na(notes),
+                            glue("General: {notes}", notes = notes),
+                                 NA)) |> 
+  select(-notes) |> 
+  rename(plot_id = plot,
+         pesticiding_date = date)
+
+
 xl_agcal <- list(
   limings = pre_limings,
   fertilizings = pre_fertilizings,
-  plantings = pre_plantings
+  plantings = pre_plantings,
+  manurings = pre_manurings,
+  tillings = pre_tillings,
+  pesticidings = pre_pesticidings
 )
 
 xl_agcal_raw <- list(
   plantings = raw_plantings,
   limings = raw_limings,
-  fertilizings = raw_fertilizings
+  fertilizings = raw_fertilizings, 
+  manurings = raw_manurings,
+  tillings = raw_tillings,
+  pesticidings = raw_pesticidings
 )
 
 date_string <- Sys.Date() %>% format(format = "%Y%m%d")

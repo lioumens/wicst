@@ -164,6 +164,16 @@ wicst_raw |>
 ** Treatment
 - "c silage" is 2017-2019
 - "c_silage" is 2020-2023
+** Soil Metric
+cash cornell guide
+- POM-C :: particulate organic matter
+  - indicator for management practices
+- PLFA :: phospholipids fatty acids
+- SOC :: soil organic carbon
+- Total C+N ::
+- 24-hr C :: biotic indicator
+- ACE protein :: indicator of fungi
+- Aggregate stability ::
 * Table Documentation/Notes
 ** Global ID Structure
 H2023_A204MMS_CS_1
@@ -462,6 +472,11 @@ user=mydom\myuserid password='MyPassword1!';
 *** scrollable cursors?
 - "As a best practice, set the EnableScrollableCursors ODBC driver option to 3." [[https://documentation.sas.com/doc/en/pgmsascdc/9.4_3.5/acreldb/p02o7pdhah9nusn1dgqjgo66ibgs.htm][sas access mssql]]
 *** Firewall
+* Front End/ETL Solutions
+** Bettyblocks
+** SSIS Package
+- i think dstx file? that you just run from local machine and it just works
+** Power Automate
 * Notes
 ** Meeting
 - meeting in field, if grain, normally it's just calculated on site with the moisture,

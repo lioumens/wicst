@@ -61,6 +61,56 @@ tbl_2002_loss <- pre_2002 |> select(any_of(loss_cols)) |> drop_na(loss_area)
 supp_2002_loss <- pre_2002 |> select(any_of(supp_loss_cols)) |>
   filter(if_any(starts_with("loss"), \(x)!is.na(x)))
 
+# pastures
+pre_2002_bio_pasture <- xl_pasture$massings |> 
+  filter(year == 2002, !is.na(yield), type == "quadrat") |>
+  group_by(year, plot, subsample) |> 
+  arrange(date) |> 
+  mutate(cut = row_number(),
+         biomassing_id = get_biomassing_id(year = 2002,
+                                           plot = plot,
+                                           section = "main",
+                                           coordinate = subsample,
+                                           biomass = "pasture",
+                                           cut = cut),
+         biomass_area = area,
+         percent_moisture = moisture,
+         biomass_date = date,
+         method = type,
+         biomass = "pasture",
+         component = "shoots",
+         biomass_width = case_when(biomass_area == 10.76391 ~ m_to_ft),
+         biomass_length = case_when(biomass_area == 10.76391 ~ m_to_ft),
+         stubble_inches = stubble_height,
+         tenday = tendayperiod,
+         cycle = cycle, 
+         biomass_grams = grams) |> 
+  mutate(
+    ml_notes = if_else(is.na(ml_note), "", glue("Michael Liou: {ml_note}", ml_note = ml_note)),
+    comments = stitch_notes(NA, ml_notes)) |> 
+  ungroup()
 
 
+tbl_2002_bio_pasture <- pre_2002_bio_pasture |> select(any_of(biomassing_cols))
+supp_2002_bio_pasture <- pre_2002_bio_pasture |> select(any_of(supp_biomassing_cols))
+
+# collect -----------------------------------------------------------------
+
+tbl_2002_harvests <- tbl_2002
+supp_2002_harvests <- supp_2002
+
+tbl_2002_loss <- tbl_2002_loss
+supp_2002_loss <- supp_2002_loss
+
+tbl_2002_bio <- bind_rows(
+  tbl_2002_bio_pasture
+)
+
+supp_2002_bio <- bind_rows(
+  supp_2002_bio_pasture
+)
+
+# xl_pasture$massings |> filter(year == 2002, type == "harvest")
+# tbl_2002_harvests |> filter(crop == "pasture") |> get_yield() |>
+#   select(harvest_tons_dm_per_acre)
 

@@ -47,7 +47,7 @@ pre_2014_bio_past <- raw_2014_bio_past |>
     section = "Main",
     # cut = str_extract(description,"\\d+"),
     # cut = row_number() + coalesce(n, 0),
-    cut = str_extract(description, "\\d") |> as.numeric() |> replace_na(1),
+    cut = str_extract(description, "\\d") |> as.numeric() |> replace_na(1) |> as.numeric(),
     biomass_date = date,
     wet_weight_no_bag = wet_weight_g,
     dry_weight_no_bag = dry_weight_g,
@@ -80,12 +80,12 @@ supp_2014_bio_past <- pre_2014_bio_past |> select(any_of(supp_biomassing_cols))
 
 raw_2014_alfalfa <- xl_snap$`2014_moistures_alfalfa` |> clean_names()
 
-raw_2014_alfalfa |> arrange(date) |> 
-  mutate(tmp = str_extract(description, "\\d"), 
-         tmp2 = row_number(),
-         .by = plot) |> 
-  select(plot, date, description, tmp, tmp2) |> 
-  print(n = 100)
+# raw_2014_alfalfa |> arrange(date) |> 
+#   mutate(tmp = str_extract(description, "\\d"), 
+#          tmp2 = row_number(),
+#          .by = plot) |> 
+#   select(plot, date, description, tmp, tmp2) |> 
+#   print(n = 100)
 
 pre_2014_alfalfa <- raw_2014_alfalfa |>
   arrange(date) |> 
@@ -98,7 +98,7 @@ pre_2014_alfalfa <- raw_2014_alfalfa |>
     cut = row_number(),
     section = "Main",
     crop = case_when(str_detect(description, "Oats/Alfalfa Baleage")~"oatlage",
-                     str_detect(description, "wheat baleage")~"wheat straw",
+                     str_detect(description, "wheat baleage")~"wheatlage",
                      .default = "alfalfa"),
     harvesting_id = get_harvest_id(year = 2014,
                                    plot = plot,
@@ -143,18 +143,6 @@ supp_2014_under <- pre_2014_under |> select(any_of(supp_biomassing_cols))
 
 # arl data -------------------------------------------------------------------------
 
-arl_crop_dict <- list("c"~"corn",
-                      "sb"~"soybean",
-                      "w"~"wheat grain",
-                      c("oa", "o")~"oats",
-                      c("o/a")~"oatlage",
-                      "fc"~"filler corn",
-                      "a"~"alfalfa",
-                      c("p", "past")~"pasture",
-                      "s"~"wheat straw",
-                      "dsa"~"direct seeded alfalfa",
-                      "c silage"~"corn silage")
-
 # Using Arl yields, all missing dates.
 raw_arl_2014 <- xl_arl$`2014`
 
@@ -186,7 +174,7 @@ pre_arl_2014_bio <- raw_arl_2014 |>
   filter(crop %in% c("past", "p")) |> 
   mutate(
     plot = plot,
-    cut = num,
+    cut = as.numeric(num),
     biomass = case_match(crop, !!!arl_crop_dict),
     biomass_length = length,
     biomass_width = width,
@@ -225,7 +213,7 @@ supp_arl_2014 <- pre_arl_2014 |> select(any_of(supp_harvesting_cols))
 
 # clip_arl_2014 |> clipr::write_clip()
 # add dates manually
-with_dates <- "~/OneDrive - UW-Madison/Database development/agcal_harvest_dates.xlsx"
+with_dates <- "~/OneDrive - UW-Madison/Database development/manual_fixes/agcal_harvest_dates.xlsx"
 tbl_arl_2014 <- read_xlsx(with_dates,
           sheet = "2014")
 
@@ -236,8 +224,14 @@ supp_arl_2014_bio <- pre_arl_2014_bio |> select(any_of(supp_biomassing_cols))
 supp_2014_bio_pasture_combined <- supp_2014_bio_past |> select(-biomass_length, -biomass_width) |>
     full_join(supp_arl_2014_bio, by = "biomassing_id")
 
-
-supp_2014_combined <- supp_arl_2014 |> left_join(supp_2014_alfalfa, by = "harvesting_id")
+supp_2014_combined <- supp_arl_2014 |> 
+  left_join(supp_2014_alfalfa, by = "harvesting_id") |> 
+  mutate(moisture_source = case_when(
+    harvesting_id %in% c("H2014_A104MMX_WL_1",
+                         "H2014_A201MMX_WL_1",
+                         "H2014_A301MMX_WL_1",
+                         "H2014_A402MMX_WL_1") ~ "rrl",
+    .default = NA))
 
 # tmp_supp <- supp_2014_bio_past |> select(-biomass_length, -biomass_width) |>
 #   full_join(supp_arl_2014_bio, by = "biomassing_id") |>
@@ -252,6 +246,11 @@ supp_2014_combined <- supp_arl_2014 |> left_join(supp_2014_alfalfa, by = "harves
 # tbl_arl_2014_bio |> left_join(xtb, by = "biomassing_id") |> 
 #   View()
 
+# fixing plots 104, 201, 301, 402
+# 36.21321106 moisture is the RRL value
+# 32.90545 is the grab sample value
+
+
 
 # combined ----------------------------------------------------------------
 
@@ -259,6 +258,9 @@ tbl_2014_harvests <- bind_rows(
   tbl_arl_2014,
   tbl_2014_past
 )
+
+tbl_2014_loss <- bind_rows()
+supp_2014_loss <- bind_rows()
 
 supp_2014_harvests <- bind_rows(
   supp_2014_combined,

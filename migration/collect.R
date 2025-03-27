@@ -9,12 +9,36 @@ if (!exists("tbl_2018_harvests")) source("migration/2018_yield.R")
 if (!exists("tbl_2017_harvests")) source("migration/2017_yield.R")
 if (!exists("tbl_2016_harvests")) source("migration/2016_yield.R")
 if (!exists("tbl_2015_harvests")) source("migration/2015_yield.R")
+if (!exists("tbl_2014_harvests")) source("migration/2014_yield.R")
+if (!exists("tbl_2013_harvests")) source("migration/2013_yield.R")
+if (!exists("tbl_2012_harvests")) source("migration/2012_yield.R")
+if (!exists("tbl_2011_harvests")) source("migration/2011_yield.R")
+if (!exists("tbl_2010_harvests")) source("migration/2010_yield.R")
+if (!exists("tbl_2009_harvests")) source("migration/2009_yield.R")
+if (!exists("tbl_2008_harvests")) source("migration/2008_yield.R")
+if (!exists("tbl_2007_harvests")) source("migration/2007_yield.R")
+if (!exists("tbl_2006_harvests")) source("migration/2006_yield.R")
+if (!exists("tbl_2005_harvests")) source("migration/2005_yield.R")
+if (!exists("tbl_2004_harvests")) source("migration/2004_yield.R")
+if (!exists("tbl_2003_harvests")) source("migration/2003_yield.R")
+if (!exists("tbl_2002_harvests")) source("migration/2002_yield.R")
+if (!exists("tbl_2001_harvests")) source("migration/2001_yield.R")
+if (!exists("tbl_2000_harvests")) source("migration/2000_yield.R")
+if (!exists("tbl_1999_harvests")) source("migration/1999_yield.R")
+if (!exists("tbl_1998_harvests")) source("migration/1998_yield.R")
+if (!exists("tbl_1997_harvests")) source("migration/1997_yield.R")
+if (!exists("tbl_1996_harvests")) source("migration/1996_yield.R")
+if (!exists("tbl_1995_harvests")) source("migration/1995_yield.R")
+if (!exists("tbl_1994_harvests")) source("migration/1994_yield.R")
+if (!exists("tbl_1993_harvests")) source("migration/1993_yield.R")
+if (!exists("tbl_1992_harvests")) source("migration/1992_yield.R")
+if (!exists("tbl_1991_harvests")) source("migration/1991_yield.R")
+if (!exists("tbl_1990_harvests")) source("migration/1990_yield.R")
 
-load("data/agcal_20241210.Rdata")
+load("data/agcal_20250326.Rdata")
 load("data/core_20241206.Rdata")
 
 # wicst ------------------------------------------------------------------
-
 
 ## core --------------------------------------------------------------------
 
@@ -38,6 +62,31 @@ tbl_harvests <- bind_rows(
   tbl_2017_harvests,
   tbl_2016_harvests,
   tbl_2015_harvests,
+  tbl_2014_harvests,
+  tbl_2013_harvests,
+  tbl_2012_harvests,
+  tbl_2011_harvests,
+  tbl_2010_harvests,
+  tbl_2009_harvests,
+  tbl_2008_harvests,
+  tbl_2007_harvests,
+  tbl_2006_harvests,
+  tbl_2005_harvests,
+  tbl_2004_harvests,
+  tbl_2003_harvests,
+  tbl_2002_harvests,
+  tbl_2001_harvests,
+  tbl_2000_harvests,
+  tbl_1999_harvests,
+  tbl_1998_harvests,
+  tbl_1997_harvests,
+  tbl_1996_harvests,
+  tbl_1995_harvests,
+  tbl_1994_harvests,
+  tbl_1993_harvests,
+  tbl_1992_harvests,
+  tbl_1991_harvests,
+  tbl_1990_harvests
 ) |> mutate(plot = glue("A{plot}"))
 
 supp_harvests <- bind_rows(
@@ -49,7 +98,32 @@ supp_harvests <- bind_rows(
   supp_2018_harvests,
   supp_2017_harvests,
   supp_2016_harvests,
-  supp_2015_harvests
+  supp_2015_harvests,
+  supp_2014_harvests,
+  supp_2013_harvests,
+  supp_2012_harvests,
+  supp_2011_harvests,
+  supp_2010_harvests,
+  supp_2009_harvests,
+  supp_2008_harvests,
+  supp_2007_harvests,
+  supp_2006_harvests,
+  supp_2005_harvests,
+  supp_2004_harvests,
+  supp_2003_harvests,
+  supp_2002_harvests,
+  supp_2001_harvests,
+  supp_2000_harvests,
+  supp_1999_harvests,
+  supp_1998_harvests,
+  supp_1997_harvests,
+  supp_1996_harvests,
+  supp_1995_harvests,
+  supp_1994_harvests,
+  supp_1993_harvests,
+  supp_1992_harvests,
+  supp_1991_harvests,
+  supp_1990_harvests
 )
 
 
@@ -65,6 +139,31 @@ tbl_loss <- bind_rows(
   tbl_2017_loss, # empty
   tbl_2016_loss, # empty
   tbl_2015_loss,
+  tbl_2014_loss, # empty
+  tbl_2013_loss,
+  tbl_2012_loss,
+  tbl_2011_loss,
+  tbl_2010_loss,
+  tbl_2009_loss,
+  tbl_2008_loss,
+  tbl_2007_loss,
+  tbl_2006_loss,
+  tbl_2005_loss,
+  tbl_2004_loss,
+  tbl_2003_loss,
+  tbl_2002_loss,
+  tbl_2001_loss, # empty
+  tbl_2000_loss, # empty
+  tbl_1999_loss, # empty
+  tbl_1998_loss, # empty
+  tbl_1997_loss, # empty
+  tbl_1996_loss, # empty
+  tbl_1995_loss, # empty
+  tbl_1994_loss, # empty
+  tbl_1993_loss, # empty
+  tbl_1992_loss, # empty
+  tbl_1991_loss, # empty
+  tbl_1990_loss, # empty
 )
 
 
@@ -76,7 +175,32 @@ supp_loss <- bind_rows(
   supp_2018_loss,
   supp_2017_loss, # empty
   supp_2016_loss, # empty
-  supp_2015_loss
+  supp_2015_loss,
+  supp_2014_loss, # empty
+  supp_2013_loss,
+  supp_2012_loss,
+  supp_2011_loss,
+  supp_2010_loss,
+  supp_2009_loss,
+  supp_2008_loss,
+  supp_2007_loss,
+  supp_2006_loss,
+  supp_2005_loss,
+  supp_2004_loss,
+  supp_2003_loss,
+  supp_2002_loss,
+  supp_2001_loss, # empty
+  supp_2000_loss, # empty
+  supp_1999_loss, # empty
+  supp_1998_loss, # empty
+  supp_1997_loss, # empty
+  supp_1996_loss, # empty
+  supp_1995_loss, # empty
+  supp_1994_loss, # empty
+  supp_1993_loss, # empty
+  supp_1992_loss, # empty
+  supp_1991_loss, # empty
+  supp_1990_loss, # empty
 )
 
 tbl_sysloss <- bind_rows(
@@ -89,6 +213,31 @@ tbl_sysloss <- bind_rows(
   tbl_2017_sysloss, # empty
   tbl_2016_sysloss, # empty
   tbl_2015_sysloss, # empty
+  # tbl_2014_sysloss, # empty
+  # tbl_2013_sysloss, # empty
+  # tbl_2012_sysloss, # empty
+  tbl_2011_sysloss,
+  # tbl_2010_sysloss, # empty
+  # tbl_2009_sysloss, # empty
+  # tbl_2008_sysloss, # empty
+  # tbl_2007_sysloss, # empty
+  # tbl_2006_sysloss, # empty
+  # tbl_2005_sysloss, # empty
+  # tbl_2004_sysloss, # empty
+  # tbl_2003_sysloss, # empty
+  # tbl_2002_sysloss, # empty
+  # tbl_2001_sysloss, # empty
+  # tbl_2000_sysloss, # empty
+  # tbl_1999_sysloss, # empty
+  # tbl_1998_sysloss, # empty
+  # tbl_1997_sysloss, # empty
+  # tbl_1996_sysloss, # empty
+  # tbl_1995_sysloss, # empty
+  # tbl_1994_sysloss, # empty
+  # tbl_1993_sysloss, # empty
+  # tbl_1992_sysloss, # empty
+  # tbl_1991_sysloss, # empty
+  # tbl_1990_sysloss, # empty
 )
 
 supp_sysloss <- bind_rows(
@@ -101,6 +250,31 @@ supp_sysloss <- bind_rows(
   supp_2017_sysloss, # empty
   supp_2016_sysloss, # empty
   supp_2015_sysloss, # empty
+  # supp_2014_sysloss, # empty
+  # supp_2013_sysloss, # empty
+  # supp_2012_sysloss, # empty
+  supp_2011_sysloss,
+  # supp_2010_sysloss, # empty
+  # supp_2009_sysloss, # empty
+  # supp_2008_sysloss, # empty
+  # supp_2007_sysloss, # empty
+  # supp_2006_sysloss, # empty
+  # supp_2005_sysloss, # empty
+  # supp_2004_sysloss, # empty
+  # supp_2003_sysloss, # empty
+  # supp_2002_sysloss, # empty
+  # supp_2001_sysloss, # empty
+  # supp_2000_sysloss, # empty
+  # supp_1999_sysloss, # empty
+  # supp_1998_sysloss, # empty
+  # supp_1997_sysloss, # empty
+  # supp_1996_sysloss, # empty
+  # supp_1995_sysloss, # empty
+  # supp_1994_sysloss, # empty
+  # supp_1993_sysloss, # empty
+  # supp_1992_sysloss, # empty
+  # supp_1991_sysloss, # empty
+  # supp_1990_sysloss, # empty
 )
 
 
@@ -116,6 +290,18 @@ tbl_bio <- bind_rows(
   tbl_2017_bio,
   tbl_2016_bio,
   tbl_2015_bio,
+  tbl_2014_bio,
+  tbl_2013_bio,
+  #TODO: biomassings prior to 2012, currently ignored
+  tbl_2001_bio,
+  tbl_2000_bio,
+  tbl_1999_bio,
+  tbl_1998_bio,
+  tbl_1997_bio,
+  # tbl_1996_bio, # empty
+  tbl_1995_bio,
+  tbl_1994_bio, # pastures
+  tbl_1993_bio  # pastures
 ) |> mutate(plot = glue("A{plot}"))
 
 supp_bio <- bind_rows(
@@ -128,6 +314,18 @@ supp_bio <- bind_rows(
   supp_2017_bio,
   supp_2016_bio,
   supp_2015_bio,
+  supp_2014_bio,
+  supp_2013_bio,
+  #TODO: biomassings prior to 2012, currently ignored
+  supp_2001_bio,
+  supp_2000_bio,
+  supp_1999_bio,
+  supp_1998_bio,
+  supp_1997_bio,
+  # supp_1996_bio,
+  supp_1995_bio,
+  supp_1994_bio, # pastures
+  supp_1993_bio
 )
 
 ## canopeo ----------------------------------------------------------------
@@ -139,6 +337,7 @@ tbl_can <- bind_rows(
   tbl_2019_can, # empty
   tbl_2018_can, # empty
   # empty 2017 - 2015
+  # empty before 2015
 )
 
 supp_can <- bind_rows(
@@ -149,6 +348,7 @@ supp_can <- bind_rows(
   supp_2019_can, # empty
   supp_2018_can, # empty
   # empty 2017 - 2015
+  # empty before 2015
 )
 
 db_can <- tbl_can |> 
@@ -163,11 +363,14 @@ db_candetails <- supp_can
 ## yieldings ---------------------------------------------------------------
 
 product_codes <- list(
-  c("A1", "A2", "Ai", "Aii", "ORG A1", "alfalfa", "a", "dsA") ~ "alfalfa",
+  c("A1", "A2", "Ai", "Aii", "ORG A1", "alfalfa", "a", "dsA", "direct seeded alfalfa", "dsa") ~ "alfalfa",
   c("Continuous Corn", "Corn", "Organic Corn", "Strip Till Corn", "Strip-till Corn", "Strip-till corn", "organic corn", "corn") ~ "corn",
+  c("filler corn") ~ "filler corn",
+  c("corn silage") ~ "corn silage",
+  c("snaplage") ~ "snaplage",
   c("No-till Soybean", "No-till Soybeans","NT soy", "Org. soy", "Organic Soybean", "Organic Soybeans", "organic soybeans", "soybean", "soybeans") ~ "soybean",
-  c("oat grain")~"oat grain",
-  c("Oat Straw")~ "oat straw",
+  c("oat grain", "oats")~"oat grain",
+  c("Oat Straw", "oat straw")~ "oat straw",
   c("Pasture", "pasture")~ "pasture",
   c("Wheat", "wheat grain", "w/cl", "wheat") ~ "wheat grain",
   c("oatlage", "o/A", "o/a") ~ "oatlage",
@@ -199,9 +402,10 @@ pre_yield <- bind_rows(tbl_harvests |> add_column(yielding_type = "harvesting"),
   mutate(yielding_id = coalesce(harvesting_id, biomassing_id),
          plot_id = plot,
          product_description = crop,
-         product = case_match(crop, !!!product_codes),
-         biomass = case_match(biomass, !!!biomass_codes),
-         coordinate = case_match(coordinate, !!!coordinate_codes, .default = coordinate))
+         product             = case_match(crop, !!!product_codes),
+         biomass             = case_match(biomass, !!!biomass_codes),
+         coordinate          = case_match(coordinate, !!!coordinate_codes,
+                                 .default = coordinate))
 
 
 ## db ----------------------------------------------------------------------

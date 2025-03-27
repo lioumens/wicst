@@ -10,9 +10,11 @@ library(rlang)
 load("data/wip_20250106.Rdata")
 load("data/master_20240926.Rdata")
 load("data/core_20241104.Rdata")
-load("data/agcal_20241210.Rdata")
+load("data/agcal_20250326.Rdata")
+load("data/nutrients_20250219.Rdata")
+load("data/pasture_20250325.Rdata")
 
-load("data/arl_20250116.Rdata")
+load("data/arl_20250327.Rdata")
 
 c_ideal_percent_moisture = 15.5
 c_bushel = 56
@@ -25,22 +27,38 @@ ws_bushel = 60
 b_ideal_percent_moisture = 14.5
 b_bushel = 48
 # barley straw ideal moisture?/bushel?
-oat_ideal_percent_moisture = 14
+oat_ideal_percent_moisture = 14 # arlington seems to be using 13 most of the time
 oat_bushel = 32 # ? is this right? 2019 oat harvest uses this
 kg_to_lbs = 2.2046226
 acre_to_ft2 = 43560
 m2_to_ft2 = 10.7639
 m_to_ft = 3.28084
 
+
+# arl_crop_dict <- list("c"~"corn",
+                      # "sb"~"soybean",
+                      # "w"~"wheat grain",
+                      # c("oa", "o")~"oats",
+                      # c("o/a")~"oatlage",
+                      # "fc"~"filler corn",
+                      # "a"~"alfalfa",
+                      # c("p", "past")~"pasture",
+                      # "s"~"wheat straw",
+                      # "dsa"~"direct seeded alfalfa",
+                      # "c silage"~"corn silage")
+
 arl_crop_dict <- list("c"~"corn",
+                      "sl"~"snaplage",
                       "sb"~"soybean",
                       "w"~"wheat grain",
-                      c("oa", "o")~"oats",
-                      c("o/a")~"oatlage",
+                      "s"~"wheat straw",
+                      "wl"~"wheatlage", # for 2014
+                      c("oa")~"oats",
+                      c("o/a", "o")~"oatlage",
                       "fc"~"filler corn",
                       "a"~"alfalfa",
                       c("p", "past")~"pasture",
-                      "s"~"wheat straw",
+                      "os"~"oat straw",
                       "dsa"~"direct seeded alfalfa",
                       c("c silage", "cs")~"corn silage")
 
@@ -84,7 +102,9 @@ get_harvest_id <- function(year, plot, section, product, cut = 1, site = "A") {
   
   product_code <- case_match(product,
                              c("corn")~"CN",
+                             c("filler corn")~"FC",
                              c("corn silage")~"CS",
+                             c("snaplage") ~ "SL",
                              c("wheat", "wheat grain", "w/cl")~"WG",
                              c("soybean")~"SB",
                              c("wheat straw")~"WS",
@@ -135,6 +155,11 @@ get_biomassing_id <- function(year, plot, section, coordinate, biomass,
                                 c("Paddock 5", "paddock 5", "5")~"5",
                                 c("Paddock 6", "paddock 6", "6")~"6",
                                 c("Paddock 7", "paddock 7", "7")~"7",
+                                c("a")~"I", # subsamples
+                                c("b")~"J",
+                                c("c")~"K",
+                                c("d")~"L",
+                                c("e")~"M",
                                 .default = "X")
   biomass_code <- case_match(biomass,
                              c("rye")~"RY",
@@ -157,7 +182,9 @@ get_biomassing_id <- function(year, plot, section, coordinate, biomass,
                         is.na(cut)~"X",
                         .default = as.character(cut))
   
-  method_code <- case_when(method %in% c("exclosure") | biomass_code == "PT"~"EX",
+  method_code <- case_when(
+    # method %in% c("exclosure") | biomass_code == "PT"~"EX", # some pastures are quadrats/exclosures
+    method %in% c("exclosure")~"EX",
                            method %in% c("quadrat")~"QT",
                            method %in% c("undercutting")~"UC",
                            .default = "XX")
@@ -234,6 +261,7 @@ get_canopeo_id <- function(year, plot, section, coordinate, biomass = "XX", cut 
 # coordinate shouldn't be relevant for harvests
 # loss_num can have multiple losses for each cut, i.e. over multiple alfalfa cuts, maybe different reasons for many areas
 # share harvesting loss id between systematic and direct
+# shared because currently no yields with both direct and systematic... but in db should allow for it
 get_harvestingloss_id <- function(year, plot, section,
                                   coordinate = "X", 
                                   product = "XX",
@@ -272,6 +300,7 @@ get_harvestingloss_id <- function(year, plot, section,
                                 .default = "X")
   product_code <- case_match(product,
                              c("corn")~"CN",
+                             c("filler corn")~"FC",
                              c("corn silage")~"CS",
                              c("wheat")~"WG",
                              c("soybean")~"SB",
@@ -311,12 +340,15 @@ stitch_notes <- function(notes, ml_notes) {
 }
 
 get_yield <- function(dat, product = NULL) {
-  corn_grains <- c("corn")
+  corn_grains <- c("corn", "filler corn")
   wheat_grains <- c("wheat", "wheat_grain", "wheat grain")
+  old_wheat_grains <- c("old_wheat") # used to be 13, changed to 13.5 recently
+  old_oat_grains <- c("old_oat") # used to be 13, changed to 14 recently
   wheat_straws <- c("wheat_straw", "wheat straw")
   soybeans <- c("soybean") 
   barleys <- c("barley")
-  oats <- c("oat", "oats", "oat grain")
+  snaplages <- c("snaplage")
+  oats <- c("oat", "oats", "oat grain") # currently 14
   oat_straws <- c("oat straw")
   
   cols_needed <- c("percent_moisture", "harvest_lbs", "harvest_area")
@@ -335,6 +367,8 @@ get_yield <- function(dat, product = NULL) {
     ideal_moisture = case_match(product %||% str_to_lower(crop),
                                 corn_grains~c_ideal_percent_moisture,
                                 wheat_grains~wg_ideal_percent_moisture,
+                                old_wheat_grains~13, # for easier QA
+                                old_oat_grains~13, # for easier QA
                                 wheat_straws~ws_ideal_percent_moisture,
                                 soybeans~sb_ideal_percent_moisture,
                                 barleys~b_ideal_percent_moisture,
@@ -342,6 +376,8 @@ get_yield <- function(dat, product = NULL) {
     bushel_lbs = case_match(product %||% str_to_lower(crop),
                             corn_grains~c_bushel,
                             wheat_grains~wg_bushel,
+                            old_wheat_grains~ wg_bushel, # QA, old bushels didn't change
+                            old_oat_grains~oat_bushel, # QA, old bushels didn't change
                             wheat_straws~ws_bushel,
                             soybeans~sb_bushel,
                             barleys~b_bushel,
@@ -377,13 +413,34 @@ get_biomass <- function(dat, biomass = NULL) {
 # Arlington cleaning ------------------------------------------------------
  
 
-loss_from_mult <- function(x, width = 60) {
-  (43560 - x * 510 * width) / -x
+loss_from_mult <- function(x, width = 60, length = 510) {
+  (43560 - x * length * width) / -x
 }
 
 
 deduce_pasture_grams <- function(yield, area = 20 * 7) {
   yield * area / 43560 * 2000 / kg_to_lbs * 1000
+}
+
+# og formula is
+# yield = lbs * (100 - moisture) / (100 - ideal moisture) / 2000 / bushellbs / (area / 43560)
+
+# deduce_harvest_lbs <- function(yield, moisture = 30, area = 510 * 60, product = "corn") {
+#   ideal_moisture <- case_match(product)
+#   49.13282 * (510 * 60 / 43560) * 60 * (100 - 13) / (100 - 20.28)
+#   31.9 * (510 * 60 / 43560) * 60 * (100 - 13) / (100 - 11.41)
+  # 4140  * (100 - 32.3) / 100 / 2000  * 43560 / 1.01
+  # (1.01 * 2000 * (30600 / 43560) / 4140)
+  # 4140 * (100 - 65.72444) / 100 / (30600 / 43560) / 2000
+# }
+# given a yield t dm/acre number, assume it's green chopped, return harvest lbs
+deduce_pasture_lbs <- function(yield, area = 510 * 60, moisture = 80) {
+  yield * (area / acre_to_ft2) * 2000 / ((100 - moisture) / 100)
+}
+
+# guess from multiplier and one of dimensions, and loss. Meant for interactive use
+guess_missing_dimension <- function(mult, width_or_length, loss = 0) {
+  (43560 + mult * loss) / (mult * width_or_length)
 }
 
 
@@ -408,8 +465,10 @@ supp_harvesting_cols <- c("harvesting_id",
                           "bag_weight", "wet_bag_weight", "dry_bag_weight", # weights of bag themselves
                           "wet_weight_w_bag", "dry_weight_w_bag", # grab sample with the bag
                           "wet_weight_no_bag", "dry_weight_no_bag", # grab sample without bag
+                          "moisture_source",
                           "num_bales",
                           "wagon_weight", "wagon_color", "trailer_weight",
+                          "stubble_inches", "tenday", "cycle",
                           "comments")
 
 supp_ei_harvesting_cols <- supp_harvesting_cols
@@ -417,6 +476,7 @@ supp_ei_harvesting_cols <- supp_harvesting_cols
 supp_cs_harvesting_cols <- c("harvesting_id", 
                              "harvest_length", "harvest_width", # dimensions
                              "rrl_id",
+                             "moisture_source",
                              # "bag_weight", "wet_bag_weight", "dry_bag_weight", # weights of bag themselves
                              # "wet_weight_w_bag", "dry_weight_w_bag", # grab sample with the bag
                              # "wet_weight_no_bag", "dry_weight_no_bag", # grab sample without bag
@@ -464,6 +524,8 @@ supp_biomassing_cols <- c("biomassing_id",
                           "bag_weight", "wet_bag_weight", "dry_bag_weight", # weights of bag themselves
                           "wet_weight_w_bag", "dry_weight_w_bag", # grab sample with the bag
                           "wet_weight_no_bag", "dry_weight_no_bag", # grab sample without bag
+                          "moisture_source",
+                          "stubble_inches", "tenday", "cycle",
                           "comments")
 
 
@@ -473,6 +535,8 @@ supp_ei_biomassing_cols <- c("biomassing_id", "biomass_length", "biomass_width",
                           "bag_weight", "wet_bag_weight", "dry_bag_weight", # weights of bag themselves
                           "wet_weight_w_bag", "dry_weight_w_bag", # grab sample with the bag
                           "wet_weight_no_bag", "dry_weight_no_bag", # grab sample without bag
+                          "moisture_source",
+                          "stubble_inches", "tenday", "cycle",
                           "comments")
 
 canopeo_cols <- c("canopeo_id", "coverage_date",
@@ -491,7 +555,6 @@ supp_ei_canopeo_cols <- c("canopeo_id", "comments")
 # there was some info about height of photos and such... maybe in supp
 
 # priarie tables
-
 fuel_harvesting_cols <- c("harvesting_id", "harvest_date", 
                "fuel_plot", "crop",
                "harvest_area", "percent_moisture",

@@ -54,12 +54,58 @@ pre_1994 <- raw_1994 |>
   )
 
 
-
 tbl_1994 <- pre_1994 |> select(any_of(harvesting_cols))
 supp_1994 <- pre_1994 |> select(any_of(supp_harvesting_cols))
 
 # no losses
 # no bios
+
+# bios
+pre_1994_pasture <- xl_pasture$massings |> 
+  filter(year == 1994, !is.na(yield), type == "quadrat") |>
+  group_by(year, plot, subsample) |> 
+  arrange(date) |> 
+  mutate(cut = row_number(),
+         biomassing_id = get_biomassing_id(year = 1994,
+                                           plot = plot,
+                                           section = "main",
+                                           coordinate = subsample,
+                                           biomass = "pasture",
+                                           cut = cut),
+         biomass_area = area,
+         percent_moisture = moisture,
+         biomass_date = date,
+         method = type,
+         biomass = "pasture",
+         component = "shoots",
+         biomass_width = case_when(biomass_area == 10.76391 ~ m_to_ft),
+         biomass_length = case_when(biomass_area == 10.76391 ~ m_to_ft),
+         stubble_inches = stubble_height,
+         tenday = tendayperiod,
+         cycle = cycle, 
+         biomass_grams = grams) |> 
+  mutate(
+    ml_notes = if_else(is.na(ml_note), "", glue("Michael Liou: {ml_note}", ml_note = ml_note)),
+    comments = stitch_notes(NA, ml_notes)) |> 
+  ungroup()
+
+tbl_1994_pasture <- pre_1994_pasture |> select(any_of(biomassing_cols))
+supp_1994_pasture <- pre_1994_pasture |> select(any_of(supp_biomassing_cols))
+
+# collect -----------------------------------------------------------------
+
+tbl_1994_harvests <- tbl_1994
+supp_1994_harvests <- supp_1994
+
+tbl_1994_loss <- bind_rows()
+supp_1994_loss <- bind_rows()
+
+tbl_1994_bio <- bind_rows(
+  tbl_1994_pasture
+)
+supp_1994_bio <- bind_rows(
+  supp_1994_pasture
+)
 
 
 

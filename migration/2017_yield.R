@@ -101,22 +101,40 @@ pre_2017_wg <- raw_2017_wg |> mutate(
   # from arl, but they don't match up with the spreadsheets i found
   harvest_length = c(
     "104" = 516, # matches
+    # 201 dimensions for 14056 = 28'x 502'
+    #!! decided to use 510 x31.5, and document 67x31.25' as weed loss
+    "201" = 510,
     # "201" = 443, # doesn't match
     "301" = 517, # matches
     "402" = 518 # matches
     )[as.character(plot)],
   harvest_width = c(
     "104" = 30.5, # matches
+    #!! decided to overide manual and use 510 x31.5, and document 67x31.25' as weed loss
+    "201" = 31.5,
     # "201" = 31.25, # doesn't match
     "301" = 30.5, # matches
     "402" = 30.5 # matches
     )[as.character(plot)],
   harvest_area = coalesce(harvest_length * harvest_width, harvested_area_ft2),
+  
+  #TODO: log the loss here
+  harvestingloss_id = get_harvestingloss_id(year = 2017,
+                                            plot = plot,
+                                            section = section,
+                                            product = crop),
+  loss_area = case_when(plot == 201 & crop == "wheat"~2093.75),
+  loss_width = case_when(plot == 201 & crop == "wheat"~31.25),
+  loss_length = case_when(plot == 201 & crop == "wheat"~67),
+  loss_reason = case_when(plot == 201 & crop == "wheat"~"weeds"),
   comments = stitch_notes(notes, NA)
 )
 
 tbl_2017_wg <- pre_2017_wg |> select(any_of(harvesting_cols))
 supp_2017_wg <- pre_2017_wg |> select(any_of(supp_harvesting_cols))
+
+tbl_2017_loss_wg <- pre_2017_wg |> select(any_of(loss_cols)) |> drop_na(loss_area)
+supp_2017_loss_wg <- pre_2017_wg |> select(any_of(supp_loss_cols)) |> drop_na(loss_reason)
 
 
 # Wheat straw -------------------------------------------------------------
@@ -338,8 +356,12 @@ tbl_2017_can <- bind_rows()
 supp_2017_can <- bind_rows()
 
 # losses
-tbl_2017_loss <- bind_rows()
-supp_2017_loss <- bind_rows()
+tbl_2017_loss <- bind_rows(
+  tbl_2017_loss_wg
+)
+supp_2017_loss <- bind_rows(
+  supp_2017_loss_wg
+)
 tbl_2017_sysloss <- bind_rows()
 supp_2017_sysloss <- bind_rows()
 

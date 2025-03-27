@@ -65,7 +65,8 @@ supp_2018_115_sb <- pre_2018_sb |>
 
 # Wheat Grain -------------------------------------------------------------
 
-raw_2018_wg <- xl_snap$`2018_harvests_wheat` |> clean_names()
+raw_2018_wg <- xl_snap$`2018_harvests_wheat` |> 
+  clean_names()
 
 pre_2018_wg <- raw_2018_wg |>
   # single row from alfalfa sheet that is wheatlage to remove, and process separately

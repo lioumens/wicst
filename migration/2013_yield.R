@@ -516,14 +516,17 @@ tbl_arl_2013 <- tbl_arl_2013 |> rows_update(oatlage_dates, by = "harvesting_id")
 # onto bios
 # skipped anpp & undercutting due to uncertainty
 
+
+# combined ----------------------------------------------------------------
+
 tbl_2013_harvests <- tbl_arl_2013
 supp_2013_harvests <- supp_arl_2013
 
+tbl_2013_loss <- tbl_arl_2013_loss
+supp_2013_loss <- supp_arl_2013_loss
 
 tbl_2013_bio <- tbl_2013_bio_past
 supp_2013_bio <- supp_2013_bio_past
-
-
 
 
 # ARCHIVE SECTION ---------------------------------------------------------

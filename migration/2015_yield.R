@@ -268,7 +268,6 @@ supp_2015_oat <- pre_2015_oat |> select(any_of(supp_harvesting_cols))
 # some of the wet weights for moistures are in harvests_forage_moisture, filling in.
 # dry and percent moistures all match up
 
-
 raw_2015_alf <- xl_snap$`2015_harvests_alf` |> 
   clean_names()
 
@@ -343,18 +342,29 @@ mid_2015_alf <- pre_2015_alf |>
                                    cut = cut),
     harvest_lbs = wt_tons * 2000,
     harvest_area = 60 * 510, # assume full plot length
-  )
-
-# all moistures are consistent
+)
+# all moistures are consistent, but still doesn't match master
 # mid_2015_alf |> select(my_moisture, percent_moisture, percent_moisture2) |> View()
 
-tbl_2015_alf <- mid_2015_alf |> select(any_of(harvesting_cols))
-supp_2015_alf <- mid_2015_alf |> select(any_of(supp_harvesting_cols))
+# join with rrl ids for moisture, needs nutrients table
+rrl_2015_alf_fp <- "~/OneDrive - UW-Madison/Database development/manual_fixes/harvest_rrl.xlsx"
+rrl_2015_alf <- read_xlsx(rrl_2015_alf_fp, sheet = "2015_alf")
+
+late_2015_alf <- mid_2015_alf |> 
+  left_join(rrl_2015_alf |> select(harvesting_id, rrl_id), by = "harvesting_id") |> 
+  left_join(xl_nutrients$`2015` |> select(rrl_id, total_moisture), by = "rrl_id") |> 
+  mutate(moisture_source = case_when(!is.na(total_moisture)~"rrl",
+                                     .default = NA),
+         percent_moisture = coalesce(total_moisture, percent_moisture))
+
+tbl_2015_alf <- late_2015_alf |> select(any_of(harvesting_cols))
+supp_2015_alf <- late_2015_alf |> select(any_of(supp_harvesting_cols))
 
 # Rye bio -----------------------------------------------------------------
 
 #TODO: 2015_harvests_rye, just not sure what some cols mean
-raw_2015_bio_rye <- xl_snap$`2015_harvests_rye` |> clean_names()
+raw_2015_bio_rye <- xl_snap$`2015_harvests_rye` |>
+  clean_names()
 
 # Assemble Tables ---------------------------------------------------------
 

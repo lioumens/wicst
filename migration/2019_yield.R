@@ -258,6 +258,8 @@ dupe_2019_og <- tbl_2019_og |> get_yield("oats")
 
 # oat straw ---------------------------------------------------------------
 
+# This section is left out because master has different oat straw values. Not sure what these values are:
+#   - different harvest area and moisture, but same harvest_lbs
 raw_2019_os <- xl_snap$`2019_harvests_oat_straw` |> clean_names()
 
 pre_2019_os <- raw_2019_os |> 
@@ -452,6 +454,7 @@ pre_2019_alf_all <- raw_2019_alf_all |>
     # 
     crop = case_when(crop == "o/a" & cut == 1 ~ "oatlage",
                      crop == "o/a" & cut > 1 ~ "alfalfa",
+                     crop == "w/cl" ~ "oat straw",
                      .default = crop),
     cut = cut,
     harvesting_id = get_harvest_id(year = 2019,
@@ -473,19 +476,19 @@ pre_2019_alf_all <- raw_2019_alf_all |>
 
 # these are the wheat ones that have slight conflict
 tbl_2019_wheat <- pre_2019_alf_all |> 
-  filter(crop == "w/cl") |>
+  filter(crop == "oat straw") |>
   select(any_of(harvesting_cols))
 
 supp_2019_wheat <- pre_2019_alf_all |> 
-  filter(crop == "w/cl") |>
+  filter(crop == "oat straw") |>
   select(any_of(supp_harvesting_cols))
 
 tbl_2019_alf <- pre_2019_alf_all |> 
-  filter(crop != "w/cl") |>
+  filter(crop != "oat straw") |>
   select(any_of(harvesting_cols))
 
 supp_2019_alf <- pre_2019_alf_all |> 
-  filter(crop != "w/cl") |>
+  filter(crop != "oat straw") |>
   select(any_of(supp_harvesting_cols))
 
 
@@ -712,7 +715,7 @@ tbl_2019_harvests <- bind_rows(
   tbl_2019_c,
   tbl_2019_sb,
   tbl_2019_og,
-  tbl_2019_os,
+  # tbl_2019_os, # left out b/c it's actually in tbl_2019_wheat, just mislabel
   tbl_2019_wheat,
   tbl_2019_alf,
   tbl_2019_past
@@ -722,7 +725,7 @@ supp_2019_harvests <- bind_rows(
   supp_2019_c,
   supp_2019_sb,
   supp_2019_og,
-  supp_2019_os,
+  # supp_2019_os, # left out b/c it's actually in supp_2019_wheat, just mislabel
   supp_2019_wheat,
   supp_2019_alf,
   supp_2019_past
