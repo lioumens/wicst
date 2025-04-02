@@ -31,7 +31,7 @@ past_exclosures <- raw_past_exclosures |>
           wet_weight_no_bag = wetg,
           dry_weight_no_bag = dryg,
           yield = coalesce(yield, biomass_grams * (100 - percent_moisture) / 100 * 2.2046226 / 1000 / 2000 / (biomass_area / 43560))
-          ) |> 
+   ) |> 
   select(-wetg, -dryg, -bagg, -type, -width, -length, -areaft2, -lbs, -kg)
 
 
@@ -88,7 +88,7 @@ xl_pasture <- list(
 #             max_max_no = max(max_no, na.rm = T))  |>
 #   mutate(across(avg_avg:max_max_no, \(x) case_when(is.infinite(x) | is.nan(x)~NA,
 #                                            .default = x)))
-    # pivot_wider(names_from = "cycle", values_from = c("avg_avg", "max_max"), names_vary = "slowest")
+# pivot_wider(names_from = "cycle", values_from = c("avg_avg", "max_max"), names_vary = "slowest")
 
 # mass_pt2 |> View()
 

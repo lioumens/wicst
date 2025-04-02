@@ -1,9 +1,10 @@
 
 if (!exists("harvesting_cols")) source("migration/yield_prep.R")
-
+library(readxl)
 
 # moisture
-raw_2015_forage_moisture <- xl_snap$`2015_harvests_forage_moisture` |> clean_names()
+raw_2015_forage_moisture <- xl_snap$`2015_harvests_forage_moisture` |>
+  clean_names()
 
 # Pasture -----------------------------------------------------------------
 
@@ -275,20 +276,20 @@ raw_2015_alf <- xl_snap$`2015_harvests_alf` |>
 pre_2015_alf_grab <- raw_2015_alf |> 
   arrange(ml_date) |>
   mutate(
-  plot = plot,
-  section = "Main",
-  cut = as.numeric(str_extract(sample_type, "\\d+")),
-  # other_cut = row_number(), # just for counting
-  # harvest_date = ml_date,
-  harvest_width = 60,
-  harvest_length = 510,
-  crop = "alfalfa",
-  harvesting_id = get_harvest_id(year = 2015,
-                                 plot = plot,
-                                 section = section,
-                                 product = crop),
-  # .by = plot
-)
+    plot = plot,
+    section = "Main",
+    cut = as.numeric(str_extract(sample_type, "\\d+")),
+    # other_cut = row_number(), # just for counting
+    # harvest_date = ml_date,
+    harvest_width = 60,
+    harvest_length = 510,
+    crop = "alfalfa",
+    harvesting_id = get_harvest_id(year = 2015,
+                                   plot = plot,
+                                   section = section,
+                                   product = crop),
+    # .by = plot
+  )
 # pre_2015_alf |> select(plot, cut, other_cut) |> filter(cut !=other_cut) |> View()
 # pre_2015_alf |> summarize(maxcut = max(cut),
 #                           countcut = n(), .by = plot)
@@ -308,11 +309,11 @@ pre_2015_alf <- pre_2015_alf_grab |>
 
 # extra moistures are in different sheet
 pre_2015_forage_moisture <- raw_2015_forage_moisture |> 
-    mutate(cut = readr::parse_number(cutting_number)) |> 
-    select(plot, dry_weight_g, wet_weight_g, percent_moisture, cut, notes) |> 
-    rename(other_moisture = percent_moisture,
-           other_dry = dry_weight_g,
-           other_wet = wet_weight_g)
+  mutate(cut = readr::parse_number(cutting_number)) |> 
+  select(plot, dry_weight_g, wet_weight_g, percent_moisture, cut, notes) |> 
+  rename(other_moisture = percent_moisture,
+         other_dry = dry_weight_g,
+         other_wet = wet_weight_g)
 
 mid_2015_alf <- pre_2015_alf |> 
   # join extra moistures

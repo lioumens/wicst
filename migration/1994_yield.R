@@ -61,7 +61,7 @@ supp_1994 <- pre_1994 |> select(any_of(supp_harvesting_cols))
 # no bios
 
 # bios
-pre_1994_pasture <- xl_pasture$massings |> 
+pre_1994_bio_pasture <- xl_pasture$massings |> 
   filter(year == 1994, !is.na(yield), type == "quadrat") |>
   group_by(year, plot, subsample) |> 
   arrange(date) |> 
@@ -89,8 +89,8 @@ pre_1994_pasture <- xl_pasture$massings |>
     comments = stitch_notes(NA, ml_notes)) |> 
   ungroup()
 
-tbl_1994_pasture <- pre_1994_pasture |> select(any_of(biomassing_cols))
-supp_1994_pasture <- pre_1994_pasture |> select(any_of(supp_biomassing_cols))
+tbl_1994_bio_pasture <- pre_1994_bio_pasture |> select(any_of(biomassing_cols))
+supp_1994_bio_pasture <- pre_1994_bio_pasture |> select(any_of(supp_biomassing_cols))
 
 # collect -----------------------------------------------------------------
 
@@ -101,10 +101,10 @@ tbl_1994_loss <- bind_rows()
 supp_1994_loss <- bind_rows()
 
 tbl_1994_bio <- bind_rows(
-  tbl_1994_pasture
+  tbl_1994_bio_pasture
 )
 supp_1994_bio <- bind_rows(
-  supp_1994_pasture
+  supp_1994_bio_pasture
 )
 
 

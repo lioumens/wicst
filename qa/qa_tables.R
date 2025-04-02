@@ -892,8 +892,109 @@ master_yield_for_qa <- master_yield |>
                             .default = as.numeric(mst_dm))) |> 
   arrange(year, plot, cut) |> 
   select(-rfv, -rfq)
-  
 
 master_past <- master_yield_for_qa |> filter(crop == "past", site == "ARL") |> select(-product) |>
   mutate(plot = readr::parse_number(as.character(plot)))
+
+# Pasture Yield Compare ---------------------------------------------------
+
+# master version
+
+
+# arl version
+arl_past_yields <- xl_arl |> map(\(x) x |> filter(crop == "p") |>
+                                   select(plot, any_of("date"), num, moisture, yield, any_of("bio"))) |> 
+  list_rbind(names_to = "year") |> 
+  rename(exclosure = bio) # bio in the arl sheet really means exclosure
+
+# our version
+pasture_harvest_for_qa <- db_harvestings |> filter(product == "pasture") |> get_yield() |> 
+  # mutate(plot = as.numeric(str_sub(plot_id,start = 2))) |> 
+  arrange(harvest_date) |> 
+  group_by(plot_id, year(harvest_date)) |>
+  mutate(
+    cut = row_number()
+  ) |> 
+  ungroup() |>
+  get_yield() |> 
+  select(harvesting_id, harvest_date, plot_id, harvest_area, cut, percent_moisture, harvest_lbs, harvest_tons_dm_per_acre) |>
+  rename(
+    plot = plot_id,
+    our_harvest_yield = harvest_tons_dm_per_acre,
+         id = harvesting_id,
+         date = harvest_date,
+         area = harvest_area) |> 
+  add_column(type = "harvest")
+
+# exclosures
+pasture_exclosure_for_qa <- db_biomassings |> filter(biomass == "pasture", method == "exclosure") |> 
+  # mutate(plot = as.numeric(str_sub(plot_id, start = 2))) |>
+  get_biomass() |> 
+  select(biomassing_id, biomass_date, plot_id, cut, biomass_area,
+         percent_moisture, biomass_grams, biomass_tons_dm_per_acre) |>
+  rename(
+    plot = plot_id,
+    our_exclosure_yield = biomass_tons_dm_per_acre,
+         id = biomassing_id,
+         date = biomass_date,
+         area = biomass_area) |>
+  add_column(type = "exclosure")
+
+pasture_harvest_and_exclosure_for_qa <- bind_rows(pasture_exclosure_for_qa, pasture_harvest_for_qa) |> 
+  relocate(type, .after = cut) |> 
+  relocate(our_exclosure_yield, .after = our_harvest_yield) |>
+  relocate(biomass_grams, .after = harvest_lbs) |> 
+  mutate(year = year(date))
+
+# yields
+master_yield <- xl_master |> clean_names() |> select(site:rfq4) |>
+  mutate(across(where(is.character), \(x) na_if(x, "."))) |> 
+  pivot_longer(matches(".*[1-4]"), names_pattern = "(.*)([1-4])",
+               names_to = c(".value", "cut")) |> 
+  filter(!is.na(crop)) # some 0 yields for crop NA. Just assuming these are no harvests (for cut 4)
+
+master_yield_for_qa <- master_yield |> 
+  filter(between(year, 1990, 2023),
+         !is.na(bu_t_ac) & bu_t_ac != 0) |> 
+  mutate(plot = factor(str_c("A", plot), levels = plots_by_treatment),
+         cut = as.numeric(cut),
+         product = case_match(crop,
+                              "fc"~"filler corn",
+                              "c"~"corn",
+                              "sb"~"soybean",
+                              c("a0", "a1", "a2", "dsa")~"alfalfa",
+                              c("of")~"oatlage",
+                              c("os")~"oat straw",
+                              c("og")~"oat grain",
+                              c("past")~"pasture",
+                              c("rc")~"red clover", 
+                              c("wg")~"wheat grain",
+                              c("wheatlage", "wl")~"wheatlage",
+                              c("ws")~"wheat straw",
+                              c("c silage", "c_silage")~"corn silage",
+                              .default = crop),
+         mst_dm = case_when(product %in% c("oatlage", "wheat straw", "wheatlage", "alfalfa", "oat straw", "pasture", "corn silage") ~ (100 - as.numeric(mst_dm)),
+                            .default = as.numeric(mst_dm))) |> 
+  arrange(year, plot, cut) |> 
+  select(-rfv, -rfq)
+
+masture_pasture_yield_for_qa <- master_yield_for_qa |>
+  mutate(type = case_when(
+    year < 1993 | year == 2020~"harvest",
+                          year > 2003~"exclosure"))
+
+masture_pasture_yield_for_qa |> 
+  mutate(plot = as.character(plot)) |>
+  filter(site == "ARL", product == "pasture") |>
+  full_join(pasture_harvest_and_exclosure_for_qa, by = join_by(type == type,
+                                                               plot == plot,
+                                                               cut == cut,
+                                                               year == year)) |>
+  arrange(year) |>
+  clipr::write_clip()
+
+
+
+
+
 

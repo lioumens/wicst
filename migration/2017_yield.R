@@ -222,7 +222,10 @@ pre_2017_past <- raw_2017_past |> mutate(
                                     coordinate = "X"),
   wet_weight_no_bag = grab_wet_wt_g,
   dry_weight_no_bag = grab_dry_wt_g,
-  percent_moisture = (wet_weight_no_bag - dry_weight_no_bag) / wet_weight_no_bag * 100,
+  percent_moisture = coalesce(
+    (wet_weight_no_bag - dry_weight_no_bag) / wet_weight_no_bag * 100,
+    moisture * 100
+  ),
   harvest_date = date,
   biomass_date = date,
   harvest_lbs = coalesce(plot_wt_kg * kg_to_lbs, plot_wt_lbs),
@@ -404,3 +407,12 @@ tbl_2017_prairie <- bind_rows(
 supp_2017_prairie <- bind_rows(
   supp_2017_prairie
 )
+
+
+# QA ----------------------------------------------------------------------
+
+# tbl_2017_harvests |> filter(crop == "pasture") 
+# supp_2017_harvests |> filter(harvesting_id == "H2017_A405MMX_PT_1") |> View()
+
+
+

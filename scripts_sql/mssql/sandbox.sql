@@ -292,3 +292,118 @@ case
 end
 from plants l
 left join plots p on p.plot_id = l.plot_id;
+
+
+---
+-- Calculate harvest yields for pasture
+---
+
+
+SELECT * FROM wicst.harvestings
+where product = 'pasture' and year(harvest_date) = 1994;
+
+select b.*, bd.cycle,
+dmta = biomass_grams / 1000 * common.CONST_KG_TO_LBS() / 2000 * (100 - percent_moisture) / 100 / (biomass_area / common.CONST_ACRE_TO_FT2())
+into #biopast1994
+from wicst.biomassings b
+left join wicst.biomassingdetails bd on b.biomassing_id = bd.biomassing_id
+where biomass = 'pasture' and year(biomass_date) between 1993 and 1994;
+
+--drop table #biopast1994;
+--drop table #biopast1994_lvl1;
+--drop table #biopast1994_lvl2;
+--drop table #biopast1994_lvl3;
+
+select 
+
+-- agg subsamples
+select biomass_date, plot_id, cycle,
+avg_dmta = AVG(dmta),
+max_dmta = MAX(dmta)
+into #biopast1994_lvl1
+from #biopast1994
+group by biomass_date, plot_id, cycle;
+
+-- agg cycle
+select plot_id, cycle,
+avg_avg_dmta = AVG(avg_dmta),
+max_max_dmta = MAX(max_dmta)
+into #biopast1994_lvl2
+from #biopast1994_lvl1
+group by plot_id, cycle
+
+select * from #biopast1994_lvl2;
+
+-- sum across cycles
+select plot_id,
+sum_avg_avg_dmta = SUM(avg_avg_dmta),
+max_avg_avg_dmta = SUM(max_max_dmta)
+into #biopast1994_lvl3
+from #biopast1994_lvl2
+group by plot_id;
+
+select * from #biopast1994_lvl3
+
+-- cycle is a critical part of the calculation unfortunately...
+-- make it work for multiple years
+select b.*, bd.cycle,
+dmta = biomass_grams / 1000 * common.CONST_KG_TO_LBS() / 2000 * (100 - percent_moisture) / 100 / (biomass_area / common.CONST_ACRE_TO_FT2()) -- biomass yield
+into #biopast
+from wicst.biomassings b
+left join wicst.biomassingdetails bd on b.biomassing_id = bd.biomassing_id
+where biomass = 'pasture' and year(biomass_date) between 1993 and 1994;
+
+select * from #biopast;
+
+select 
+	biomass_date,
+	YEAR(biomass_date) as biomass_year,
+	plot_id, cycle,
+	avg_dmta = AVG(dmta),
+	max_dmta = MAX(dmta)
+into #biopast_lvl1
+from #biopast
+group by YEAR(biomass_date), biomass_date, plot_id, cycle; -- cannot use alias in group_by statement
+
+
+-- agg cycle
+select biomass_year, plot_id, cycle,
+avg_avg_dmta = AVG(avg_dmta),
+max_max_dmta = MAX(max_dmta)
+into #biopast_lvl2
+from #biopast_lvl1
+group by biomass_year, plot_id, cycle
+
+select * from #biopast_lvl2;
+
+-- sum across cycles
+select biomass_year, plot_id,
+sum_avg_avg_dmta = SUM(avg_avg_dmta),
+max_avg_avg_dmta = SUM(max_max_dmta)
+into #biopast_lvl3
+from #biopast_lvl2
+group by biomass_year, plot_id;
+
+select * from #biopast_lvl3
+order by biomass_year, plot_id;
+
+--drop table #biopast;
+--drop table #biopast_lvl1;
+--drop table #biopast_lvl2;
+--drop table #biopast_lvl3;
+
+-- need to ensure harvestings have the cycle information
+
+-- 1. yield
+
+select * from wicst.harvesting_summary hs;
+
+select harvesting_id, harvest_date, plot_id, product, dry_matter_tons_per_adjusted_acre as yield from wicst.harvesting_summary hs
+where product = 'pasture' and year(harvest_date) = 1994;
+
+
+-- 2. avg yield
+-- 3. sum yield
+
+
+

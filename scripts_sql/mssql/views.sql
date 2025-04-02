@@ -223,4 +223,4 @@ WITH aggs AS (
 		dry_matter_tons_per_adjusted_acre   = (100 - percent_moisture) / 100 * harvest_lbs / 2000 / ((harvest_area - coalesce(total_loss_area, 0)) * (1 - coalesce(total_loss_fraction, 0)) / common.CONST_ACRE_TO_FT2())
 	) as calc
 
-	drop view wicst.harvesting_summary 
+-- drop view wicst.harvesting_summary 

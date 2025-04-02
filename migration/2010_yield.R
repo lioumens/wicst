@@ -16,7 +16,7 @@ pre_2010 <- raw_2010 |>
     crop = case_match(crop, !!!arl_crop_dict, .default = crop),
     guess_loss = NA,
     guess_lbs = if_else(crop == "pasture" & yield != 0 & plot == 112,
-                        yield * (510 * 60 / 43560) * 2000,
+                        deduce_pasture_lbs(yield, moisture = moisture),
                         NA)
     # guess_lbs = if_else(crop == "pasture" & yield != 0,
     #                     yield * (20 * 7 / 43560) * 2000 / kg_to_lbs / 1000, # to grams
@@ -73,14 +73,90 @@ supp_2010_loss <- pre_2010 |> select(any_of(supp_loss_cols)) |>
   filter(if_any(-harvestingloss_id, \(x) !is.na(x)))
 
 # no sysloss
-# biomassing ignored
+# pasture harvests already included
+# biomassings
+pre_2010_bio_pasture <- xl_pasture$massings |> 
+  filter(year == 2010, !is.na(yield), type == "quadrat") |>
+  group_by(year, plot, subsample) |> 
+  arrange(date) |> 
+  mutate(cut = row_number(),
+         biomassing_id = get_biomassing_id(year = 2010,
+                                           plot = plot,
+                                           section = "main",
+                                           coordinate = subsample,
+                                           biomass = "pasture",
+                                           cut = cut),
+         biomass_area = area,
+         percent_moisture = moisture,
+         biomass_date = date,
+         method = type,
+         biomass = "pasture",
+         component = "shoots",
+         biomass_width = case_when(biomass_area == 10.76391 ~ m_to_ft),
+         biomass_length = case_when(biomass_area == 10.76391 ~ m_to_ft),
+         stubble_inches = stubble_height,
+         tenday = tendayperiod,
+         cycle = cycle, 
+         biomass_grams = grams) |> 
+  mutate(
+    ml_notes = if_else(is.na(ml_note), "", glue("Michael Liou: {ml_note}", ml_note = ml_note)),
+    comments = stitch_notes(NA, ml_notes)) |> 
+  ungroup()
+
+tbl_2010_bio_pasture <- pre_2010_bio_pasture |> select(any_of(biomassing_cols))
+supp_2010_bio_pasture <- pre_2010_bio_pasture |> select(any_of(supp_biomassing_cols))
+
+# pasture exclosures
+pre_2010_bio_pasture_excl <- xl_pasture$exclosures |>
+  filter(year == 2010) |> 
+  mutate(
+    crop = "pasture",
+    biomass = crop,
+    section = "Main",
+    component = "shoots",
+    biomass_date = date,
+    biomassing_id = get_biomassing_id(year = 2010,
+                                      plot = plot,
+                                      section = section,
+                                      cut = cut,
+                                      biomass = crop,
+                                      method = method,
+                                      component = component,
+                                      coordinate = NA_character_),
+    comments = stitch_notes(note, ml_note),
+    stubble_inches = case_when(method == "exclosure"~3)
+  )
+
+tbl_2010_bio_pasture_excl <- pre_2010_bio_pasture_excl |> select(any_of(biomassing_cols))
+supp_2010_bio_pasture_excl <- pre_2010_bio_pasture_excl |> select(any_of(supp_biomassing_cols))
 
 # collect -----------------------------------------------------------------
 
 tbl_2010_harvests <- tbl_2010
 supp_2010_harvests <- supp_2010
 
+# losses
+tbl_2010_loss <- tbl_2010_loss
+supp_2010_loss <- supp_2010_loss
+
+tbl_2010_bio <- bind_rows(
+  tbl_2010_bio_pasture,
+  tbl_2010_bio_pasture_excl
+)
+
+supp_2010_bio <- bind_rows(
+  supp_2010_bio_pasture,
+  supp_2010_bio_pasture_excl
+)
+
 # QA ----------------------------------------------------------------------
+
+# supp_2010_harvests |> filter(harvesting_id == "H2010_A112MMX_PT_1") 
+# tbl_2010_bio_pasture_excl |> get_biomass() |>
+#   mutate(old_bm = biomass_tons_dm_per_acre * 1.12) |>
+#   select(plot, cut, biomass_tons_dm_per_acre, old_bm) |>
+#   arrange(plot)
+# raw_2010 |> filter(crop == "p", yield_mult |> is.na()) |> View()
 
 # 185 vs 183 in master
 # tbl_2010_harvests |> filter(plot == 106) |> 

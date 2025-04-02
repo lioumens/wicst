@@ -199,9 +199,9 @@ pre_2013_wg <- raw_2013_wg |>
     bag_weight = ml_bag_weight_g,
     comments = stitch_notes(NA, ml_notes = ml_notes)
   )
-  # meeting w/ greg, we decided to just change everything to 510 to be
-  # consistent with other years instead of the precise measurements here,
-  # so make a note of the original plot length used in the original calculation
+# meeting w/ greg, we decided to just change everything to 510 to be
+# consistent with other years instead of the precise measurements here,
+# so make a note of the original plot length used in the original calculation
 
 # adds no useful information, just
 # - loss_comments
@@ -389,12 +389,12 @@ pre_2013_bio_past <- raw_2013_past |> group_by(ml_plot) |>
     biomass = "pasture",
     biomassing_id = get_biomassing_id(year = 2013,
                                       plot = plot,
-                                   section = "Main",
-                                   coordinate = "X",
-                                   biomass = biomass,
-                                   cut = cut,
-                                   method = method,
-                                   component = component),
+                                      section = "Main",
+                                      coordinate = "X",
+                                      biomass = biomass,
+                                      cut = cut,
+                                      method = method,
+                                      component = component),
     biomass_date = ml_sample_date,
     biomass_width = ml_plot_width,
     biomass_length = ml_plot_length,
@@ -465,14 +465,14 @@ tbl_arl_2013 <- rows_update(tbl_arl_2013,
 
 # update tbl with the comments, then update arl again
 supp_alf_rows <- supp_2013_alf |> left_join(supp_arl_2013 |> 
-                             select(harvesting_id, comments),
-                           by = "harvesting_id") |> 
+                                              select(harvesting_id, comments),
+                                            by = "harvesting_id") |> 
   rowwise() |> 
   mutate(comments = 
            case_when(is.na(comments.x)~comments.y,
                      is.na(comments.y)~comments.x,
                      !is.na(comments.x) & !is.na(comments.y)~str_flatten(c(comments.x, comments.y), collapse = " | ")
-                     )
+           )
   ) |> 
   select(-comments.x, -comments.y)
 
@@ -527,7 +527,6 @@ supp_2013_loss <- supp_arl_2013_loss
 
 tbl_2013_bio <- tbl_2013_bio_past
 supp_2013_bio <- supp_2013_bio_past
-
 
 # ARCHIVE SECTION ---------------------------------------------------------
 

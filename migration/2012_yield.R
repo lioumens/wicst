@@ -79,12 +79,81 @@ tbl_2012_loss <- pre_2012 |> select(any_of(loss_cols)) |> drop_na(loss_area)
 supp_2012_loss <- pre_2012 |> select(any_of(supp_loss_cols)) |> 
   filter(if_any(-harvestingloss_id, \(x) !is.na(x)))
 
+# manually adding 2012 harvest
+pre_2012_pasture <- tibble_row(
+  plot = 207,
+  crop = "pasture",
+  section = "Main",
+  harvesting_id = get_harvest_id(year = 2012,
+                                 plot = plot,
+                                 section = section,
+                                 product = crop,
+                                 cut = 1),
+  harvest_date = as.POSIXct("2012-05-24", tz = "UTC"),
+  harvest_length = 510,
+  harvest_width = 60,
+  harvest_area = harvest_length * harvest_width, 
+  percent_moisture = 80, # assumed 80
+  yield = 1.63,
+  harvest_lbs = deduce_pasture_lbs(yield, area = harvest_area, moisture = percent_moisture),
+  comments = glue("Michael Liou: area assumed to be 510'x60' and moisture assumed to be .8, harvest lbs deduced from yield of {yield}", yield = yield)
+)
+
+tbl_2012_pasture <- pre_2012_pasture |> select(any_of(harvesting_cols))
+supp_2012_pasture <- pre_2012_pasture |> select(any_of(supp_harvesting_cols))
+
+# no quadrats
+pre_2012_bio_pasture_excl <- xl_pasture$exclosures |>
+  filter(year == 2012) |> 
+  mutate(
+    crop = "pasture",
+    biomass = crop,
+    section = "Main",
+    component = "shoots",
+    biomass_date = date,
+    biomassing_id = get_biomassing_id(year = 2012,
+                                      plot = plot,
+                                      section = section,
+                                      cut = cut,
+                                      biomass = crop,
+                                      method = method,
+                                      component = component,
+                                      coordinate = NA_character_),
+    comments = stitch_notes(note, ml_note),
+    stubble_inches = case_when(method == "exclosure"~3)
+  )
+
+tbl_2012_bio_pasture_excl <- pre_2012_bio_pasture_excl |> select(any_of(biomassing_cols))
+supp_2012_bio_pasture_excl <- pre_2012_bio_pasture_excl |> select(any_of(supp_biomassing_cols))
+
 
 # collect -----------------------------------------------------------------
 
-tbl_2012_harvests <- tbl_2012
-supp_2012_harvests <- supp_2012
+tbl_2012_harvests <- bind_rows(
+  tbl_2012,
+  tbl_2012_pasture
+)
+supp_2012_harvests <- bind_rows(
+  supp_2012,
+  supp_2012_pasture
+)
 
+tbl_2012_bio <- bind_rows(
+  tbl_2012_bio_pasture_excl
+)
+
+supp_2012_bio <- bind_rows(
+  supp_2012_bio_pasture_excl
+)
+
+
+# QA ----------------------------------------------------------------------
+
+# tbl_2012_bio_pasture_excl |> get_biomass() |>
+#   mutate(old_bm = biomass_tons_dm_per_acre * 1.12) |>
+#   select(plot, cut, biomass_tons_dm_per_acre, old_bm) |>
+#   arrange(plot)
+# raw_2012 |> filter(crop == "p", yield_mult |> is.na()) |> View()
 
 
 

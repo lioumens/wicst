@@ -753,6 +753,7 @@ used cuts 2-4 from here, see [[*2015_harvests_forage][2015_harvests_forage]] for
 - ignoring all the swg and pasture data right now
 ** 2007
 - comments have been added in text, also skipping pastures
+- pastures accounted for in pastures file
 ** REVIEW 2006
 - [ ] missing pasture information, only have yields and no dates
 ** DONE 2004
@@ -927,11 +928,15 @@ breaking/table/schema change, constraint/property/column change, small inserts/p
 :END:
 *** DONE 1990
 :PROPERTIES:
-:num_harvests: 4
+:num_harvests: 12
 :STATUS:   DONE
-:NUM_BIOMASSINGS:
+:NUM_BIOMASSINGS: 0
 :END:
 - harvests, numbers look good
+- 3 (hay) harvests according to agcal calendar
+  - only first 2 in arlington yields, but master has the third with the moistures.
+  - imputed the lbs
+- no biomassings
 *** DONE 1991
 - 3 harvests for all 4 plots
 *** DONE 1992
@@ -963,6 +968,8 @@ breaking/table/schema change, constraint/property/column change, small inserts/p
 - 1 harvests accounted for
 *** 2004
 - 1 harvest accounted for, exclosures
+*** REVIEW 2005
+- null harvests
 *** 2006
 - can't find harvests, impute from moisture?
 - the exclosures are off by 1.12 * kg_to_lbs as well
@@ -970,6 +977,67 @@ breaking/table/schema change, constraint/property/column change, small inserts/p
 - pasture date from agcal calendar, other date from the cs6_hay_yield file
 - biomassings, exclosures, and 2 harvests
 - again, the exclosures are off by arl numbers by 1.12
+*** 2008
+- All the exclosures use the same 1.12 multiplier, except for
+- 207 cut 2 does not use multiplier
+- 302 cut 2 does not use multiplier
+*** 2009
+- harvests, exclosures, and biomassings
+- have the 1.12 multiplier to get to the old arlington yields, but for master the yields are without the multiplier
+- harvests are not in arl yields
+*** REVIEW 2010
+- I'm not sure what harvests here are real
+- [ ] the first hay exclosure yield looks like it's just copied from green chop, remove?
+- [X] harvest on plot 302 that doesn't have a harvest date, can't find a hint for it anywhere.... May 28 found
+  - https://uwprod.sharepoint.com/:x:/r/sites/SanfordLab/Shared%20Documents/Database%20development/WICST_Nutrient_Analysis/Forage/2010/2010%20440%20harvest%20information.xlsx?d=wd3d5dae5f4334481a2f9e3200663d660&csf=1&web=1&e=KrnQ3p
+- 1.12 multiplier again
+- 2 hay harvests and 1 green chop.
+- 3 harvests (112, 302, 405), exclosures, and biomassings
+- 3 harvests shown in arlington yields
+  - 112 has moisture but no lbs
+  - 302 and 405 have lbs, but moisture looks imputed to be .75
+- 112 and 405 dates in agcal, missing the 302 date
+- only 112 is in cs6 hay, date is just 1 day off
+*** REVIEW 2011
+- uses 1.12x for first and second cuts, not 3rd to match arl yields. master doesn't use this multiplier
+*** DONE 2012
+- doesn't use multiplier
+- 1 harvest manually added, no quadrats, 4 cuts of exclosures
+*** 2013
+- 16 exclosures are in master, and they all match
+- 4 harvests, only one has a grab bag sample, but originally in the data sheet they wanted to use .6. the grab sample was aroudn 78 ish
+*** 2014
+- 16 exclosures, all match up with master
+*** 2015
+- 4 baleage plots as "first cut", yield values are calculated at .6 but we deleted those for missing moisture
+*** 2016
+- plot 112 is eheee
+- plot 207: heee
+- plot 302: eeee (one empty "harvest") with bagging information, and comment (flail harvested)
+- plot 405: heee
+- mix of exclosures and harvests, all the numbers are there, just the numbering of the cuts are different and harvest
+*** DONE 2017
+- 112: eeee
+- 207: heee
+- 302: eeee
+- 405: heee
+- may need to add moisture info "81.40456" to the 405 harvest
+*** 2018
+- 16 exclosures, everything matches
+*** 2019
+- 15 exclosures, 1 harvest, everything matches
+- 112: heee
+- rest of plots are eeee
+*** 2020
+- 12 harvests, the qa sheet doesn't account for shed dimensions
+- very close
+*** 2021
+- 15 exclosures and 1 harvest
+- numbers are quite close,
+*** 2022
+- 16 exclosures, relatively close
+*** 2023
+- 12 exclosures
 * QA Process
 1. Clean excel sheets directly, fill in unknowns with Nolan
 ** ARL QA

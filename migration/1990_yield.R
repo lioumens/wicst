@@ -53,11 +53,41 @@ pre_1990 <- raw_1990 |>
     comments = stitch_notes(NA, note)
   )
 
-
-
 tbl_1990 <- pre_1990 |> select(any_of(harvesting_cols))
 supp_1990 <- pre_1990 |> select(any_of(supp_harvesting_cols)) |>
   filter(if_any(c(harvest_length, harvest_width, comments), \(x) !is.na(x)))
+
+# third pasture data is missing from arl yields, impute from master yield
+pre_1990_pasture3 <- xl_master |> filter(year == 1990,
+                    plot %in% c(112, 207, 302, 405),
+                    site == "ARL") |> 
+  # select them all for now, and just filter
+  select(plot,
+         matches("bu_T_ac[1-3]"),
+         matches("mst_dm[1-3]")) |> 
+  pivot_longer(bu_T_ac1:mst_dm3, names_pattern = c("(.*)([1-3])"), 
+               names_to = c(".value", "cut")) |> 
+  # only need to add cut 3
+  filter(cut == 3) |>
+  mutate(across(c(cut, bu_T_ac, mst_dm), as.numeric),
+         harvest_length = 510,
+         harvest_width = 60,
+         harvest_area = harvest_length * harvest_width, 
+         harvest_lbs = deduce_pasture_lbs(bu_T_ac, moisture = mst_dm),
+         section = "Main",
+         crop = "pasture",
+         harvest_date = case_when(cut == 3 ~ as.POSIXct("1990-10-24", tz = "UTC")),
+         percent_moisture = mst_dm,
+         harvesting_id = get_harvest_id(year = 1990,
+                                        plot = plot,
+                                        section = section,
+                                        product = crop,
+                                        cut = cut),
+         comments = glue("Michael Liou: assumed harvest area of 510'x60' and deduced harvest lbs from yield of {yield}", yield = bu_T_ac))
+# pre_1990 |> filter(crop == "pasture") |> distinct(num, date)
+
+tbl_1990_pasture3 <- pre_1990_pasture3 |> select(any_of(harvesting_cols))
+supp_1990_pasture3 <- pre_1990_pasture3 |> select(any_of(supp_harvesting_cols))
 
 # no losses
 # no bios
@@ -70,4 +100,6 @@ supp_1990_harvests <- supp_1990
 tbl_1990_loss <- bind_rows()
 supp_1990_loss <- bind_rows()
 
+# QA ----------------------------------------------------------------------
 
+# tbl_1990_harvests |> get_yield() |> filter(crop == "pasture") |> arrange(plot) |> View()

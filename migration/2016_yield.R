@@ -283,3 +283,9 @@ tbl_2016_prairie <- bind_rows(
 supp_2016_prairie <- bind_rows(
   supp_2016_prairie
 )
+
+# QA ----------------------------------------------------------------------
+
+# tbl_2016_harvests |> filter(crop == "pasture")
+# supp_2016_harvests |> filter(harvesting_id == "H2016_A302MMX_PT_2") |> View()
+

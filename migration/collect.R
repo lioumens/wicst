@@ -292,7 +292,17 @@ tbl_bio <- bind_rows(
   tbl_2015_bio,
   tbl_2014_bio,
   tbl_2013_bio,
-  #TODO: biomassings prior to 2012, currently ignored
+  tbl_2012_bio,
+  tbl_2011_bio,
+  tbl_2010_bio,
+  tbl_2009_bio,
+  tbl_2008_bio,
+  tbl_2007_bio,
+  tbl_2006_bio,
+  tbl_2005_bio,
+  tbl_2004_bio,
+  tbl_2003_bio,
+  tbl_2002_bio,
   tbl_2001_bio,
   tbl_2000_bio,
   tbl_1999_bio,
@@ -302,6 +312,7 @@ tbl_bio <- bind_rows(
   tbl_1995_bio,
   tbl_1994_bio, # pastures
   tbl_1993_bio  # pastures
+  # pastures 1990, 1991 & 1992 are only harvests
 ) |> mutate(plot = glue("A{plot}"))
 
 supp_bio <- bind_rows(
@@ -316,7 +327,17 @@ supp_bio <- bind_rows(
   supp_2015_bio,
   supp_2014_bio,
   supp_2013_bio,
-  #TODO: biomassings prior to 2012, currently ignored
+  supp_2012_bio,
+  supp_2011_bio,
+  supp_2010_bio,
+  supp_2009_bio,
+  supp_2008_bio,
+  supp_2007_bio,
+  supp_2006_bio,
+  supp_2005_bio,
+  supp_2004_bio,
+  supp_2003_bio,
+  supp_2002_bio,
   supp_2001_bio,
   supp_2000_bio,
   supp_1999_bio,
@@ -325,7 +346,8 @@ supp_bio <- bind_rows(
   # supp_1996_bio,
   supp_1995_bio,
   supp_1994_bio, # pastures
-  supp_1993_bio
+  supp_1993_bio 
+  # pastures 1991 & 1992 are only harvests
 )
 
 ## canopeo ----------------------------------------------------------------
