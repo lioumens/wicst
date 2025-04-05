@@ -44,7 +44,9 @@ pre_2004 <- raw_2004 |>
     loss_width = loss_width,
     loss_length = loss_length,
     loss_reason = lossreason,
-    comments = stitch_notes(NA, note)
+    comments = stitch_notes(NA, note),
+    tenday = pasture_tendayperiod,
+    cycle = pasture_cycle
   )
 
 # no longer needed, pasture data more complete

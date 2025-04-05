@@ -126,6 +126,7 @@ pre_2014_under <- raw_2014_under |>
     method = "undercutting",
     component = "roots",
     coordinate = coordinate,
+    biomass_date = date,
     biomassing_id = get_biomassing_id(year = 2014,
                                       plot = plot,
                                       section = section,

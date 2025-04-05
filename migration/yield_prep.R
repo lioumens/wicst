@@ -12,7 +12,7 @@ load("data/master_20240926.Rdata")
 load("data/core_20241104.Rdata")
 load("data/agcal_20250326.Rdata")
 load("data/nutrients_20250219.Rdata")
-load("data/pasture_20250327.Rdata")
+load("data/pasture_20250405.Rdata")
 
 load("data/arl_20250402.Rdata")
 

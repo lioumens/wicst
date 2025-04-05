@@ -75,6 +75,28 @@ END;
 RETURN @IDEAL_BUSHEL
 END;
 
+
+--drop function common.GUESS_MOISTURE;
+CREATE FUNCTION common.GUESS_MOISTURE (@year INT, @product VARCHAR(50))
+  /**
+   * Returns imputed moisture value for missing values
+   * 
+   * @param year    - year to impute 
+   * @param product - moisture value to impute for
+   * @returns moisture percentage
+   */
+RETURNS REAL AS 
+BEGIN
+	DECLARE @IMPUTED_MOISTURE REAL
+	SET @IMPUTED_MOISTURE = 
+		CASE  
+			WHEN @year = 2013 AND @product = 'pasture' THEN 60
+			WHEN @year = 2015 AND @product = 'pasture' THEN 60	    
+			else NULL
+		END
+RETURN @IMPUTED_MOISTURE
+END;
+
 -----------------------
 -- HELPER FUNCTIONS  --
 -----------------------
@@ -106,6 +128,14 @@ BEGIN
 	END
     RETURN;
 END;
+
+
+----------------
+-- Unit Tests --
+----------------
+--select common.GUESS_MOISTURE(2015, 'pasture');
+
+
 
 
 

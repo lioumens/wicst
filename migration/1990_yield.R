@@ -94,8 +94,16 @@ supp_1990_pasture3 <- pre_1990_pasture3 |> select(any_of(supp_harvesting_cols))
 
 # collect -----------------------------------------------------------------
 
-tbl_1990_harvests <- tbl_1990
-supp_1990_harvests <- supp_1990
+tbl_1990_harvests <- bind_rows(
+  tbl_1990,
+  tbl_1990_pasture3
+)
+  
+supp_1990_harvests <- bind_rows(
+  supp_1990_pasture3,
+  supp_1990
+)
+  
 
 tbl_1990_loss <- bind_rows()
 supp_1990_loss <- bind_rows()

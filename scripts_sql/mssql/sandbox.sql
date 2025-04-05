@@ -296,114 +296,233 @@ left join plots p on p.plot_id = l.plot_id;
 
 ---
 -- Calculate harvest yields for pasture
----
 
-
-SELECT * FROM wicst.harvestings
-where product = 'pasture' and year(harvest_date) = 1994;
-
-select b.*, bd.cycle,
-dmta = biomass_grams / 1000 * common.CONST_KG_TO_LBS() / 2000 * (100 - percent_moisture) / 100 / (biomass_area / common.CONST_ACRE_TO_FT2())
-into #biopast1994
-from wicst.biomassings b
-left join wicst.biomassingdetails bd on b.biomassing_id = bd.biomassing_id
-where biomass = 'pasture' and year(biomass_date) between 1993 and 1994;
-
---drop table #biopast1994;
---drop table #biopast1994_lvl1;
---drop table #biopast1994_lvl2;
---drop table #biopast1994_lvl3;
-
-select 
-
--- agg subsamples
-select biomass_date, plot_id, cycle,
-avg_dmta = AVG(dmta),
-max_dmta = MAX(dmta)
-into #biopast1994_lvl1
-from #biopast1994
-group by biomass_date, plot_id, cycle;
-
--- agg cycle
-select plot_id, cycle,
-avg_avg_dmta = AVG(avg_dmta),
-max_max_dmta = MAX(max_dmta)
-into #biopast1994_lvl2
-from #biopast1994_lvl1
-group by plot_id, cycle
-
-select * from #biopast1994_lvl2;
-
--- sum across cycles
-select plot_id,
-sum_avg_avg_dmta = SUM(avg_avg_dmta),
-max_avg_avg_dmta = SUM(max_max_dmta)
-into #biopast1994_lvl3
-from #biopast1994_lvl2
-group by plot_id;
-
-select * from #biopast1994_lvl3
-
--- cycle is a critical part of the calculation unfortunately...
--- make it work for multiple years
-select b.*, bd.cycle,
-dmta = biomass_grams / 1000 * common.CONST_KG_TO_LBS() / 2000 * (100 - percent_moisture) / 100 / (biomass_area / common.CONST_ACRE_TO_FT2()) -- biomass yield
-into #biopast
-from wicst.biomassings b
-left join wicst.biomassingdetails bd on b.biomassing_id = bd.biomassing_id
-where biomass = 'pasture' and year(biomass_date) between 1993 and 1994;
-
-select * from #biopast;
-
-select 
-	biomass_date,
-	YEAR(biomass_date) as biomass_year,
-	plot_id, cycle,
-	avg_dmta = AVG(dmta),
-	max_dmta = MAX(dmta)
-into #biopast_lvl1
-from #biopast
-group by YEAR(biomass_date), biomass_date, plot_id, cycle; -- cannot use alias in group_by statement
-
-
--- agg cycle
-select biomass_year, plot_id, cycle,
-avg_avg_dmta = AVG(avg_dmta),
-max_max_dmta = MAX(max_dmta)
-into #biopast_lvl2
-from #biopast_lvl1
-group by biomass_year, plot_id, cycle
-
-select * from #biopast_lvl2;
-
--- sum across cycles
-select biomass_year, plot_id,
-sum_avg_avg_dmta = SUM(avg_avg_dmta),
-max_avg_avg_dmta = SUM(max_max_dmta)
-into #biopast_lvl3
-from #biopast_lvl2
-group by biomass_year, plot_id;
-
-select * from #biopast_lvl3
-order by biomass_year, plot_id;
-
---drop table #biopast;
---drop table #biopast_lvl1;
---drop table #biopast_lvl2;
---drop table #biopast_lvl3;
 
 -- need to ensure harvestings have the cycle information
 
--- 1. yield
+-- combine harvesting and biomassing information
+select hs.*, hd.tenday, hd.cycle
+into #harvestpast
+from wicst.harvesting_summary hs
+left join wicst.harvestingdetails hd on hs.harvesting_id = hd.harvesting_id
+where product = 'pasture' and (harvest_lbs  > 0 or harvest_lbs IS NULL);
 
-select * from wicst.harvesting_summary hs;
+select b.*, bd.cycle,
+dmta = biomass_grams / 1000 * common.CONST_KG_TO_LBS() / 2000 * (100 - percent_moisture) / 100 / (biomass_area / common.CONST_ACRE_TO_FT2()) -- biomass yield, not accounting for loss yet
+into #biopast
+from wicst.biomassings b
+left join wicst.biomassingdetails bd on b.biomassing_id = bd.biomassing_id
+where biomass = 'pasture' and year(biomass_date) between 1990 and 2023;
 
-select harvesting_id, harvest_date, plot_id, product, dry_matter_tons_per_adjusted_acre as yield from wicst.harvesting_summary hs
-where product = 'pasture' and year(harvest_date) = 1994;
+--select * from #biopast
+--
+--drop table #biopast
+--
+
+select distinct year(biomass_date) as year from wicst.biomassings
+order by year;
+
+-- null value
+-- 2014 plots missing
+
+drop table #harvestpast
+
+-- combined bio/harvest
 
 
--- 2. avg yield
--- 3. sum yield
+--drop table #pastyield_imputed_lvl1_harvestexclosures
+
+-- const table
+
+
+select num as year, lowernum
+from common.SEQ(2023, 1990, 1)
+cross apply (select lowernum = num - 5) as other
+
+-- start with this, and left join away
+with harvestpast AS (
+	select hs.*, hd.tenday, hd.cycle
+	from wicst.harvesting_summary hs
+	left join wicst.harvestingdetails hd on hs.harvesting_id = hd.harvesting_id
+	where product = 'pasture' and (harvest_lbs  > 0 or harvest_lbs IS NULL)
+), biopast AS (
+	select b.*, bd.cycle,
+	--TODO: biomass yield, not accounting for loss in the pastures
+	dmta = biomass_grams / 1000 * common.CONST_KG_TO_LBS() / 2000 * (100 - percent_moisture) / 100 / (biomass_area / common.CONST_ACRE_TO_FT2())
+	from wicst.biomassings b
+	left join wicst.biomassingdetails bd on b.biomassing_id = bd.biomassing_id
+	where biomass = 'pasture' and year(biomass_date) between 1990 and 2023 -- remove later for generalizability
+), pastyield AS (
+	SELECT *
+	FROM (
+		select plot_id, harvest_date as date, year(harvest_date) as year,
+			dry_matter_tons_per_adjusted_acre as yield,
+			method = 'harvest',
+			cycle
+		from harvestpast
+		where year(harvest_date) between 1990 and 2023
+		UNION ALL
+		select plot_id, biomass_date as date, year(biomass_date) as year,
+		    dmta as yield,
+		    method,
+		    cycle
+		from biopast
+	) as cb
+), pastyield_imputed AS (
+	select *
+	from (select plot_id, harvest_date as date, year(harvest_date) as year,
+			coalesce(dry_matter_tons_per_adjusted_acre, guess_dry_matter_tons_per_adjusted_acre) as yield,
+			method = 'harvest',
+			cycle
+		from harvestpast
+		where year(harvest_date) between 1990 and 2023
+		UNION ALL
+		select plot_id, biomass_date as date, year(biomass_date) as year,
+		    dmta as yield,
+		    method,
+		    cycle
+		from biopast
+	) as cb
+), 
+-- Three levels of sum/averaging/maxing for quadrat + harvesting
+-- 1. avg/max subsample
+-- 2. avg/max cycle
+-- 3. sum plot
+pastyield_lvl1 AS (
+	select 
+		date, year,	plot_id, cycle,
+		avg_yield = AVG(yield),
+		max_yield = MAX(yield)
+	from pastyield
+	where method IN ('quadrat', 'harvest')
+	group by year, date, plot_id, cycle
+), pastyield_lvl2 AS (
+	select year, plot_id, cycle,
+	avg_avg_yield = AVG(avg_yield),
+	max_max_yield = MAX(max_yield)
+	from pastyield_lvl1
+	group by year, plot_id, cycle
+), pastyield_lvl3 AS (
+	select year, plot_id,
+	sum_avg_avg_yield = SUM(avg_avg_yield),
+	sum_max_max_yield = SUM(max_max_yield)
+	from pastyield_lvl2
+	group by year, plot_id
+), pastyield_lvl1_noharvest AS (
+	select 
+		date, year,	plot_id, cycle,
+		avg_yield = AVG(yield),
+		max_yield = MAX(yield)
+	from pastyield
+	where method = 'quadrat'
+	group by year, date, plot_id, cycle
+), pastyield_lvl2_noharvest AS (
+	select year, plot_id, cycle,
+	avg_avg_yield = AVG(avg_yield),
+	max_max_yield = MAX(max_yield)
+	from pastyield_lvl1_noharvest
+	group by year, plot_id, cycle
+), pastyield_lvl3_noharvest AS (
+	select year, plot_id,
+	sum_avg_avg_yield = SUM(avg_avg_yield),
+	sum_max_max_yield = SUM(max_max_yield)
+	from pastyield_lvl2_noharvest
+	group by year, plot_id
+), pastyield_lvl1_harvestexclosures AS (
+	select 
+		year, plot_id, -- exclosures do not have cycle info
+		sum_yield = SUM(yield),
+		count_harvestexclosures = count(yield)
+	from pastyield
+	where method IN ('harvest', 'exclosure')
+	group by year, plot_id
+), pastyield_lvl1_exclosures AS (
+	select 
+		year, plot_id, -- exclosures do not have cycle info
+		sum_yield = SUM(yield),
+		count_exclosures = count(yield)
+	from pastyield
+	where method IN ('exclosure')
+	group by year, plot_id
+), pastyield_imputed_lvl1_harvestexclosures AS (
+	select
+		year, plot_id,
+		sum_yield = SUM(yield),
+		count_harvestexclosures = count(yield)
+	from pastyield_imputed
+	where method IN ('harvest', 'exclosure')
+	group by year, plot_id
+), pastyield_imputed_lvl1_exclosures AS (
+	select
+		year, plot_id,
+		sum_yield = SUM(yield),
+		count_exclosures = count(yield)
+	from pastyield_imputed
+	where method IN ('exclosure')
+	group by year, plot_id
+), pasture_year_plot AS (
+	-- outer product of years and pasture plots
+	select 
+		num as year,	
+		pasture_plots.plot_id
+	from common.SEQ(2023, 1990, 1)
+	cross join (
+		select *
+		from (VALUES ('A112'),('A207'),('A302'),('A405')) as ConstTable(plot_id)
+	) as pasture_plots
+)
+select 
+	pyp.*,
+	h.sum_avg_avg_yield as sum_avg_avg_yield_harvestquadrat,
+	h.sum_max_max_yield as sum_max_max_yield_harvestquadrat,
+	nh.sum_avg_avg_yield as sum_avg_avg_yield_quadrat,
+	nh.sum_max_max_yield as sum_max_max_yield_quadrat,
+	he.sum_yield as sum_yield_harvestexclosures,
+	e.sum_yield as sum_yield_exclosures,
+	ihe.sum_yield as sum_imputed_yield_harvestexclosures,
+	ie.sum_yield as sum_imputed_yield_exclosures
+from pasture_year_plot pyp
+left join pastyield_lvl3 h on pyp.year = h.year and pyp.plot_id = h.plot_id
+left join pastyield_lvl3_noharvest nh on pyp.year = nh.year and pyp.plot_id = nh.plot_id
+left join pastyield_lvl1_harvestexclosures he on pyp.year = he.year and pyp.plot_id = he.plot_id
+left join pastyield_lvl1_exclosures e on pyp.year = e.year and pyp.plot_id = e.plot_id
+left join pastyield_imputed_lvl1_harvestexclosures ihe on pyp.year = ihe.year and pyp.plot_id = ihe.plot_id
+left join pastyield_imputed_lvl1_exclosures ie on pyp.year = ie.year and pyp.plot_id = ie.plot_id
+order by year, plot_id
+
+select * from #pastyield_lvl1_harvestexclosures
+select * from #pastyield_lvl1_exclosures
+select * from #pastyield_imputed_lvl1_harvestexclosures
+
+--select distinct plot_id from wicst.LookupCoreTreatment
+--where realcrop = 'P' and LEFT(plot_id, 1) = 'A'
+
+select 
+coalesce(h.year, nh.year) as year,
+coalesce(h.plot_id, nh.plot_id) as plot_id,
+nh.sum_avg_avg_yield as sum_avg_avg_yield_no_harvest,
+nh.sum_max_max_yield as sum_max_max_yield_no_harvest,
+--he.sum_yield as sum_yield_harvest_and_exclosures,
+h.sum_avg_avg_yield, h.sum_max_max_yield
+from #pastyield_lvl3_noharvest nh
+full join #pastyield_lvl3 h on nh.year = h.year and nh.plot_id = h.plot_id
+--full join #pastyield_lvl1_harvestexclosures he on he.year = coalesce(h.year, nh.year) and he.plot_id = coalesce(h.plot_id, nh.plot_id)
+order by year, plot_id;
+
+select * from wicst.grazings
+
+select 
+ca.average_weight / ca.num_days as adg
+from wicst.grazings
+cross apply (
+	select 
+	num_days = DATEDIFF(day, on_date, off_date),
+	average_weight = end_lbs - start_lbs
+) as ca;
+
+
+
+
 
 
 

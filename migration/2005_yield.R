@@ -49,7 +49,9 @@ pre_2005 <- raw_2005 |>
     loss_width = loss_width,
     loss_length = loss_length,
     loss_reason = lossreason,
-    comments = stitch_notes(NA, note)
+    comments = stitch_notes(NA, note),
+    tenday = pasture_tendayperiod,
+    cycle = pasture_cycle
   )
 
 deduce_pasture_grams <- function(yield) {
@@ -118,8 +120,7 @@ pre_2005_excl_pasture <- xl_pasture$exclosures |>
                                       method = method,
                                       component = component,
                                       coordinate = NA_character_),
-    comments = stitch_notes(note, ml_note),
-    stubble_inches = case_when(method == "exclosure"~3)
+    comments = stitch_notes(note, ml_note)
   )
 
 tbl_2005_excl_pasture <- pre_2005_excl_pasture |> select(any_of(biomassing_cols))

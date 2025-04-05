@@ -52,8 +52,27 @@ past_massings <- raw_past_massings |>
          moisture = case_when(type == "quadrat" & !is.na(yield) & is.na(moisture) ~ 20),
          grams = yield * 2000 / 2.2046226 * 1000 / ((100 - moisture) / 100) * (area / 43560)) # t/acre to grams
 
-past_animal <- raw_past_animal
-past_management <- raw_past_management
+
+# animal ------------------------------------------------------------------
+
+# raw_past_animal |> 
+#   mutate(my_doy = yday(on_date),
+#          my_off_doy = yday(off_date),
+#          my_days = my_off_doy - my_doy,
+#          my_adg = (end_lbs - start_lbs) / my_days) |> 
+#   select(on_doy, my_doy, my_off_doy, off_doy, my_days, days, my_adg, ADG_lbs)
+
+raw_past_animal |> head()
+
+tbl_past_animal <- raw_past_animal |> 
+  select(year, animal_id, animal_type, on_date, off_date, start_lbs, end_lbs)
+
+# Management --------------------------------------------------------------
+tbl_past_management <- raw_past_management |> 
+  mutate(site = str_to_upper(site))
+
+past_animal <- tbl_past_animal
+past_management <- tbl_past_management
 past_summary <- raw_past_summary
 
 # collect

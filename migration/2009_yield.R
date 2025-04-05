@@ -173,7 +173,7 @@ tbl_2009_harvests <- bind_rows(
 
 supp_2009_harvests <- bind_rows(
   supp_2009,
-  tbl_2009_pasture
+  supp_2009_pasture
 )
 
 tbl_2009_loss <- tbl_2009_loss

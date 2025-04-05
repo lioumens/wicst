@@ -100,6 +100,8 @@ dbWriteTable(con, Id(schema = "wicst", table = "systematiclossdetails"), db_syst
 dbWriteTable(con, Id(schema = "wicst", table = "canopeo"), db_can, overwrite = oo$overwrite)
 dbWriteTable(con, Id(schema = "wicst", table = "canopeodetails"), db_candetails, overwrite = oo$overwrite)
 
+## animal grazing
+dbWriteTable(con, Id(schema = "wicst", table = "grazings"), db_grazings, overwrite = oo$overwrite)
 
 # ei ----------------------------------------------------------------------
 ## core --------------------------------------------------------------------

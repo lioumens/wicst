@@ -427,7 +427,7 @@ pre_yield <- bind_rows(tbl_harvests |> add_column(yielding_type = "harvesting"),
          product             = case_match(crop, !!!product_codes),
          biomass             = case_match(biomass, !!!biomass_codes),
          coordinate          = case_match(coordinate, !!!coordinate_codes,
-                                 .default = coordinate))
+                                          .default = coordinate))
 
 
 ## db ----------------------------------------------------------------------
@@ -450,10 +450,10 @@ db_harvestings <- pre_yield |>
   filter(yielding_type == "harvesting") |> 
   select(all_of(db_harvesting_cols))
 db_harvestingdetails <- supp_harvests
+
 db_biomassings <- pre_yield |> 
   filter(yielding_type == "biomassing") |> 
   select(all_of(db_biomassing_cols))
-
 db_biomassingdetails <- supp_bio
 
 # losses
@@ -472,6 +472,9 @@ db_systematiclosses <- pre_genlosses |> filter(loss_type == "systematic") |>
   select(systematicloss_id, any_of(sysloss_cols))
 db_systematiclossdetails <- supp_sysloss |>
   rename(systematicloss_id = systematicharvestingloss_id)
+
+# animal grazings
+db_grazings <- xl_pasture$animal
 
 # ei ----------------------------------------------------------------------
 

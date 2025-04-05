@@ -50,10 +50,10 @@ pre_1995 <- raw_1995 |>
                             glue("Michael Liou: \"Loss deduced from yield multiplier of {yield_mult}\"",
                                  yield_mult = yield_mult),
                             NA),
-    comments = stitch_notes(NA, note)
+    comments = stitch_notes(NA, note),
+    tenday = pasture_tendayperiod,
+    cycle = pasture_cycle
   )
-
-
 
 tbl_1995 <- pre_1995 |> select(any_of(harvesting_cols))
 supp_1995 <- pre_1995 |> select(any_of(supp_harvesting_cols))
