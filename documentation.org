@@ -1,0 +1,297 @@
+#+title: Documentation
+#+MACRO: comments_description how is this actually working
+
+* WICST Experimental Design
+The core experiment information is held in 3 tables: [[*wicst.plots][wicst.plots]], [[*wicst.rotations][wicst.rotations]], and
+* Accessing the database
+
+#+begin_src R
+# Ensure you are running R >= 4.0.0
+con <- DBI::dbConnect(odbc::odbc(),
+                      driver = “ODBC Driver 18 for SQL Server”,
+                      server = “carrington.doit.wisc.edu”,
+                      uid = “USERNAME”,
+                      pwd = rstudioapi::askForPassword("Database Password"),
+                      database = “WEIR”,
+                      TrustServerCertificate = “yes”,
+                      port = 1433)
+
+# slightly shorter connection string using “dsn”
+con <- DBI::dbConnect(odbc::odbc(),
+                      dsn = “carrington”, # name of DSN specified
+                      uid = “USERNAME”,
+                      pwd = rstudioapi::askForPassword("Database Password"))
+
+# read a table from
+DBI::dbReadTable(con, DBI::Id(schema = “wicst”, table = “plantings”))
+#+end_src
+
+* Table Documentation
+** WICST Schema
+*** wicst.biomassingdetails
+#+ATTR_ODT: :rel-width 100
+| Column Name            | Type         | Description                                                                                                                                    |
+|------------------------+--------------+------------------------------------------------------------------------------------------------------------------------------------------------|
+| =biomassing_id= (PK, FK) | VARCHAR<255> | ID for biomassing observation                                                                                                                  |
+| =biomass_length=         | FLOAT<8>     | Length of area biomassed, if known. =biomass_area= will normally be =biomass_length= * =biomass_width=, unless =biomass_area= is manually overwritten. |
+| =biomass_width=          | FLOAT<8>     | Width of area biomassed, if known. =biomass_area= will normally be =biomass_length= * =biomass_width=, unless =biomass_area= is manually overwritten.  |
+| =rrl_id=                 | FLOAT<8>     | Rock River Lab ID of biomassing sample                                                                                                         |
+| =bucket_lbs=             | FLOAT<8>     | Weight of the bucket used to assist in collecting biomass                                                                                      |
+| =comments=               | VARCHAR<255> | Miscellaneous comments about observation. Different comments delimited by "\vert "                                                                 |
+| =bag_weight=             | FLOAT<8>     | Weight of the bag used to assist in collecting biomass. Unknown if bag weight was before or after drying sample.                               |
+| =dry_weight_w_bag=       | FLOAT<8>     | Weight of biomassing bag with the dried sample                                                                                                 |
+| =wet_weight_w_bag=       | FLOAT<8>     | Weight of biomassing bag with the wet sample                                                                                                   |
+| =wet_bag_weight=         | FLOAT<8>     | Weight of the bag used to assist in collecting biomass before drying the sample.                                                               |
+| =dry_bag_weight=         | FLOAT<8>     | Weight of the bag used to assist in collecting biomass after drying the sample.                                                                |
+| =wet_weight_no_bag=      | FLOAT<8>     | Weight of biomass not including the weight of the bag, before drying.                                                                          |
+| =dry_weight_no_bag=      | FLOAT<8>     | Weight of biomass not including the weight of the bag, after drying.                                                                           |
+| =stubble_inches=         | FLOAT<8>     | How many inches of stubble is left after taking the biomassing sample.                                                                         |
+| =tenday=                 | FLOAT<8>     | Numeric estimate of how many 10 day periods since the beginning of season the biomassing was taken.                                            |
+| =cycle=                  | FLOAT<8>     | Estimate of how many growing cycles since beginning of season the biomassing was taken.                                                        |
+**** Details
+- cycle :: For biomassings on pasture, cycle gives an estimate of when in the season the biomassing was taken. This value is used to help estimate the total forage availability. Each cycle is roughly considered 30 days.
+- tenday :: For biomassings on pasture, tenday gives a finer estimate of when in the season the biomassing was taken, numerically, in 10 day increments starting early-May to October depending on the year. This serves a similar purpose to pasture cycle, but is used in the calculation of forage availability. See
+*** wicst.biomassings
+#+ATTR_ODT: :rel-width 100
+| Column Name             | Type         | Description                                  |
+| =biomassing_id= (PK + FK) | VARCHAR<255> | ID for biomassing observation                |
+| =yielding_type=           | VARCHAR<255> | Type of yield                                |
+| =biomass_date=            | DATETIME     | Date of biomassing                           |
+| =plot_id=                 | VARCHAR<255> | ID of plot biomassing was taken              |
+| =coordinate=              | VARCHAR<255> | Area of plot-section biomassing was taken    |
+| =method=                  | VARCHAR<255> | Technique of how biomassing was taken        |
+| =biomass=                 | VARCHAR<255> | The product that was taken during biomassing |
+| =component=               | VARCHAR<255> | Portion of plant biomassed                   |
+| =cut=                     | FLOAT<8>     | Iteration                                    |
+| =biomass_area=            | FLOAT<8>     | Area in square feet the biomass was taken    |
+| =percent_moisture=        | FLOAT<8>     | Water moisture content of biomassed sample   |
+| =biomass_grams=           | FLOAT<8>     | Amount of biomass taken in grams             |
+**** Data Details
+- =yielding_type= :: type of yield in this table is all biomassing, but needed for checking exclusive typing.
+  + biomassing - taking a measurement with the goal of inferring yield or mass from larger area. Observations are generally clearly one or the other, but small harvests may conceptually be similar. For such cases, biomassings should be limited to be less than 1000 sq ft.
+  + harvesting - all product is taken off the field
+- =method= :: Technique of how biomassing was taken
+  + /quadrat/ - taking a biomass by manually sampling above ground from small area, normally within a quadrat
+  + /undercutting/ - drawing blade through the soil, for either shoots or roots. This practice was more common between 2014-2019, and stopped in preference for quadratting for less soil disturbance
+- =component= :: the portion of the plant that was biomassed.
+  + roots - underground portion
+  + shoots - above ground portion
+*** wicst.canopeo
+Canopeo is an app used for estimating green canopy cover
+| Column Name         | Type         | Description                                                  |
+| =canopeo_id= (PK, FK) | VARCHAR<255> | ID for canopeo observation                                   |
+| =coverage_date=       | DATETIME     | Date the canopeo observation was made                        |
+| =plot=                | VARCHAR<255> | The plot that the canopeo observation is made                |
+| =coordinate=          | VARCHAR<255> | location within plot-section the canopeo observation is made |
+| =biomass=             | VARCHAR<255> | Description of biomass(es) contributing to the canopy cover  |
+| =percent_cover=       | FLOAT<8>     | The percentage of area the canopy is covered                 |
+**** Details
+- =percent_cover= [0-100] ::
+- =biomass= :: Multiple biomasses may contribute to the canopy cover, this text field is currently unstructured.
+*** wicst.canopeodetails
+| Column Name | Type         | Description                                        |
+| =canopeo_id=  |              | ID for canopeo observation                         |
+| =comments=    | VARCHAR<255> | Additional comments describing canopeo observation |
+*** wicst.directlossdetails
+| Column Name   | Type | Description                                               |
+| =directloss_id= |      | ID of direct loss observed                                |
+| =loss_width=    |      | Width of loss area                                        |
+| =loss_length=   |      | Length of loss area                                       |
+| =loss_reason=   |      | Reason for loss                                           |
+| =loss_comments= |      | Additional comments regarding the direct loss observation |
+**** Details
+- =loss_width= :: =wicst.directlosses.loss_area= should normally be =loss_width= * =loss_length=, but not always because =loss_area= may have been manually overridden or modified. =loss_width= was sourced from excel sheets either explicitly or implicitly based on area calculations. Width is considered less than length if unlabelled.
+- =loss_length= :: =wicst.directlosses.loss_area= should normally be =loss_width= * =loss_length=, but not always because =loss_area= may have been manually overridden or modified. =loss_length= was sourced from excel sheets either explicitly or implicitly based on area calculations. Width is considered less than length if unlabelled.
+*** wicst.directlosses
+| Column Name   | Type         | Description                                          |
+| =directloss_id= | VARCHAR<255> | ID of direct loss observed                           |
+| =harvesting_id= | VARCHAR<255> | ID of harvesting that the direct loss applies to     |
+| =loss_area=     | FLOAT<8>     | Area of plot that harvest for which harvest was lost |
+*** wicst.feedings
+| Column Name                 | Type | Description                                                   |
+| =year=                        |      | Year of feeding observation                                   |
+| =seasonal_sum_grain_per_head= |      | Total amount of grain fed to each heifer across entire season |
+**** Data Details
+*** wicst.fertilizings
+| Column Name      | Type         | Description                                      |
+| =fertilizing_date= | DATETIME     | Date of fertilizing                              |
+| =plot_id=          | VARCHAR<255> | ID of plot where fertilizer was applied          |
+| =fertilizer_type=  | VARCHAR<255> | Common name of fertilizer                        |
+| =n=                | FLOAT<8>     | Nitrogen content of N                            |
+| =p2o5=             | FLOAT<8>     | Phosphorus pentoxide of fertilizer               |
+| =k2o=              | FLOAT<8>     | Potassium oxide content of fertilizer            |
+| =s=                | FLOAT<8>     | Sulfur content of fertilizer                     |
+| =ca=               | FLOAT<8>     | Calcium content of fertilizer                    |
+| =mg=               | FLOAT<8>     | Magnesium content of fertilizer                  |
+| =rate=             | FLOAT<8>     | Fertilizer application rate                      |
+| =rate_unit=        | VARCHAR<255> | Unit the =rate= is recorded in                     |
+| =comments=         | VARCHAR<255> | Additional comments about fertilizer application |
+**** Data details
+*** wicst.grazings
+| Column Name | Type         | Description                                |
+| =year=        | FLOAT<8>     | Year of grazing observation                |
+| =animal_id=   | FLOAT<8>     | ID of grazing animal                       |
+| =animal_type= | VARCHAR<255> | Type of grazing animal                     |
+| =on_date=     | DATETIME     | Date animal started grazing for the season |
+| =off_date=    | DATETIME     | Date animal stopped grazing for the season |
+| =start_lbs=   | FLOAT<8>     | Beginning weight of animal before grazing  |
+| =end_lbs=     | FLOAT<8>     | Ending weight of animal after grazing      |
+**** Data details
+- =animal_type= [heifer | steer] :: The type of grazing animal
+*** wicst.harvestingdetails
+| Column Name       | Type         | Description                                                                                                      |
+| =harvesting_id=     | VARCHAR<255> | ID of harvesting observation                                                                                     |
+| =harvest_length=    | FLOAT<8>     | Length of harvest area                                                                                           |
+| =harvest_width=     | FLOAT<8>     | Width of harvest area                                                                                            |
+| =rrl_id=            | FLOAT<8>     | Rock River Lab ID of harvesting sample                                                                           |
+| =comments=          | VARCHAR<255> | Additional comments about harvest                                                                                |
+| =bag_weight=        | FLOAT<8>     | Weight of the bag used to assist in collecting biomass. Unknown if bag weight was before or after drying sample. |
+| =wet_weight_w_bag=  | FLOAT<8>     | Weight of harvest bag with the wet sample                                                                        |
+| =dry_weight_w_bag=  | FLOAT<8>     | Weight of harvest bag with the dried sample                                                                      |
+| =dry_weight_no_bag= | FLOAT<8>     | Weight of the harvest sample not including the weight of the bag, after drying.                                  |
+| =num_bales=         | FLOAT<8>     | Number of bales of harvest product                                                                               |
+| =wet_bag_weight=    | FLOAT<8>     | Weight of the bag used to collect harvest sample before drying the sample.                                       |
+| =wet_weight_no_bag= | FLOAT<8>     | Weight of the biomass not including the weight of the bag, before drying.                                        |
+| =wagon_weight=      | FLOAT<8>     | Weight of the wagon used to collect harvest                                                                      |
+| =wagon_color=       | VARCHAR<255> | Color of the wagon used to collect harvest                                                                       |
+| =trailer_weight=    | FLOAT<8>     | Weight of the trailer used to collect harvest                                                                    |
+| =dry_bag_weight=    | FLOAT<8>     | Weight of the bag used to collect harvest sample after drying the sample                                         |
+| =bushel_lbs=        | FLOAT<8>     | Weight of a single bushel of product in pounds.                                                                  |
+| =moisture_source=   | VARCHAR<255> | How and where was the water moisture content evaluated                                                           |
+| =tenday=            | FLOAT<8>     | Numeric estimate of how many 10 day periods since the beginning of season the harvest was taken.                 |
+| =cycle=             | FLOAT<8>     | Estimate of how many growing cycles since beginning of season the biomassing was taken.                          |
+*** wicst.harvestings
+| Column Name         | Type         | Description                                      |
+| =harvesting_id=       | VARCHAR<255> | ID of harvesting observation                     |
+| =yielding_type=       | VARCHAR<255> | Type of yield observation                        |
+| =harvest_date=        | DATETIME     | Date of harvest                                  |
+| =plot_id=             | VARCHAR<255> | ID of plot harvest was taken                     |
+| =product=             | VARCHAR<255> | Category of harvested product                    |
+| =product_description= | VARCHAR<255> | Description of harvested product                 |
+| =harvest_area=        | FLOAT<8>     | Amount of area that was harvested in square feet |
+| =percent_moisture=    | FLOAT<8>     | Moisture content of harvested product            |
+| =harvest_lbs=         | FLOAT<8>     | Weight of harvested product in pounds            |
+**** Data Details
+*** wicst.limings
+| Column Name | Type         | Description                     |
+| =date=        | DATETIME     | Date of lime application        |
+| =plot_id=     | VARCHAR<255> | ID of plot the lime was applied |
+| =grading=     | VARCHAR<255> | Lime grade                      |
+| =rate=        | FLOAT<8>     | Rate the lime was applied       |
+| =rate_unit=   | VARCHAR<255> | Unit the rate is recorded       |
+*** wicst.losses
+| Column Name   | Type         | Description                           |
+| loss_id       | VARCHAR<255> | ID of loss observation                |
+| loss_type     | VARCHAR<255> | Type of loss observation              |
+| harvesting_id | VARCHAR<255> | ID of harvesting that loss is applied |
+*** wicst.manurings
+| Column Name | Type         | Description |
+| plot_id     | VARCHAR<255> |             |
+| manure_date | DATETIME     |             |
+| source      | VARCHAR<255> |             |
+| type        | VARCHAR<255> |             |
+| method      | VARCHAR<255> |             |
+| rate        | FLOAT<8>     |             |
+| rate_unit   | VARCHAR<255> |             |
+| comments    | VARCHAR<255> |             |
+*** wicst.plantings
+*** wicst.plots
+| Column Name  | Type         | Description                                                         |
+| =plot_id=      | VARCHAR<255> | ID of plots in WICST                                                |
+| =site_id=      | VARCHAR<255> | ID of sites plot belongs to                                         |
+| =block=        | FLOAT<8>     | Replicate number plot belongs to from initial RCBD randomization    |
+| =treatment_id= | FLOAT<8>     | ID of treatment the plot was assigned in initial RCBD randomization |
+*** wicst.rotations
+| Column Name      | Type         | Description                                       |
+| =rotation_id= (PK) | VARCHAR<255> | ID of the combination of system and phase         |
+| =system_id=        | VARCHAR<255> | ID of the cropping system                         |
+| =phase=            | FLOAT<8>     | Crop rotation phase                               |
+| =crop=             | FLOAT<8>     | Primary crop for the system and phase combination |
+**** Data Details
+- =phase= [1-4] :: phase of the crop rotation. The number of phases depend on the assigned cropping system. Phase 1 is always corn.
+- =crop= [C | SB | W/CL | A | Ai | Aii | O/A | P] :: Multiple crops may be planted but each phase of the cropping systems is coded with a "main" crop.
+  + /C/ - corn
+  + /SB/ - soybean
+  + /W/CL/ - wheat with clover cover crop
+  + /A/ - direct seeded alfalfa
+  + /Ai/ - established alfalfa 1
+  + /Aii/ - established alfalfa 2
+  + /O/A/ - oats and alfalfa
+  + /P/ - pasture plots
+*** wicst.sites
+The sites holds information relevant to where research plots are and experiments are happening. WICST has two research sites, Arlington and Lakeland.
+| Column Name  | Type         | Description                      |
+| =site_id= (PK) | VARCHAR<255> | ID of the research site          |
+| =site_name=    | VARCHAR<255> | Common name of the research site |
+**** Data Details
+- =site_id= [ARL | LAC] :: Three letter code for research site. Only Arlington research station is currently active.
+*** wicst.soils
+Table holding information related to soil fertility. Routine fertility, and deep core samples are included here.
+| Column Name | Type         | Description                                          |
+|-------------+--------------+------------------------------------------------------|
+| =year=        | FLOAT<8>     | year of soil sample                                  |
+| =plot=        | FLOAT<8>     | ID of plot soil samples were taken from              |
+| =coordinate=  | VARCHAR<255> | Location within plot-section soil samples were taken |
+| =section=     | VARCHAR<255> | Location within plot soil samples were taken         |
+| =site=        | VARCHAR<255> |                                                      |
+| =season=      | VARCHAR<255> | season soil sample was taken                         |
+| =soil_tier=   | VARCHAR<255> | type of soil fertility                               |
+| =depth=       | VARCHAR<255> | Range of soil depth used for soil analysis           |
+| =ph=          | FLOAT<8>     | pH of soil                                           |
+| =om=          | FLOAT<8>     | Organic Matter Percentage                            |
+| =p=           | FLOAT<8>     | Soil Test Phosphorus in ppm                          |
+| =k=           | FLOAT<8>     | Soil Test Potassium in ppm                           |
+| =ca=          | FLOAT<8>     | Calcium                                              |
+| =mg=          | FLOAT<8>     | Magnesium                                            |
+| =cec=         | FLOAT<8>     | Cation Exchange Capacity                             |
+| =b=           | FLOAT<8>     | Boron                                                |
+| =mn=          | FLOAT<8>     | Manganese                                            |
+| =z=           | FLOAT<8>     | Zinc                                                 |
+| =s=           | FLOAT<8>     | Sulfur                                               |
+| =cu=          | FLOAT<8>     | Copper                                               |
+| =fe=          | FLOAT<8>     | Iron                                                 |
+| =bph=         | FLOAT<8>     | Buffer pH                                            |
+| =nit_real=    | FLOAT<8>     | Nitrogen                                             |
+| =nit_est=     | FLOAT<8>     | Estimated Nitrogen                                   |
+| =soil_date=   | DATETIME     | When the soil sample was taken, if known             |
+| =lab_source=  | VARCHAR<255> | Where the soil was analyzed                          |
+| =comments=    | VARCHAR<255> | comments about soil nutrient observations  |
+**** Data Details
+- =soil_tier= [routine fertility | fall nitrates | deep fertility] :: What type of soil fertility test and soil source.
+- =lab_source= :: The location where the analytic soil tests done.
+- comments :: Additional comments about soil observations. Comments are in the format 'source: "comment"', and delimited by \vert.
+*** wicst.systematiclossdetails
+| Column Name                | Type         | Description                                      |
+| =systematicloss_id= (PK, FK) | VARCHAR<255> | ID of systematic loss observation                |
+| =assessment_total_area=      | FLOAT<8>     | Total area assesed for losses in square feet     |
+| =assessment_loss_area=       | FLOAT<8>     | Area considered as loss in square feet           |
+| =assessment_loss_length=     | FLOAT<8>     | Length of area considered as loss in feet        |
+| =assessment_loss_rows=       | FLOAT<8>     | Number of rows considered as loss in plot        |
+| =sysloss_location=           | VARCHAR<255> | Description of where the systematic loss was     |
+| =sysloss_comments=           | VARCHAR<255> | Comments describing the systematic loss observed |
+*** wicst.systematiclosses
+| Column Name                | Type         | Description                                            |
+| =systematicloss_id= (PK, FK) | VARCHAR<255> | ID of systematic loss observation                      |
+| =harvesting_id=              | VARCHAR<255> | ID of harvest the systematic loss should be applied to |
+| =loss_fraction=              | FLOAT<8>     | Proportion of harvest that was lost                    |
+| =loss_category=              | VARCHAR<255> | Categorical reason of systematic loss                  |
+*** wicst.systems
+| Column Name    | Type         | Description                           |
+| =system_id= (PK) | FLOAT<8>     | ID of cropping system                 |
+| =description=    | VARCHAR<255> | Common description of cropping system |
+*** wicts.treatments
+| Column Name       | Type     | Description                                        |
+| =treatment_id= (PK) | FLOAT<8> | ID of assigned treatment                           |
+| =system_id= (FK)    | FLOAT<8> | Cropping system the assigned treatment belongs     |
+| =start_year=        | FLOAT<8> | First year after 1989 that is not filler corn      |
+| =start_crop=        | FLOAT<8> | First crop planted after filler corn on =start_year= |
+*** wicst.yieldings
+| Column Name      | Type         | Description                                    |
+| =yielding_id= (PK) | VARCHAR<255> | ID of the yield observation                    |
+| =yielding_type=    | VARCHAR<255> | Cropping system the assigned treatment belongs |
+* Views Documentation
+** WICST Schema
+*** Pasture Summary
+* Database Maintenance
+** Style Guide
+** Design Guide
