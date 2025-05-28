@@ -7,14 +7,14 @@ library(purrr)
 library(tidyr)
 library(rlang)
 
-load("data/wip_20250106.Rdata")
+load("data/wip_20250414.Rdata")
 load("data/master_20240926.Rdata")
 load("data/core_20241104.Rdata")
 load("data/agcal_20250326.Rdata")
 load("data/nutrients_20250219.Rdata")
-load("data/pasture_20250405.Rdata")
+load("data/pasture_20250407.Rdata")
 
-load("data/arl_20250402.Rdata")
+load("data/arl_20250414.Rdata")
 
 c_ideal_percent_moisture = 15.5
 c_bushel = 56

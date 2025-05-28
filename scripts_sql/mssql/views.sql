@@ -149,7 +149,7 @@ UNPIVOT
 -----------------
 -- Yield Views --
 -----------------
-select * from wicst.harvesting_summary hs;
+--select * from wicst.harvesting_summary hs;
 
 -- working to calculate total loss fraction and loss table
 --TODO: will need to change these tables to be yielding ID's
@@ -243,6 +243,7 @@ with harvestpast AS (
 ), biopast AS (
 	select b.*, bd.cycle,
 	--TODO: biomass yield, not accounting for loss in the pastures
+	-- dry matter tons acre
 	dmta = biomass_grams / 1000 * common.CONST_KG_TO_LBS() / 2000 * (100 - percent_moisture) / 100 / (biomass_area / common.CONST_ACRE_TO_FT2())
 	from wicst.biomassings b
 	left join wicst.biomassingdetails bd on b.biomassing_id = bd.biomassing_id
@@ -365,6 +366,14 @@ pastyield_lvl1_noharvest AS (
 	from pastyield_imputed
 	where method IN ('exclosure')
 	group by year, plot_id
+), pastyield_imputed_lvl1_harvests AS (
+	select
+		year, plot_id,
+		sum_yield = SUM(yield),
+		count_harvests = count(yield)
+	from pastyield_imputed
+	where method IN ('harvest')
+	group by year, plot_id
 ), pasture_year_plot AS (
 	-- outer product of years and pasture plots
 	select 
@@ -387,7 +396,10 @@ pastyield_lvl1_noharvest AS (
 	) as pt
 )
 select 
-	pyp.*, pcw.n_harvest, pcw.n_quadrat, pcw.n_exclosure,
+	pyp.*, pcw.n_harvest, 
+	ih.sum_yield as sum_imputed_yield_harvests,
+	pcw.n_quadrat, pcw.n_exclosure,
+	ie.sum_yield as sum_imputed_yield_exclosures,
 	h.sum_avg_avg_yield as sum_avg_avg_yield_harvestquadrat,
 	0.75 * h.sum_avg_avg_yield as sum_avg_avg_yield_harvestquadrat_stubble3in,
 	h.sum_max_max_yield as sum_max_max_yield_harvestquadrat,
@@ -396,8 +408,7 @@ select
 	nh.sum_max_max_yield as sum_max_max_yield_quadrat,
 	he.sum_yield as sum_yield_harvestexclosures,
 	e.sum_yield as sum_yield_exclosures,
-	ihe.sum_yield as sum_imputed_yield_harvestexclosures,
-	ie.sum_yield as sum_imputed_yield_exclosures
+	ihe.sum_yield as sum_imputed_yield_harvestexclosures
 from pasture_year_plot pyp
 left join pastyield_lvl3 h on pyp.year = h.year and pyp.plot_id = h.plot_id
 left join pastyield_lvl3_noharvest nh on pyp.year = nh.year and pyp.plot_id = nh.plot_id
@@ -405,9 +416,10 @@ left join pastyield_lvl1_harvestexclosures he on pyp.year = he.year and pyp.plot
 left join pastyield_lvl1_exclosures e on pyp.year = e.year and pyp.plot_id = e.plot_id
 left join pastyield_imputed_lvl1_harvestexclosures ihe on pyp.year = ihe.year and pyp.plot_id = ihe.plot_id
 left join pastyield_imputed_lvl1_exclosures ie on pyp.year = ie.year and pyp.plot_id = ie.plot_id
+left join pastyield_imputed_lvl1_harvests ih on pyp.year = ih.year and pyp.plot_id = ih.plot_id
 left join pasture_counts_wide pcw on pyp.year = pcw.year and pyp.plot_id = pcw.plot_id
 	
-select * from wicst.pasture_yield_summary order by year, plot_id
+--select * from wicst.pasture_yield_summary order by year, plot_id
 
 --drop view wicst.pasture_yield_summary
 -- drop view wicst.harvesting_summary 

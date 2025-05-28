@@ -56,7 +56,9 @@ pre_2008 <- raw_2008 |>
     #                    glue("Michael Liou: \"harvest area deduced from yield multiplier of {mult}.\"",
     #                         mult = yield_mult),
                      # .default = note),
-    comments = stitch_notes(NA, note)
+    comments = stitch_notes(NA, note),
+    tenday = pasture_tendayperiod,
+    cycle = pasture_cycle
   )
 
 # harvests w/ pastures

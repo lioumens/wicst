@@ -509,7 +509,14 @@ full join #pastyield_lvl3 h on nh.year = h.year and nh.plot_id = h.plot_id
 --full join #pastyield_lvl1_harvestexclosures he on he.year = coalesce(h.year, nh.year) and he.plot_id = coalesce(h.plot_id, nh.plot_id)
 order by year, plot_id;
 
-select * from wicst.grazings
+select * from wicst.biomassings b
+left join wicst.biomassingdetails bd on b.biomassing_id =  bd.biomassing_id
+where method = 'quadrat' and year(biomass_date) = 2008;
+
+
+select * from wicst.harvestings
+where year(harvest_date) = 2008 and product = 'pasture'
+
 
 select 
 ca.average_weight / ca.num_days as adg
@@ -519,6 +526,16 @@ cross apply (
 	num_days = DATEDIFF(day, on_date, off_date),
 	average_weight = end_lbs - start_lbs
 ) as ca;
+
+
+
+select * from wicst.harvestings h
+left join wicst.harvestingdetails hd on h.harvesting_id = hd.harvesting_id
+where product = 'pasture' AND year(harvest_date) = 2013;
+
+
+
+
 
 
 

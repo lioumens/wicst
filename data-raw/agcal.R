@@ -10,6 +10,9 @@ library(dplyr)
 library(janitor)
 library(lubridate)
 
+load("data/manure_master_20250516.Rdata")
+load("data/translate_20250517.Rdata")
+
 agcal <- "~/OneDrive - UW-Madison/Database development/agcal_db.xlsx"
 
 plantings_fp <- "~/OneDrive - UW-Madison/Database development/WICST agcal data entry/2 - Input Sheet - Plantings.xlsx"
@@ -37,41 +40,139 @@ pre_limings <- raw_limings |> rename(plot_id = plot)
 ## fertilizings ------------------------------------------------------------
 
 raw_fertilizings <- read_xlsx(fertilizers_fp, sheet = "Sheet1", na = "-")
+
 pre_fertilizings <- raw_fertilizings |> clean_names() |> 
   filter(keep_or_remove != "remove" | is.na(keep_or_remove)) |> 
-  mutate(comments = if_else(!is.na(notes),
-                                        glue("Nolan Majerowski: \"{note}\"",
-                                             note = notes),
-                                        NA)) |>
-  select(-notes) |>
+  rowwise() |> 
+  mutate(nolan_comment = if_else(!is.na(notes),
+                                 glue("Nolan Majerowski: \"{note}\"",
+                                      note = notes),
+                                 NA),
+         agcal_comment = if_else(!is.na(agcal_notes),
+                                 
+                                 glue("Agcal: \"{note}\"",
+                                      note = agcal_notes),
+                                 NA),
+         comments = case_when(is.na(nolan_comment) & is.na(agcal_comment)~NA,
+                              .default = str_flatten(c(nolan_comment, agcal_comment),
+                                                     collapse = " | ",
+                                                     na.rm = T)),
+         fertilizer = case_match(fertilizer_type,
+                                 !!!xl_translate$flist_fertilizings,
+                                 .default = "unknown translation")
+         ) |>
+  select(-notes, -agcal_notes, -nolan_comment, -agcal_comment, -fertilizer_type,
+         -keep_or_remove) |>
+ mutate(
+  fy_n    = case_when(fertilizer == "chicken pellet manure"~n, 
+                      .default = NA),
+  fy_p2o5 = case_when(fertilizer == "chicken pellet manure"~p2o5,
+                      .default = NA),
+  fy_k2o  = case_when(fertilizer == "chicken pellet manure"~k2o,
+                      .default = NA),
+  fy_s    = case_when(fertilizer == "chicken pellet manure"~s, 
+                      .default = NA),
+  fy_ca   = case_when(fertilizer == "chicken pellet manure"~ca,
+                      .default = NA),
+  fy_mg   = case_when(fertilizer == "chicken pellet manure"~mg,
+                      .default = NA),
+  year = year(date),
+  .after = mg
+) |> 
+  left_join(xl_manure$cpm |> 
+              mutate(m_type = case_match(m_type, "cpm"~"chicken pellet manure"),
+                     cpm_s = 0,
+                     cpm_ca = 0,
+                     cpm_mg = 0),
+            by = join_by(fertilizer == m_type, year == year),
+            relationship = "many-to-one") |> 
+  mutate(n = coalesce(tn, n),
+         p2o5 = coalesce(tp2, p2o5),
+         k2o = coalesce(tk2, k2o),
+         s = coalesce(cpm_s, s),
+         ca = coalesce(cpm_ca, ca),
+         mg = coalesce(cpm_mg, mg)) |> 
   rename(plot_id = plot,
-         fertilizing_date = date)
+         fertilizing_date = date,
+         timing = timing_notes) |>
+  relocate(fertilizer, .after = plot_id)
+
+# pre_fertilizings |> filter(fertilizer == "potassium sulfate", s == 0)
+# pre_fertilizings |> count(fertilizer, n, p2o5, k2o, s, ca) |> View()
+
+
+# pre_fertilizings$comments
+# pre_fertilizings$comments[!is.na(pre_fertilizings$comments)]
 
 
 ## manurings ---------------------------------------------------------------
 raw_manurings <- read_xlsx(manurings_fp, sheet = "Sheet1", na = "-")
+
 pre_manurings <- raw_manurings |> clean_names() |> 
   filter(keep_or_remove != "remove" | is.na(keep_or_remove)) |>
   mutate(comments = if_else(!is.na(notes),
                             glue("General: {notes}", notes = notes),
                             NA)) |> 
-  select(-notes) |> 
+  select(-notes, -keep_or_remove) |> 
   rename(plot_id = plot,
-         manuring_date = date)
+         manure_date = date)
 
 # tillings ----------------------------------------------------------------
 raw_tillings <- read_xlsx(tillings_fp, sheet = "Sheet1", na = "-")
 pre_tillings <- raw_tillings |> clean_names() |> 
   mutate(comments = if_else(!is.na(notes),
-                            glue("General: {notes}", notes = notes),
-                                 NA)) |> 
-  select(-notes) |> 
+                            glue("General: \"{notes}\"", notes = notes),
+                                 NA)) |>
+  # translate implement to gregg implements and modifier
+  mutate(new_implement =
+           case_match(implement,
+                      !!!xl_translate$flist_tillings_implement),
+         modifier = case_match(implement,
+                                   !!!xl_translate$flist_tillings_modifier)) |> 
+  # implement types
+  left_join(dd_tillings_type |> 
+              filter(gregg_implement != "disk"), # disk can be primary or secondary
+            by = join_by(new_implement == gregg_implement)) |> 
+  # rename
+  mutate(implement = coalesce(new_implement, implement),
+         type = coalesce(type, gregg_type)) |>
+  select(-new_implement, -gregg_type, -notes) |>
   rename(plot_id = plot,
          tilling_date = date)
-
-# tillings_translate <- read_xlsx("~/Downloads/tillings_translate.xlsx",
-#                                 sheet = "Sheet1")
 # 
+# pre_tillings |> 
+#   mutate(plot_id = factor(plot_id, levels = plots_by_treatment)) |>
+#   arrange(plot_id, tilling_date) |>
+#   select(-planting, -passes, -comments) |>
+#   # summarize(n = n(), .by = c(tilling_date, plot_id)) |> 
+#   # filter(n > 1L)
+#   pivot_wider(names_from = plot_id, values_from = c(type, implement), names_vary = "slowest",
+#               values_fn = ~str_flatten(.x, collapse = ", ")) |> 
+#   clipr::write_clip()
+
+# pre_tillings |>
+#   left_join(xl_core$plots |> select(plot_id, treatment_id), by = "plot_id") |>
+#   mutate(plot_id = factor(plot_id, levels = plots_by_treatment),
+#          year = year(tilling_date)) |>
+#   arrange(year, plot_id, type, tilling_date) |> 
+#   relocate(year, .before = 1) |> 
+#   relocate(treatment_id, .after = plot_id) |> 
+#   filter(is.na(plot_id))
+
+# pre_tillings |> filter(!(plot_id %in% plots_by_treatment)) |> View()
+
+
+pre_tillings |> filter(!is.na(modifier) & year(tilling_date) < 1993)
+
+
+# QA get rid of duplicates, larger table first
+pre_tillings |> count(year(tilling_date), plot_id, type, implement) |> 
+  arrange(desc(n)) |> 
+  filter(type == "primary", n > 1) |> View()
+
+pre_tillings |> filter(implement == "chisel", year(tilling_date) == 1997, plot_id == "A104")
+
+
 # raw_tillings |> left_join(tillings_translate |>
 #                             distinct(type, implement, pick(starts_with("gregg"))),
 #                           by = c("type", "implement")) |>
@@ -84,14 +185,16 @@ pre_tillings <- raw_tillings |> clean_names() |>
 # pesticidings ----------------------------------------------------------------
 raw_pesticidings <- read_xlsx(pesticidings_fp, sheet = "Sheet1", na = "-",
                               col_types = c("guess", "guess", "guess", "guess",
-                                            "guess", "guess", "text"))
+                                            "guess", "text", "text", "text", "text"))
 pre_pesticidings <- raw_pesticidings |> clean_names() |> 
-  mutate(comments = if_else(!is.na(notes),
+  mutate(comments = if_else(!is.na(notes), 
                             glue("General: {notes}", notes = notes),
                                  NA)) |> 
   select(-notes) |> 
   rename(plot_id = plot,
          pesticiding_date = date)
+
+pre_pesticidings
 
 
 xl_agcal <- list(

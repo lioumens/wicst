@@ -901,6 +901,10 @@ breaking/table/schema change, constraint/property/column change, small inserts/p
 - Plot 410, west strip (corn silage): A copy-paste error was discovered in the excel spreadsheets, plot dimensions used in previous year were carried over into this year. The change was reverted from 415' -> 510' for plot length, resulting in a decrease in plot yield from 9.75 -> 7.9 t dm/year, a 18% change.
 **** 2021
 - Nearly all plots show somewhat minor changes in yield due to rounding of final yield number in master (up to 5% change). Recalculations from raw data give unrounded numbers for storage.
+*** Missing Pasture Yields
+Decision to delete nonharvests
+**** 2008
+- Plot 207: Janet Hedtcke: "southern 1/2 of plot flooded and reseeded in Aug"
 * Tables
 ** tbl_2023_biomassing
 - [ ] moistures should be zero?
@@ -966,14 +970,15 @@ breaking/table/schema change, constraint/property/column change, small inserts/p
 *** 2000
 - two harvests accounted for
 *** REVISIT 2002
-- plot 302, unsure if there was actually a cut here, cs6_pasture sheet shows NA here
+- [X] plot 302, unsure if there was actually a cut here, cs6_pasture sheet shows NA here
+  - delete the 302 harvest moisture value
 - agcal says only 3 harvests
 - qa fails
 *** 2003
 - 1 harvests accounted for
 *** 2004
 - 1 harvest accounted for, exclosures
-*** REVIEW 2005
+*** REVISIT 2005
 - null harvests
 *** 2006
 - can't find harvests, impute from moisture?
@@ -982,8 +987,9 @@ breaking/table/schema change, constraint/property/column change, small inserts/p
 - pasture date from agcal calendar, other date from the cs6_hay_yield file
 - biomassings, exclosures, and 2 harvests
 - again, the exclosures are off by arl numbers by 1.12
-*** REVIEW 2008
-- [ ] Missing cycle and tenday for calculations
+*** REVISIT 2008
+- [X] Missing cycle and tenday for calculations
+  - hard code 2 for everything
 - All the exclosures use the same 1.12 multiplier, except for
 - 207 cut 2 does not use multiplier
 - 302 cut 2 does not use multiplier
@@ -993,9 +999,10 @@ breaking/table/schema change, constraint/property/column change, small inserts/p
 - harvests, exclosures, and biomassings
 - have the 1.12 multiplier to get to the old arlington yields, but for master the yields are without the multiplier
 - harvests are not in arl yields
-*** REVIEW 2010
+*** REVISIT 2010
 - I'm not sure what harvests here are real
-- [ ] the first hay exclosure yield looks like it's just copied from green chop, remove?
+- [X] the first hay exclosure yield looks like it's just copied from green chop, remove?
+  - yes delete this oberservation
 - [X] harvest on plot 302 that doesn't have a harvest date, can't find a hint for it anywhere.... May 28 found
   - https://uwprod.sharepoint.com/:x:/r/sites/SanfordLab/Shared%20Documents/Database%20development/WICST_Nutrient_Analysis/Forage/2010/2010%20440%20harvest%20information.xlsx?d=wd3d5dae5f4334481a2f9e3200663d660&csf=1&web=1&e=KrnQ3p
 - 1.12 multiplier again
@@ -1011,8 +1018,9 @@ breaking/table/schema change, constraint/property/column change, small inserts/p
 *** DONE 2012
 - doesn't use multiplier
 - 1 harvest manually added, no quadrats, 4 cuts of exclosures
-*** REVIEW 2013
-- [ ] percent of the distributed yields
+*** REVISIT 2013
+- [X] percent of the distributed yields
+  - action: make them all null, delete the last percent moisture, add comment about nonconfidence of field sample
 - 16 exclosures are in master, and they all match
 - 4 harvests, only one has a grab bag sample, but originally in the data sheet they wanted to use .6. the grab sample was aroudn 78 ish
 *** 2014
@@ -1065,8 +1073,119 @@ breaking/table/schema change, constraint/property/column change, small inserts/p
 1. Clean excel sheets directly, fill in unknowns with Nolan
 ** ARL QA
 - H2009_A213MMX_AF_2 :: don't
-* Local Variables
-# Local Variables:
-# org-todo-keyword-faces: (("REVISIT" . warning) ("REVIEW" . error) ("STARTED" . success))
-# org-priority-faces: ((65 . error) (66 . warning) (67 . success)))
-# End:
+** Fertilizings QA
+*** is starter 52 real?
+*** DONE 1990
+*** DONE 1991
+*** DONE 1992
+*** DONE 1993
+*** DONE 1994
+*** DONE 1995
+*** TODO 1996
+- [X] urea possibly miscoded as esn?
+*** TODO 1997
+- [X] as required? in trt 9 and 8
+  - all zero, as needed, check input in master
+*** DONE 1998
+*** DONE 1999
+- note about 80 N being lowest setting
+*** TODO 2000
+- [X] pasture plots unlabeled, 40 lbs N?
+*** DONE 2002
+- [X] esn? was 44, but 46 in agcal?
+*** DONE 2003
+- [X] missing dates & range given for rate/rate_unit
+*** TODO 2004
+*** TODO 2005
+*** DONE 2011
+- needs massive review, k2so4 vs kcl is unclear, just says soil testing
+** Limings QA
+- [ ] change to grade not grading
+** Tillings QA
+*** DONE 1989
+*** DONE 1990
+- mechanical weeding no till cultivation not documented
+*** DONE 1991
+- treatment 7 had no tillage all of 1991
+*** DONE 1992
+- added S-tine as a comment
+- treatment 6 had no tillage all of 1992, these plots primary tillage delayed until may 1993
+- treatment 8 also had no tillage all of 1992
+- plots 103 and 213 were accidentally disked by mistake, comment in agcal calendar noted
+*** DONE 1993
+- s tine as comment, treatment 6 had the delayed extra primary tillage
+*** 1994
+- 10, 12 treatments were untouched
+- there are some cultivation no till that are not documented, highlighted in orange
+*** 1995
+- 10 also untouched
+*** 1996
+- no tills are documented in this year, but not previous years, and they're labelled as w/sweeps
+*** 1997
+- digger problem with and cultivator issue
+- 9 untouched
+*** 1998
+- 10 untouched
+*** 1999
+- [ ] 1999 says with sweeps, 2000 agcal doesn't have it, which is it?
+*** 2001
+- [ ] "stalk chopper for rc biomass" ignore? added for now
+- 9 untouched
+*** 2002
+- [ ] possible misentry for treatment 9. 2003 has w/ twisted shank, but wrong year for where it would normally be 2002. Sweeps is noted in the 2002 entry
+*** 2003
+- [ ] treatment 1, and treatment 4 and treatment 9, treatment 10, 13. 2003 has twisted shanks in the fall practices, and 2004 leaves it off, removing the one with less info...
+*** 2004
+- [X] treatment 4 has a disk entry error probably, 5-17-07 date?
+- [X] treatment 4 fall practice, field digger/disk and field cultivator, they conflict if they are really different
+- 8 untouched
+*** 2005
+- [ ] T1, twisted shank info but left off in next year. keep tw?
+- [ ] T5 has a field cultivator that seems like primary? but by definition should be secondary?
+- [ ] T7, twisted shank info but left off in next year. keep tw?
+*** 2010
+- [X] T9 has chisel in fall practice, but disk-chisel in 2011
+*** 2013
+- [ ] T3 has a strip till in fall practice in 2014 agcal, this is normally the place for 2014 striptills... is this just misdated?
+*** 2014
+- [ ] T1 disk chisel in 2015 agcal, but has chisel plow in 2014.
+*** 2015
+- what is Agco 4511, is that a disk chisel? yes
+*** 2016
+- nothing
+*** 2017
+- t4 has entry for 2016 under field cultivate where normally for 2017
+*** Notes
+- field digger can be primary or secondary. Fall practices should be primary, otherwise leave them as secondary.
+- "no till cultivation" like a chisel plow, but with sweeps. We will call these row cultivator with "no-till with sweeps" modifier
+- repairing a seedbed
+* Elemental Conversions
+- K2SO4 (0-0-50)
+  + elemental K * 1.2 / 0.5
+- KCL (0-0-60)
+  + elemental K * 1.2 / 0.6
+- TSP (0-46-0)
+  + elemental P * 2.29 / .46
+- DAP (18-46-0)
+  + elemental P * 2.29 / .46
+* Soils
+** 2012
+- no mg/cec/ca data
+** 2013
+- 201 <-> 214
+- 301 <-> 303
+- 402 <-> 401
+- 201 <-> 214
+** 2014
+- labels look scrambled, values all look the same... but missing a few in the raw data. Must have been filled in otherwise
+** 2015
+* Data Entry
+-
+* Soil Archive
+- sieved to 2-4 mm, and use square corepak jars
+- identifiers for physical samples. What's the system of the labeling?
+- cost more to wash the jars, about 50c a jar
+- plot, location, depth, location in plot. SOCnet is getting archived and wicst
+- aphis guidelines?
+** Important Attributes
+- plot, location, depth, location

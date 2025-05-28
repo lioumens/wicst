@@ -88,9 +88,6 @@ I'll propose that my work will have roughly 3 phases, and progress in mostly a t
      - [[https://storage.researchdata.wisc.edu/][Research Data Services]] also has some campus related tools we may be able to use, including cloud services like Amazon web services, and Azure.
      - At this time, I'm considering single file endpoints, with Rposit for computing, UW for web hosting. Sqlite can be created for single file endpoint.
    - Can also develop and track project metrics to make it easier to justify for future funding projects.
-* Task List
-** Data
-** Knowledge
 * Background Information
 ** Farming
 *** Fertilizers
@@ -210,8 +207,6 @@ H2023_A204MMS_CS_1
 - ....._......._.._1 (cut)
   - 1 - 5 currently for cut from location
   - signifies temporal
-** sites
-- description: holds information relevant to where research plots are and experiments are happening
 ** plots
 - system should be a property of plots... but the lakeland plots are an excepttion to that requirement what to do here...
 ** SubPlots
@@ -409,7 +404,6 @@ ENGINE = InnoDB
   - bio.id <- yield.id -> harvest.id (incorrect)
   - bio.id -> yield.id <- harvest.id
 - I think you have to implement it as Bio -> Yieldings... can you implement it as a check?
-* Business Rules
 * Style Guide
 ** Table Names
 - lowercase and all plural

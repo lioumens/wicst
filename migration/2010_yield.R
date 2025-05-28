@@ -163,3 +163,10 @@ supp_2010_bio <- bind_rows(
 #   # mutate(harvest_area = 15077.93) |> 
 #   mutate(percent_moisture = 18.7) |> 
 #   get_yield() |> pull(corrected_bu_per_acre)
+
+# # plot 112 has 1 harvest 3 exclosures
+# tbl_2010_bio |> filter(plot == 112) |> 
+#   View()
+# 
+# tbl_2010_harvests |> filter(plot == 112) |> 
+#   View()

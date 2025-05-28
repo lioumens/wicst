@@ -221,3 +221,35 @@ PIVOT (
 	FOR [method] in ([harvest], [quadrat], [exclosure])
 ) as pt
 order by year, plot_id
+
+
+select year, num_days, count(*) as n,
+row_number()
+from wicst.grazing_summary
+group by year, num_days
+order by year, n DESC
+
+select year, num_days, count(num_days) OVER(PARTITION BY year) from wicst.grazing_summary
+
+select * from wicst.pasture_yield_summary
+order by year, plot_id
+
+with harvestpast AS (
+	select hs.*, hd.tenday, hd.cycle
+	from wicst.harvesting_summary hs
+	left join wicst.harvestingdetails hd on hs.harvesting_id = hd.harvesting_id
+	where product = 'pasture' and (harvest_lbs  > 0 or harvest_lbs IS NULL)
+), biopast AS (
+	select b.*, bd.cycle,
+	--TODO: biomass yield, not accounting for loss in the pastures
+	-- dry matter tons acre
+	dmta = biomass_grams / 1000 * common.CONST_KG_TO_LBS() / 2000 * (100 - percent_moisture) / 100 / (biomass_area / common.CONST_ACRE_TO_FT2())
+	from wicst.biomassings b
+	left join wicst.biomassingdetails bd on b.biomassing_id = bd.biomassing_id
+	where biomass = 'pasture' and year(biomass_date) between 1990 and 2023 --TODO remove year concstaints for for generalizability
+)
+select * from biopast;
+
+
+SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'pasture_yield_summary' ORDER BY ORDINAL_POSITION
+

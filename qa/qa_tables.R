@@ -262,15 +262,15 @@ yield_compare |>
   na_if(Inf) |> 
   quantile(probs = seq(.1, .9, .1), na.rm = TRUE)
 
-  
+
 # db_harvestings |> count(product)
 
 # harvest_for_qa |> filter(year == 2017, plot_id == "A311")
 
 
 harvest_for_qa_exclosure <- bind_rows(db_adj_harvestings,
-                            db_biomassings |> filter(method == "exclosure") |> get_biomass(),
-                            db_adj_silage_harvestings) |> 
+                                      db_biomassings |> filter(method == "exclosure") |> get_biomass(),
+                                      db_adj_silage_harvestings) |> 
   mutate(
     id =  coalesce(harvesting_id, biomassing_id),
     product = coalesce(product, biomass),

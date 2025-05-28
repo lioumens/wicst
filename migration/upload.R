@@ -5,7 +5,6 @@ oo <- list(
 )
 
 
-
 # libraries and setup -----------------------------------------------------
 
 library(dbplyr)
@@ -61,6 +60,7 @@ dbWriteTable(con, Id(schema = "wicst", table = "systems"), xl_core$systems, over
 dbWriteTable(con, Id(schema = "wicst", table = "plantings"), db_plantings, overwrite = oo$overwrite)
 dbWriteTable(con, Id(schema = "wicst", table = "fertilizings"), db_fertilizings, overwrite = oo$overwrite)
 dbWriteTable(con, Id(schema = "wicst", table = "limings"), db_limings, overwrite = oo$overwrite)
+dbWriteTable(con, Id(schema = "wicst", table = "manurings"), db_manurings, overwrite = oo$overwrite)
 # dbWriteTable(con, Id(schema = "wicst", table = "manurings"), tbl_manurings)
 
 
@@ -100,8 +100,14 @@ dbWriteTable(con, Id(schema = "wicst", table = "systematiclossdetails"), db_syst
 dbWriteTable(con, Id(schema = "wicst", table = "canopeo"), db_can, overwrite = oo$overwrite)
 dbWriteTable(con, Id(schema = "wicst", table = "canopeodetails"), db_candetails, overwrite = oo$overwrite)
 
-## animal grazing
+## animal grazing ----------------------------------------------------------
 dbWriteTable(con, Id(schema = "wicst", table = "grazings"), db_grazings, overwrite = oo$overwrite)
+dbWriteTable(con, Id(schema = "wicst", table = "feedings"), db_feedings, overwrite = oo$overwrite)
+
+
+## Soil Fertility ----------------------------------------------------------
+
+dbWriteTable(con, Id(schema = "wicst", table = "soils"), db_soils, overwrite = oo$overwrite)
 
 # ei ----------------------------------------------------------------------
 ## core --------------------------------------------------------------------

@@ -18,8 +18,7 @@ tbl_2015_nutrients <- pre_2015_nutrients |>
   filter(!(rrl_id %in% c(325, 326, 327, 328)))
 
 
-tbl_2015_nutrients |> filter(!is.na(total_moisture)) |> clipr::write_clip(
-)
+tbl_2015_nutrients |> filter(!is.na(total_moisture)) |> clipr::write_clip()
 
 tbl_2015_nutrients |> filter(plot %in% (tbl_2015_alf |> pull(plot) |> unique())) |>
   count(plot)

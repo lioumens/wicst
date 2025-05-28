@@ -1,6 +1,7 @@
 
 library(readxl)
 library(tidyverse)
+library(glue)
 pasture_fp <- "~/OneDrive - UW-Madison/Database development/Michael/pasture_cleaned.xlsx"
 
 raw_past_massings <- read_excel(pasture_fp, sheet = "massings",na = ".", range = cell_cols("A:K"))
@@ -8,13 +9,15 @@ raw_past_exclosures <- read_excel(pasture_fp, sheet = "exclosures")
 raw_past_management <- read_excel(pasture_fp, sheet = "management")
 raw_past_summary <- read_excel(pasture_fp, sheet = "summary")
 raw_past_animal <- read_excel(pasture_fp, sheet = "animal")
+raw_past_feedings <- read_excel(pasture_fp, sheet = "feedings")
 
 xl_pasture_raw <- list(
   massings = raw_past_massings,
   exclosures = raw_past_exclosures,
   management = raw_past_management,
   summary =  raw_past_summary,
-  animal = raw_past_animal
+  animal = raw_past_animal,
+  feedings = raw_past_feedings
 )
 
 # clean a little ----------------------------------------------------------
@@ -62,7 +65,7 @@ past_massings <- raw_past_massings |>
 #          my_adg = (end_lbs - start_lbs) / my_days) |> 
 #   select(on_doy, my_doy, my_off_doy, off_doy, my_days, days, my_adg, ADG_lbs)
 
-raw_past_animal |> head()
+# raw_past_animal |> head()
 
 tbl_past_animal <- raw_past_animal |> 
   select(year, animal_id, animal_type, on_date, off_date, start_lbs, end_lbs)
@@ -71,9 +74,19 @@ tbl_past_animal <- raw_past_animal |>
 tbl_past_management <- raw_past_management |> 
   mutate(site = str_to_upper(site))
 
+
+# Feeding -----------------------------------------------------------------
+
+tbl_past_feedings <- raw_past_feedings |> 
+  mutate(comments = case_when(is.na(notes) ~ NA,
+                              .default = glue("General: \"{notes}\"", notes = notes))) |> 
+  select(year, seasonal_sum_grain_per_head, comments)
+
+
 past_animal <- tbl_past_animal
 past_management <- tbl_past_management
 past_summary <- raw_past_summary
+past_feedings <- tbl_past_feedings
 
 # collect
 xl_pasture <- list(
@@ -81,7 +94,8 @@ xl_pasture <- list(
   exclosures = past_exclosures,
   animal = past_animal,
   management = past_management,
-  summary = past_summary
+  summary = past_summary,
+  feedings = past_feedings
 )
 
 # QA Section -------------------------------------------------------------

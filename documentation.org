@@ -1,10 +1,17 @@
-#+title: Documentation
+# -*- org-odt-preferred-output-format: doc; -*-
+#+title: WEIR Database Documentation
 #+MACRO: comments_description how is this actually working
+#+OPTIONS: tex:imagemagick author:nil
+#+bibliography: wicst_references.bib
+#+cite_export: csl ~/Zotero/styles/chicago-author-date.csl
+#+select_tags: soil_archive
+
+#+ATTR_ODT: :width 800 :height 300 :anchor page
+[[file:img/bob_weir.jpg]]
 
 * WICST Experimental Design
 The core experiment information is held in 3 tables: [[*wicst.plots][wicst.plots]], [[*wicst.rotations][wicst.rotations]], and
 * Accessing the database
-
 #+begin_src R
 # Ensure you are running R >= 4.0.0
 con <- DBI::dbConnect(odbc::odbc(),
@@ -29,6 +36,7 @@ DBI::dbReadTable(con, DBI::Id(schema = “wicst”, table = “plantings”))
 * Table Documentation
 ** WICST Schema
 *** wicst.biomassingdetails
+This table holds additional details of biomass sampling with "non-essential" information, supplemental to the [[*wicst.biomassings][=wicst.biomassings=]] table. The information collected over the years for sampling has changed, thus the information in this table is largely dependent on the year and process of sample collection.
 #+ATTR_ODT: :rel-width 100
 | Column Name            | Type         | Description                                                                                                                                    |
 |------------------------+--------------+------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -37,7 +45,7 @@ DBI::dbReadTable(con, DBI::Id(schema = “wicst”, table = “plantings”))
 | =biomass_width=          | FLOAT<8>     | Width of area biomassed, if known. =biomass_area= will normally be =biomass_length= * =biomass_width=, unless =biomass_area= is manually overwritten.  |
 | =rrl_id=                 | FLOAT<8>     | Rock River Lab ID of biomassing sample                                                                                                         |
 | =bucket_lbs=             | FLOAT<8>     | Weight of the bucket used to assist in collecting biomass                                                                                      |
-| =comments=               | VARCHAR<255> | Miscellaneous comments about observation. Different comments delimited by "\vert "                                                                 |
+| =comments=               | VARCHAR<255> | Miscellaneous comments about observation. Different comments delimited by "\vert"                                                                  |
 | =bag_weight=             | FLOAT<8>     | Weight of the bag used to assist in collecting biomass. Unknown if bag weight was before or after drying sample.                               |
 | =dry_weight_w_bag=       | FLOAT<8>     | Weight of biomassing bag with the dried sample                                                                                                 |
 | =wet_weight_w_bag=       | FLOAT<8>     | Weight of biomassing bag with the wet sample                                                                                                   |
@@ -51,33 +59,36 @@ DBI::dbReadTable(con, DBI::Id(schema = “wicst”, table = “plantings”))
 **** Details
 - cycle :: For biomassings on pasture, cycle gives an estimate of when in the season the biomassing was taken. This value is used to help estimate the total forage availability. Each cycle is roughly considered 30 days.
 - tenday :: For biomassings on pasture, tenday gives a finer estimate of when in the season the biomassing was taken, numerically, in 10 day increments starting early-May to October depending on the year. This serves a similar purpose to pasture cycle, but is used in the calculation of forage availability. See
+- =stubble_inches= :: In order to estimate forage availability more consistently across different years, the stubble height can be used to adjust the weight of the biomass collected.
 *** wicst.biomassings
+This table holds every measured and sampled observation from the plot with the purposes of estimating an amount of biomass on the field without fully harvesting all the product off the field. Both hand and machine sampled observations are included, such as sampling from quadrats and undercuts.
 #+ATTR_ODT: :rel-width 100
-| Column Name             | Type         | Description                                  |
-| =biomassing_id= (PK + FK) | VARCHAR<255> | ID for biomassing observation                |
-| =yielding_type=           | VARCHAR<255> | Type of yield                                |
-| =biomass_date=            | DATETIME     | Date of biomassing                           |
-| =plot_id=                 | VARCHAR<255> | ID of plot biomassing was taken              |
-| =coordinate=              | VARCHAR<255> | Area of plot-section biomassing was taken    |
-| =method=                  | VARCHAR<255> | Technique of how biomassing was taken        |
-| =biomass=                 | VARCHAR<255> | The product that was taken during biomassing |
-| =component=               | VARCHAR<255> | Portion of plant biomassed                   |
-| =cut=                     | FLOAT<8>     | Iteration                                    |
-| =biomass_area=            | FLOAT<8>     | Area in square feet the biomass was taken    |
-| =percent_moisture=        | FLOAT<8>     | Water moisture content of biomassed sample   |
-| =biomass_grams=           | FLOAT<8>     | Amount of biomass taken in grams             |
+| Column Name            | Type         | Description                                                 |
+| =biomassing_id= (PK, FK) | VARCHAR<255> | ID for biomassing observation                               |
+| =yielding_type=          | VARCHAR<255> | Type of yield                                               |
+| =biomass_date=           | DATETIME     | Date of biomassing                                          |
+| =plot_id=                | VARCHAR<255> | ID of plot biomassing was taken                             |
+| =coordinate=             | VARCHAR<255> | Area of plot-section biomassing was taken                   |
+| =method=                 | VARCHAR<255> | Technique of how biomassing was taken                       |
+| =biomass=                | VARCHAR<255> | The product that was taken during biomassing                |
+| =component=              | VARCHAR<255> | Portion of plant biomassed                                  |
+| =cut=                    | FLOAT<8>     | How many times has a product been cut from this plot before |
+| =biomass_area=           | FLOAT<8>     | Area in square feet the biomass was taken                   |
+| =percent_moisture=       | FLOAT<8>     | Water moisture content of biomassed sample                  |
+| =biomass_grams=          | FLOAT<8>     | Amount of biomass taken in grams                            |
 **** Data Details
+- =biomass=  ["quack" | "rye" | "oat" | "wheat" | "weed" | "berseem clover" | "residue" | "alfalfa" | "clover" | "pasture"] ::
 - =yielding_type= :: type of yield in this table is all biomassing, but needed for checking exclusive typing.
   + biomassing - taking a measurement with the goal of inferring yield or mass from larger area. Observations are generally clearly one or the other, but small harvests may conceptually be similar. For such cases, biomassings should be limited to be less than 1000 sq ft.
   + harvesting - all product is taken off the field
-- =method= :: Technique of how biomassing was taken
+- =method= [quadrat | undercutting | exclosure] :: Technique of how biomassing was taken
   + /quadrat/ - taking a biomass by manually sampling above ground from small area, normally within a quadrat
   + /undercutting/ - drawing blade through the soil, for either shoots or roots. This practice was more common between 2014-2019, and stopped in preference for quadratting for less soil disturbance
-- =component= :: the portion of the plant that was biomassed.
+- =component= [roots | shoots] :: the portion of the plant that was biomassed.
   + roots - underground portion
   + shoots - above ground portion
 *** wicst.canopeo
-Canopeo is an app used for estimating green canopy cover
+Canopeo is an app used for estimating green canopy cover, this table hold relevant information for such
 | Column Name         | Type         | Description                                                  |
 | =canopeo_id= (PK, FK) | VARCHAR<255> | ID for canopeo observation                                   |
 | =coverage_date=       | DATETIME     | Date the canopeo observation was made                        |
@@ -90,7 +101,7 @@ Canopeo is an app used for estimating green canopy cover
 - =biomass= :: Multiple biomasses may contribute to the canopy cover, this text field is currently unstructured.
 *** wicst.canopeodetails
 | Column Name | Type         | Description                                        |
-| =canopeo_id=  |              | ID for canopeo observation                         |
+| =canopeo_id=  | VARCHAR<255> | ID for canopeo observation                         |
 | =comments=    | VARCHAR<255> | Additional comments describing canopeo observation |
 *** wicst.directlossdetails
 | Column Name   | Type | Description                                               |
@@ -178,23 +189,35 @@ Canopeo is an app used for estimating green canopy cover
 | =plot_id=     | VARCHAR<255> | ID of plot the lime was applied |
 | =grading=     | VARCHAR<255> | Lime grade                      |
 | =rate=        | FLOAT<8>     | Rate the lime was applied       |
-| =rate_unit=   | VARCHAR<255> | Unit the rate is recorded       |
+| =rate_unit=   | VARCHAR<255> | Unit the =rate= is recorded     |
 *** wicst.losses
 | Column Name   | Type         | Description                           |
-| loss_id       | VARCHAR<255> | ID of loss observation                |
-| loss_type     | VARCHAR<255> | Type of loss observation              |
-| harvesting_id | VARCHAR<255> | ID of harvesting that loss is applied |
+| =loss_id=       | VARCHAR<255> | ID of loss observation                |
+| =loss_type=     | VARCHAR<255> | Type of loss observation              |
+| =harvesting_id= | VARCHAR<255> | ID of harvesting that loss is applied |
 *** wicst.manurings
-| Column Name | Type         | Description |
-| plot_id     | VARCHAR<255> |             |
-| manure_date | DATETIME     |             |
-| source      | VARCHAR<255> |             |
-| type        | VARCHAR<255> |             |
-| method      | VARCHAR<255> |             |
-| rate        | FLOAT<8>     |             |
-| rate_unit   | VARCHAR<255> |             |
-| comments    | VARCHAR<255> |             |
+| Column Name | Type         | Description                                  |
+| =plot_id=     | VARCHAR<255> | ID of plot manure was applied                |
+| =manure_date= | DATETIME     | Date manure was applied                      |
+| =source=      | VARCHAR<255> | Source from which the manure originated      |
+| =type=        | VARCHAR<255> | The material form of the manure              |
+| =method=      | VARCHAR<255> | How was the manure applied to the plot       |
+| =rate=        | FLOAT<8>     | Rate of manure application                   |
+| =rate_unit=   | VARCHAR<255> | Unit the =rate= is recorded                    |
+| =comments=    | VARCHAR<255> | Additional comments about manure application |
 *** wicst.plantings
+| Column Name      | Type         | Description                                                                                                        |
+| =planting_date=    | DATETIME     | Date crop was seeded                                                                                               |
+| =plot_id=          | VARCHAR<255> | ID of plot where the crop was planted                                                                              |
+| =crop=             | VARCHAR<255> | Crop that was planted                                                                                              |
+| =source=           | VARCHAR<255> | Source of crop seed                                                                                                |
+| =variety=          | VARCHAR<255> | Variety of seed that was planted                                                                                   |
+| =attribute_listed= | VARCHAR<255> | An identifying attribute listed by manufacture, which in addition to variety identifies the specific seed product. |
+| =rate=             | FLOAT<8>     | Rate of planting                                                                                                   |
+| =rate_unit=        | VARCHAR<255> | Unit the =rate= is recorded                                                                                          |
+| =type=             | VARCHAR<255> | The type of planting strategy used.                                                                                |
+| =method=           | VARCHAR<255> | How was the seed put into the ground                                                                               |
+| =comments=         | VARCHAR<255> | Additional comments about the seed plantings                                                                       |
 *** wicst.plots
 | Column Name  | Type         | Description                                                         |
 | =plot_id=      | VARCHAR<255> | ID of plots in WICST                                                |
@@ -225,16 +248,16 @@ The sites holds information relevant to where research plots are and experiments
 | =site_name=    | VARCHAR<255> | Common name of the research site |
 **** Data Details
 - =site_id= [ARL | LAC] :: Three letter code for research site. Only Arlington research station is currently active.
-*** wicst.soils
+*** wicst.soils                                                   :soil_archive:
 Table holding information related to soil fertility. Routine fertility, and deep core samples are included here.
 | Column Name | Type         | Description                                          |
 |-------------+--------------+------------------------------------------------------|
 | =year=        | FLOAT<8>     | year of soil sample                                  |
-| =plot=        | FLOAT<8>     | ID of plot soil samples were taken from              |
-| =coordinate=  | VARCHAR<255> | Location within plot-section soil samples were taken |
+| =plot_id=     | FLOAT<8>     | ID of plot soil samples were taken from              |
 | =section=     | VARCHAR<255> | Location within plot soil samples were taken         |
-| =site=        | VARCHAR<255> |                                                      |
+| =coordinate=  | VARCHAR<255> | Location within plot-section soil samples were taken |
 | =season=      | VARCHAR<255> | season soil sample was taken                         |
+| =soil_date=   | DATETIME     | When the soil sample was taken, if known             |
 | =soil_tier=   | VARCHAR<255> | type of soil fertility                               |
 | =depth=       | VARCHAR<255> | Range of soil depth used for soil analysis           |
 | =ph=          | FLOAT<8>     | pH of soil                                           |
@@ -251,19 +274,132 @@ Table holding information related to soil fertility. Routine fertility, and deep
 | =cu=          | FLOAT<8>     | Copper                                               |
 | =fe=          | FLOAT<8>     | Iron                                                 |
 | =bph=         | FLOAT<8>     | Buffer pH                                            |
-| =nit_real=    | FLOAT<8>     | Nitrogen                                             |
-| =nit_est=     | FLOAT<8>     | Estimated Nitrogen                                   |
-| =soil_date=   | DATETIME     | When the soil sample was taken, if known             |
+| =nit_real=    | FLOAT<8>     | Nitrogen in =lbs/acre=                                 |
+| =nit_est=     | FLOAT<8>     | Estimated Nitrogen =lbs/acre=                          |
 | =lab_source=  | VARCHAR<255> | Where the soil was analyzed                          |
-| =comments=    | VARCHAR<255> | comments about soil nutrient observations  |
+| =comments=    | VARCHAR<255> | comments about soil nutrient observations            |
 **** Data Details
-- =soil_tier= [routine fertility | fall nitrates | deep fertility] :: What type of soil fertility test and soil source.
+- =soil_tier= [routine fertility | fall nitrates | deep fertility] :: What type of soil fertility test and what soil source
+- =depth= [0-6 in | 6-12 in | 0-12 in | 12-24 in | 24-36 in] :: What range of depth did the soil data come from.
+  - This should be the targeted soil horizon for sampling that the observations represent
+  - Routine fertility should be 0-6 in in depth
+  - Fall nitrates should have three target depths =0-12 in=, =12-24 in=, =24-36 in=.
 - =lab_source= :: The location where the analytic soil tests done.
+- =soil_tier= [ fall nitrates | deep fertility | routine fertility ] :: Type of soil sample
+  Each soil sample has a set of target depths, see data details for =depth=
+  - /fall nitrates/ - assessment of nitrate in 1 ft soil intervals during the fall
+  - /deep fertility/ - measurements from deep sample cores
+  - /routine fertility/ - recurring measurements of soil nutrients
+- =nit_est= ::
+  NO3-N in the soil estimated by lab. Estimates for =24-36 in= depth samples are estimated from 1 and 2 ft samples.
+- season [fall] :: season of soil sampling
+  Exact dates for soil samples are not complete, but season of soil sample sufficient for estimate of time when backfilling data
 - comments :: Additional comments about soil observations. Comments are in the format 'source: "comment"', and delimited by \vert.
+*** wicst.carbon                                                  :soil_archive:
+Table holding soil organic carbon measurements for WICST.
+| Column Name         | Type         | Description                                                                 |
+|---------------------+--------------+-----------------------------------------------------------------------------|
+| =year=                | FLOAT<8>     | year of soil sample                                                         |
+| =plot_id=             | VARCHAR<255> | ID of plot soil samples were taken from                                     |
+| =section=             | VARCHAR<255> | Location within plot soil samples were taken                                |
+| =coordinate=          | VARCHAR<255> | Location within plot-section soil samples were taken                        |
+| =depth=               | VARCHAR<255> | The targeted sampling depth category                                        |
+| =min_depth_inch=      | FLOAT<8>     | Actual minimum limit of soil sampling depth in inches                       |
+| =max_depth_inch=      | FLOAT<8>     | Actual maximum limit of soil sampling depth in inches                       |
+| =cn_method=           | VARCHAR<255> | Method used to quantify carbon and nitrogen                                 |
+| =number_composited=   | FLOAT<8>     | Number of soil samples that have been composited for observation            |
+| =nit=                 | FLOAT<8>     | Nitrogen percentage measured                                                |
+| =nit_kriged=          | FLOAT<8>     | kriged estimate of nitrogen as percentage                                   |
+| =nit_kriged_variance= | FLOAT<8>     | variance of kriged estimate of nitrogen                                     |
+| =soc=                 | FLOAT<8>     | Soil organic carbon percentage                                              |
+| =soc_kriged=          | FLOAT<8>     | kriged estimate of soil organic carbon as percentage                        |
+| =soc_kriged_variance= | FLOAT<8>     | variance of kriged estimate of soil organic carbon                          |
+| =soc_equipment=       | VARCHAR<255> | Equipment used for SOC measurement                                          |
+| =bulk_density_g_cm3=  | FLOAT<8>     | Bulk density in =g/cm^3=                                                      |
+| =soc_mg_ha=           | FLOAT<8>     | soil organic carbon in =megagrams/hectare=                                    |
+| =soc_mg_ha_method=    | VARCHAR<255> | method of calculating =soc_mg_ha=                                             |
+| =esm_reference=       | VARCHAR<255> | Free text description for conserved reference mass in =soc_mg_ha= calculation |
+**** Data Details
+- =coordinate= ["south" | "north" | "center"] ::
+- =depth= ["0-6 in" | "6-12 in" | "0-12 in" | "12-24 in" | "24-36 in"] ::
+  Depth categorizations of soil sampling observations. These represent the intended soil sample, even if full depth was not achieved
+- =min_depth_inch= ::
+  When target sampling depth was not obtained, these numbers provide a more accurate interval for soil collected
+- =max_depth_inch= ::
+  When target sampling depth was not obtained, these numbers provide a more accurate interval for soil collected
+- =number_composited= ::
+  Some observations are composited from multiple samples from the field.
+  - /0/ - observation is not representative of any soil samples, for example for kriged estimates
+  - /1+/ - when 1 or greater, the number of samples composited in the field for the observation
+- =soc= ::
+  The =soc= column refers to the mass % carbon of the soil sample, as determined by dry combustion using a Flash EA 1112 CN Automatic Elemental Analyzer. %C was considered equivalent to %SOC for these soils. Samples for %SOC analysis were collected by combining 3 samples taken 19 cm apart (0, 19, and 38 cm). This was done to ensure that samples were collected in-row, between-row, and at an intermediate location in all of the maize plots, to account for variation in SOC between rows of maize.
+  - See [cite/t:@dietzSoilCarbonMaintained2024]
+- =soc_kriged= ::
+  see =nit_kriged=
+- =nit_kriged= ::
+  Bulk soils were sampled on a 30 x 30 grid in 1989 as described in [cite/t:@dietzSoilCarbonMaintained2024] and segmented into 0-15, 15-30, 30-60, and 60-90 cm depth increments. Samples were analyzed for N (and C) using dry combustion. Bulk soil N (g N / 100 g soil) was interpolated using a kriging process similar to that described in [cite/t:@dietzSoilCarbonMaintained2024] for C interpolation. Briefly, spherical variogram models using were fitted to each depth separately using the gstat package in R. Starting values for nugget, psill, and range were determined by visual inspection of semi-variograms. Due to low spatial autocorrelation in the 30-60 and 60-90 cm depths, the variogram models did not fully meet convergence criteria. However, visual inspection of the model vs. semi-variogram indicated that the model fits were acceptable. The low spatial autocorrelation in the 30-60 cm and 60-90 cm depths results in high variance and limited range of estimated values. However, for N balance purposes, the high variance of N estimates is likely acceptable.
+  - See =WICST_N_kriging_graphs_2024-01-14.pdf= for graphs of the kriging process.
+  - See also [cite/t:@gralerSpatioTemporalInterpolationUsing2016] kriging details in R
+- =cn_method= ["dry combustion" | "mid infrared reflectance"] ::
+  - /dry combustion/ - considered the standard for elemental analysis
+  - /mid-infrared reflectance/ - predicts SOC concentration based on absorbed mid-infrared light. Cheaper but less accurate.
+- =soc_mg_ha_method= ["depth based" | "equivalent soil mass"] ::
+  - /depth based/ - uses the soil depth interval to estimate soil mass, multiplying by bulk density and soil carbon percentage for carbon stock
+  - /equivalent soil mass/ - To determine C stocks, rather than using depth from surface, we used cumulative mineral soil mass from the surface as it is a reference system that remains stable over time (i.e., not impacted by changes in bulk density or changes in organic matter). This "equivalent soil mass" or ESM method accounts for compaction, expansion, and addition or loss of organic matter, ensuring the same section of the soil profile is considered each time. For this dataset, these calculations were performed using R code provided by [cite/t:@vonhadenSoilsDirtyLittle2020] with the 1989 %SOC and BD for each sampling location (e.g. subplot within each plot) as the baseline.
+    - See [cite/t:@vonhadenSoilsDirtyLittle2020] a clear and thorough explanation of ESM and its importance.
+*** ei.biogeo                                                     :soil_archive:
+| Column Name                  | Type         | Description                                                                                                                   |
+|------------------------------+--------------+-------------------------------------------------------------------------------------------------------------------------------|
+| =year=                         | FLOAT<8>     | year                                                                                                                          |
+| =seq_id=                       | FLOAT<8>     | sequence for rock river lab samples submission                                                                                |
+| =plot=                         | VARCHAR<255> | main plot number                                                                                                              |
+| =section=                      | VARCHAR<255> | section of main plot containing EI                                                                                            |
+| =cc_pre=                       | VARCHAR<255> | cover crop preceding main crop                                                                                                |
+| =cc_pre_method=                | VARCHAR<255> | planting method of =cc_pre=                                                                                                     |
+| =cc_post=                      | VARCHAR<255> | cover crop planted after, or interseeded in main crop                                                                         |
+| =cc_post_method=               | VARCHAR<255> | planting method of =cc_post=                                                                                                    |
+| =stability_coef=               | FLOAT<8>     | stand alone soil "stability" coefficient;                                                                                     |
+| =stability_coef_normalized=    | FLOAT<8>     | soil "stability" coefficient min/max normalized using just the SI plots; based on =stability_coef=                              |
+| =living_cover_coef=            | FLOAT<8>     | stand alone soil "living cover (or roots)" coefficient;                                                                       |
+| =living_cover_coef_normalized= | FLOAT<8>     | living cover (or roots) coefficient min/max normalized using only SI plots; based on unadjusted system score for living cover |
+| =rci_coef=                     | FLOAT<8>     | Rotational Complexity Index (RCI = number of species*rotation length); see Bowles et al. 2020                                 |
+| =rci_coef_normalized=          | FLOAT<8>     | RCI min/max normalized using only SI plots; based on unadjusted RCI (i.e., rci)                                               |
+| =richness_coef=                | FLOAT<8>     | richness stand alone coefficients                                                                                             |
+| =richness_coef_normalized=     | FLOAT<8>     | richness min/max normalized using only SI plots; based on unadjusted system score                                             |
+| =cows_coef=                    | FLOAT<8>     | degree of livestock integration taking presence/absence of animals into account as well as livestock manrue;                  |
+| =cows_coef_normalized=         | FLOAT<8>     | cows min/max normalized using only SI plots; based on unadjusted systems score                                                |
+| =pox=                          | FLOAT<8>     | POxC, mg C oxidized per kg soil                                                                                               |
+| =pom=                          | FLOAT<8>     | POM-C, fraction of total C                                                                                                    |
+| =nit=                          | FLOAT<8>     | Total N, %                                                                                                                    |
+| =c=                            | FLOAT<8>     | Total C, %                                                                                                                    |
+| =microbial_biomass=            | FLOAT<8>     | Microbial biomass, nmol/g soil                                                                                                |
+| =act_abundance=                | FLOAT<8>     | Actinobacteria abundance, nmol/g soil (16:0 10 methyl + 17:0 10 methyl + 18:0 10 methyl)                                      |
+| =amf_abundance=                | FLOAT<8>     | AMF, nmol/g soil  (16:1 w5c), in agricultural soils this may contain bacterial components                                     |
+| =fun_abundance=                | FLOAT<8>     | Fungi abundance, nmol/g soil (18:1 w9c + 18:2 w6c), weighted toward saprophytic fungi, not mycorrhizal fungi                  |
+| =gram_negative_abundance=      | FLOAT<8>     | Gram negative bacteria abundance, nmol/g soil                                                                                 |
+| =gram_positive_abundance=      | FLOAT<8>     | Gram positive bacteria abundance, nmol/g soil                                                                                 |
+| =protist_abundance=            | FLOAT<8>     | Protists, nmol/g soil  (20:4 w6c)                                                                                             |
+| =bacteria_abundance=           | FLOAT<8>     | Bacteria, nmol/g soil                                                                                                         |
+| =act_percent=                  | FLOAT<8>     | Actinobacteria,mol%  (16:0 10 methyl + 17:0 10 methyl + 18:0 10 methyl)                                                       |
+| =amf_percent=                  | FLOAT<8>     | AMF, mol% (16:1 w5c)                                                                                                          |
+| =fun_percent=                  | FLOAT<8>     | Fungi, mol% (18:1 w9c + 18:2 w6c)                                                                                             |
+| =gram_negative_percent=        | FLOAT<8>     | Gram negative bacteria abundance,mol%                                                                                         |
+| =gram_positive_percent=        | FLOAT<8>     | Gram positive bacteria abundance, mol%                                                                                        |
+| =protist_percent=              | FLOAT<8>     | Protists, mol% (20:4 w6c)                                                                                                     |
+| =bacteria_percent=             | FLOAT<8>     | Bacteria, mol%                                                                                                                |
+**** Data Details
+- =no_till_stability_coef= ::
+  1/(1+system score), simple inverse of tillage with correction for values <1
+- =living_cover_coef= ::
+  1/(1+system score), simple inverse with correction for values <1
+- =richness_coef= ::
+  =richness_coef = 1-(1/score)=
+- =cows_coef= ::
+  adding 1 in denominator to account for zeros =cows_coef = 1-1/(score+1)=
 *** wicst.systematiclossdetails
 | Column Name                | Type         | Description                                      |
 | =systematicloss_id= (PK, FK) | VARCHAR<255> | ID of systematic loss observation                |
-| =assessment_total_area=      | FLOAT<8>     | Total area assesed for losses in square feet     |
+| =assessment_total_area=      | FLOAT<8>     | Total area assessed for losses in square feet    |
 | =assessment_loss_area=       | FLOAT<8>     | Area considered as loss in square feet           |
 | =assessment_loss_length=     | FLOAT<8>     | Length of area considered as loss in feet        |
 | =assessment_loss_rows=       | FLOAT<8>     | Number of rows considered as loss in plot        |
@@ -279,6 +415,8 @@ Table holding information related to soil fertility. Routine fertility, and deep
 | Column Name    | Type         | Description                           |
 | =system_id= (PK) | FLOAT<8>     | ID of cropping system                 |
 | =description=    | VARCHAR<255> | Common description of cropping system |
+*** wicst.tillings
+| Column Name    | Type         | Description                           |
 *** wicts.treatments
 | Column Name       | Type     | Description                                        |
 | =treatment_id= (PK) | FLOAT<8> | ID of assigned treatment                           |
@@ -295,3 +433,5 @@ Table holding information related to soil fertility. Routine fertility, and deep
 * Database Maintenance
 ** Style Guide
 ** Design Guide
+* Bibliography                                                      :soil_archive:
+#+print_bibliography:
