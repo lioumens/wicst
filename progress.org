@@ -1155,10 +1155,21 @@ Decision to delete nonharvests
 - nothing
 *** 2017
 - t4 has entry for 2016 under field cultivate where normally for 2017
+*** 2019
+- T6, Field cultivation 8/21/19 at bottom. Brillion and sunflower, is it both on that day?
+- T1, T6, T10, several others with depth 2, are these actually 2 passes? 2020 has 2x in treatment 1, but 2" in 2019
 *** Notes
 - field digger can be primary or secondary. Fall practices should be primary, otherwise leave them as secondary.
 - "no till cultivation" like a chisel plow, but with sweeps. We will call these row cultivator with "no-till with sweeps" modifier
 - repairing a seedbed
+- chisel plot should
+- [ ] c-shank? comments that have c-shank, wondering if this should be coded as a modifier
+- [ ] 4511, some just labeled chisel, should it be "disk-chisel"? for consistency?
+- [ ] DW's 4-row unit, what company/equipment was this? (comments)
+- [ ] 15' Balzer, how to code this correctly?
+- [ ] Vertical tillage considered "secondary" in 2014, should change to primary?
+- [ ] Similarly, disk-chisel is secondary in
+*** Cleaning
 * Elemental Conversions
 - K2SO4 (0-0-50)
   + elemental K * 1.2 / 0.5
@@ -1179,8 +1190,15 @@ Decision to delete nonharvests
 ** 2014
 - labels look scrambled, values all look the same... but missing a few in the raw data. Must have been filled in otherwise
 ** 2015
+* Actions
 * Data Entry
--
+- [X] add Pioneer P0421Q https://northfortyseed.com/wp-content/uploads/2019/02/P0421Q.pdf as corn option
+- [ ] add canopeo sheet for data entry
+  - [ ] decide on what biomasses to use for those canopeo entries w/ gregg
+- [ ] corn silage as main data entry
+- [X] add extra tilling columns
+- [X] change kcl to 0-0-60, and k2so4 to 0-0-50-17
+- [ ] document tillings
 * Soil Archive
 - sieved to 2-4 mm, and use square corepak jars
 - identifiers for physical samples. What's the system of the labeling?

@@ -15,7 +15,6 @@ library(here)
 # data --------------------------------------------------------------------
 
 load("data/core_20241108.Rdata")
-load("data/agcal_20241119.Rdata")
 
 # connect -----------------------------------------------------------------
 
@@ -61,6 +60,7 @@ dbWriteTable(con, Id(schema = "wicst", table = "plantings"), db_plantings, overw
 dbWriteTable(con, Id(schema = "wicst", table = "fertilizings"), db_fertilizings, overwrite = oo$overwrite)
 dbWriteTable(con, Id(schema = "wicst", table = "limings"), db_limings, overwrite = oo$overwrite)
 dbWriteTable(con, Id(schema = "wicst", table = "manurings"), db_manurings, overwrite = oo$overwrite)
+dbWriteTable(con, Id(schema = "wicst", table = "tillings"), db_tillings, overwrite = oo$overwrite)
 # dbWriteTable(con, Id(schema = "wicst", table = "manurings"), tbl_manurings)
 
 

@@ -556,6 +556,19 @@ xl_agcal$tillings |>
   count(type, implement, planting) |>
   clipr::write_clip()
 
+db_tillings |> 
+  left_join(xl_core$plots, by = "plot_id") |>
+  count(year = year(tilling_date), treatment_id, type) |> 
+  arrange(treatment_id, type) |>
+  complete(year, treatment_id, type, fill = list(n = 0)) |>
+  pivot_wider(names_from = c(type, treatment_id), values_from = n) |> 
+  arrange(year) |> 
+  clipr::write_clip()
+
+xl_agcal$tillings |> 
+  count(company, equipment, implement, type) |> 
+  clipr::write_clip()
+
 
 ## Fertilizers -------------------------------------------------------------
 

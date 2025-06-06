@@ -35,7 +35,7 @@ if (!exists("tbl_1992_harvests")) source("migration/1992_yield.R")
 if (!exists("tbl_1991_harvests")) source("migration/1991_yield.R")
 if (!exists("tbl_1990_harvests")) source("migration/1990_yield.R")
 
-load("data/agcal_20250405.Rdata")
+load("data/agcal_20250606.Rdata")
 load("data/core_20241206.Rdata")
 load("data/soil_20250527.Rdata")
 
@@ -51,7 +51,7 @@ db_plantings <- xl_agcal$plantings
 db_limings <- xl_agcal$limings 
 db_fertilizings <- xl_agcal$fertilizings
 db_manurings <- xl_agcal$manurings
-
+db_tillings <- xl_agcal$tillings
 
 ## harvestings -------------------------------------------------------------
 tbl_harvests <- bind_rows(
@@ -482,10 +482,10 @@ db_feedings <- xl_pasture$feedings
 db_soils <- tbl_soil |> 
   mutate(plot_id = case_when(site == "ARL"~str_c("A", plot),
                              site == "LAC"~str_c("L", plot))) |>
-  select(-plot, -site) |> 
-  relocate(year, season, soil_date, plot_id, section, coordinate, soil_date, .before = 1)
+  select(-plot, -site, -section) |> 
+  relocate(year, season, soil_date, plot_id, coordinate, soil_date, .before = 1)
 
-db_soils |> arrange(year, soil_tier, plot_id) |> clipr::write_clip()
+# db_soils |> arrange(year, soil_tier, plot_id) |> clipr::write_clip()
 
 # ei ----------------------------------------------------------------------
 

@@ -1,0 +1,37 @@
+#+title: Billing
+#+description: billing sheet
+
+* Entry Sheet Instructions
+** Orders Sheet
+- Customer ID
+* Formulas
+** OrdersMachines
+*** Lookup
+#+begin_quote
+=FILTER(Equipment[Lab Description], Equipment[Equipment Category] = P1, #N/A)
+#+end_quote
+*** Validate
+#+begin_quote
+=OR(NOT(ISNA(MATCH([@Equipment], FILTER(Equipment[Lab Description], Equipment[Equipment Category] = [@[Equipment Category]], 0), 0))), ISBLANK([@Equipment]))
+#+end_quote
+*** Self referencing table
+- https://exceleratorbi.com.au/self-referencing-tables-power-query/
+* Notes
+- The ~OrderMachines~ table is a power query result, which relies on file path unfortunately, but best way to ge
+* Outstanding
+* Verify
+** [#B] Day rate calculated
+- calculate day rate and round or just enter the amount of days
+** [#B] Unify Billing for halfday?
+- Just multiply
+** Product IDs for Labor only? Same rate depending on driver?
+** Equipment Labeling
+- [ ] one category for each needed equipment, no overlap?
+- [ ] 3 equipment enough for each service job?
+** Is Driver really necessary? is it relevant to all orders or just those that include labor?
+** Billing looks to be by Group, different customer if same group different point of contact?
+- does this instead need like a funding string or something?
+- currently just used in the Billing
+** Do you need more sophisticated billing table?
+- just a pivot table of the orders
+- [ ] adjustment?

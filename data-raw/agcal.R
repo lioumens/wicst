@@ -9,6 +9,8 @@ library(glue)
 library(dplyr)
 library(janitor)
 library(lubridate)
+library(stringr)
+library(tidyr)
 
 load("data/manure_master_20250516.Rdata")
 load("data/translate_20250517.Rdata")
@@ -118,59 +120,167 @@ pre_manurings <- raw_manurings |> clean_names() |>
          manure_date = date)
 
 # tillings ----------------------------------------------------------------
-raw_tillings <- read_xlsx(tillings_fp, sheet = "Sheet1", na = "-")
-pre_tillings <- raw_tillings |> clean_names() |> 
-  mutate(comments = if_else(!is.na(notes),
-                            glue("General: \"{notes}\"", notes = notes),
-                                 NA)) |>
-  # translate implement to gregg implements and modifier
-  mutate(new_implement =
-           case_match(implement,
-                      !!!xl_translate$flist_tillings_implement),
-         modifier = case_match(implement,
-                                   !!!xl_translate$flist_tillings_modifier)) |> 
-  # implement types
-  left_join(dd_tillings_type |> 
-              filter(gregg_implement != "disk"), # disk can be primary or secondary
-            by = join_by(new_implement == gregg_implement)) |> 
-  # rename
-  mutate(implement = coalesce(new_implement, implement),
-         type = coalesce(type, gregg_type)) |>
-  select(-new_implement, -gregg_type, -notes) |>
-  rename(plot_id = plot,
-         tilling_date = date)
-# 
+raw_tillings <- read_xlsx(tillings_fp, sheet = "Sheet2", na = "-",
+                          col_types = c(rep("guess", 7), 
+                                        "text", rep("guess", 4),
+                                        "text", "text", "text",
+                                        "numeric", "numeric"))
+
+pre_tillings <- raw_tillings |> 
+  mutate(thematch = str_match(comments, regex("(?<comp>(agco|rich|yetter|brillion|case|blu|sunflower|bal[zs]er|krause))(?:[iIhH\\s]*)(?<code>[0-9]*).*?", ignore_case = T)),
+         company = case_when(
+           str_detect(comments, regex("rich", ignore_case = T))~coalesce(company, "Wil-Rich"),
+           str_detect(comments, regex("agco", ignore_case = T))~coalesce(company, "AGCO"),
+           str_detect(comments, regex("yetter", ignore_case = T))~coalesce(company, "Yetter"),
+           str_detect(comments, regex("brillion", ignore_case = T))~coalesce(company, "Brillion"),
+           str_detect(comments, regex("blu", ignore_case = T))~coalesce(company, "Blu-Jet"),
+           str_detect(comments, regex("case", ignore_case = T))~coalesce(company, "Case IH"),
+           str_detect(comments, regex("sunflower", ignore_case = T))~coalesce(company, "Sunflower"),
+           str_detect(comments, regex("bal[zs]er", ignore_case = T))~coalesce(company, "Balzer"),
+           str_detect(comments, regex("krause", ignore_case = T))~coalesce(company, "Krause"),
+           str_detect(equipment, regex("jd", ignore_case = T))~coalesce(company, "JD"),
+           str_detect(equipment, regex("agco", ignore_case = T))~coalesce(company, "AGCO"),
+           .default = company
+         ),
+         equipment = readr::parse_number(coalesce(equipment, thematch[,"code"])),
+         theinch = str_match(comments, regex("(?<dep>[0-9\\.]*)(?=\\s*inch)", ignore_case = T)),
+         depth = coalesce(depth, as.numeric(theinch[,"dep"])),
+         year = year(tilling_date)) |>
+  filter(keep_remove != "remove" | is.na(keep_remove)) |> 
+  select(-theinch, -thematch, -keep_remove) |>
+  arrange(tilling_date, treatment_id, plot_id) |>
+  mutate(company = case_match(company,
+                              # change any names of company here
+                              c("AGCO", "Agco")~"AGCO",
+                              c("Balser", "Balzer")~"Balzer",
+                              c("Case")~"Case IH",
+                              c("JD") ~ "John Deere",
+                              .default = company),
+         # force implement > type here
+         type = case_when(implement == "chisel"~"primary",
+                          implement == "field cultivator"~"secondary",
+                          implement == "rotary hoe"~"tertiary",
+                          implement == "tine weeder" ~ "tertiary",
+                          implement == "vertical-till"~"primary",
+                          implement == "disk-chisel"~"primary",
+                          implement == "strip-till"~"secondary",
+                          .default = type),
+         # getting rid of comments when captured by columns, or actions based on specific comments
+         comments = case_when(comments == "General: \"S-tine\"" & !is.na(modifier)~NA,
+                              comments %in% c(
+                                "General: \"Wilrich\"",
+                                "General: \"Wil-Rich\"",
+                                "General: \"wilrich\""
+                              ) & company == "Wil-Rich"~NA,
+                              comments == "General: \"Yetter\"" & company == "Yetter"~NA,
+                              comments == "General: \"w/ sweeps\"" & !is.na(modifier)~NA,
+                              comments == "General: \"sunflower\"" & company == "Sunflower"~NA,
+                              comments == "General: \"JD\"" & company == "John Deere"~NA,
+                              comments %in%  c("General: \"Case IH\"",
+                                               "General: \"case\""
+                              ) & company == "Case IH"~NA,
+                              comments == "General: \"Brillion\"" & company == "Brillion"~NA,
+                              comments == "General: \"Balser\"" & company == "Balzer"~NA,
+                              comments %in% c(
+                                "General: \"AGCo 4511\"",
+                                "General: \"Agco 4511\"",
+                                "General: \"Agco 4511 at 8 inches\"",
+                                "General: \"Agco4511\""
+                              ) & company == "AGCO" & equipment == 4511 ~ NA,
+                              comments == "General: \"AGCo 5035\"" & company == "AGCO" & equipment == 5035 ~ NA,
+                              comments == "General: \"Blu Jet\"" & company == "Blu-Jet"~NA,
+                              .default = comments)) |> 
+  # change the naming of the equipment
+  mutate(equipment = as.character(equipment),
+         equipment = case_when(company == "Balzer" & equipment == "15" ~ "15 ft",
+                               .default = equipment)) |> 
+  # rename the columns
+  rename(
+    timing = planting,
+  )
+
+tillings_cols <- c("tilling_date", "plot_id", "type", "implement", 
+                   "modifier", "timing", "passes",
+                   "equipment", "company", "depth", "speed")
+
+# in order to number uniquely, maybe this
 # pre_tillings |> 
-#   mutate(plot_id = factor(plot_id, levels = plots_by_treatment)) |>
-#   arrange(plot_id, tilling_date) |>
-#   select(-planting, -passes, -comments) |>
-#   # summarize(n = n(), .by = c(tilling_date, plot_id)) |> 
-#   # filter(n > 1L)
-#   pivot_wider(names_from = plot_id, values_from = c(type, implement), names_vary = "slowest",
-#               values_fn = ~str_flatten(.x, collapse = ", ")) |> 
-#   clipr::write_clip()
+#   group_by(year, plot_id) |> 
+#   arrange(tilling_date, treatment_id, plot_id, type) |>
+#   mutate(tilling_num = row_number(),
+#          .after = plot_id)
+  
+tbl_tillings <-  pre_tillings |>
+  filter(section == "C30'" | is.na(section)) |>
+  select(any_of(tillings_cols))
 
-# pre_tillings |>
-#   left_join(xl_core$plots |> select(plot_id, treatment_id), by = "plot_id") |>
-#   mutate(plot_id = factor(plot_id, levels = plots_by_treatment),
-#          year = year(tilling_date)) |>
-#   arrange(year, plot_id, type, tilling_date) |> 
-#   relocate(year, .before = 1) |> 
-#   relocate(treatment_id, .after = plot_id) |> 
-#   filter(is.na(plot_id))
+tbl_tillings_silage <- pre_tillings |> 
+  filter(section %in% c("E15'","W15'")) |>
+  select(any_of(tillings_cols))
 
-# pre_tillings |> filter(!(plot_id %in% plots_by_treatment)) |> View()
+tbl_tillings_prairie <- pre_tillings |> 
+  filter(section %in% c("micro")) |>
+  select(any_of(tillings_cols))
 
 
-pre_tillings |> filter(!is.na(modifier) & year(tilling_date) < 1993)
-
-
-# QA get rid of duplicates, larger table first
-pre_tillings |> count(year(tilling_date), plot_id, type, implement) |> 
-  arrange(desc(n)) |> 
-  filter(type == "primary", n > 1) |> View()
-
-pre_tillings |> filter(implement == "chisel", year(tilling_date) == 1997, plot_id == "A104")
+# # raw_tillings$comments |> str_match(regex("agco\\s*?(?<code>\\d*)", ignore_case = T))
+# raw_tillings$comments |> str_extract_all(regex("agco\\s*?(?<code>\\d*?)", ignore_case = T)) |> str_subset(".+")
+# raw_tillings |> filter(str_detect(comments))
+# 
+# pre_tillings <- raw_tillings |> clean_names() |> 
+#   mutate(comments = if_else(!is.na(notes),
+#                             glue("General: \"{notes}\"", notes = notes),
+#                                  NA)) |>
+#   # translate implement to gregg implements and modifier
+#   mutate(new_implement =
+#            case_match(implement,
+#                       !!!xl_translate$flist_tillings_implement),
+#          modifier = case_match(implement,
+#                                    !!!xl_translate$flist_tillings_modifier)) |> 
+#   # implement types
+#   left_join(dd_tillings_type |> 
+#               filter(gregg_implement != "disk"), # disk can be primary or secondary
+#             by = join_by(new_implement == gregg_implement)) |> 
+#   # rename
+#   mutate(implement = coalesce(new_implement, implement),
+#          type = coalesce(type, gregg_type)) |>
+#   select(-new_implement, -gregg_type, -notes) |>
+#   rename(plot_id = plot,
+#          tilling_date = date)
+# 
+# # pre_tillings |> 
+# #   mutate(plot_id = factor(plot_id, levels = plots_by_treatment)) |>
+# #   arrange(plot_id, tilling_date) |>
+# #   select(-planting, -passes, -comments) |>
+# #   # summarize(n = n(), .by = c(tilling_date, plot_id)) |> 
+# #   # filter(n > 1L)
+# #   pivot_wider(names_from = plot_id, values_from = c(type, implement), names_vary = "slowest",
+# #               values_fn = ~str_flatten(.x, collapse = ", ")) |> 
+# #   clipr::write_clip()
+# 
+# # pre_tillings |>
+# #   left_join(xl_core$plots |> select(plot_id, treatment_id), by = "plot_id") |>
+# #   mutate(plot_id = factor(plot_id, levels = plots_by_treatment),
+# #          year = year(tilling_date)) |>
+# #   arrange(year, plot_id, type, tilling_date) |> 
+# #   relocate(year, .before = 1) |> 
+# #   relocate(treatment_id, .after = plot_id) |> 
+# #   filter(is.na(plot_id))
+# 
+# # pre_tillings |> filter(!(plot_id %in% plots_by_treatment)) |> View()
+# 
+# 
+# pre_tillings |> filter(!is.na(modifier) & year(tilling_date) < 1993)
+# 
+# 
+# # QA get rid of duplicates, larger table first
+# pre_tillings |> 
+#   count(year(tilling_date), plot_id, type, implement) |> 
+#   arrange(desc(n)) |> 
+#   filter(type == "primary", n > 1) |> 
+#   View()
+# 
+# pre_tillings |> filter(implement == "chisel", year(tilling_date) == 1997, plot_id == "A104")
 
 
 # raw_tillings |> left_join(tillings_translate |>
@@ -181,6 +291,7 @@ pre_tillings |> filter(implement == "chisel", year(tilling_date) == 1997, plot_i
 #   mutate(modifier = gregg_modifier, .after = "implement") |>
 #   select(-starts_with("gregg")) |> 
 #   clipr::write_clip()
+
 
 # pesticidings ----------------------------------------------------------------
 raw_pesticidings <- read_xlsx(pesticidings_fp, sheet = "Sheet1", na = "-",
@@ -194,15 +305,15 @@ pre_pesticidings <- raw_pesticidings |> clean_names() |>
   rename(plot_id = plot,
          pesticiding_date = date)
 
-pre_pesticidings
-
 
 xl_agcal <- list(
   limings = pre_limings,
   fertilizings = pre_fertilizings,
   plantings = pre_plantings,
   manurings = pre_manurings,
-  tillings = pre_tillings,
+  tillings = tbl_tillings,
+  tillings_silage = tbl_tillings_silage,
+  tillings_prairie = tbl_tillings_prairie,
   pesticidings = pre_pesticidings
 )
 

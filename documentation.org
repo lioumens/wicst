@@ -1,10 +1,8 @@
-# -*- org-odt-preferred-output-format: doc; -*-
 #+title: WEIR Database Documentation
 #+MACRO: comments_description how is this actually working
 #+OPTIONS: tex:imagemagick author:nil
 #+bibliography: wicst_references.bib
 #+cite_export: csl ~/Zotero/styles/chicago-author-date.csl
-#+select_tags: soil_archive
 
 #+ATTR_ODT: :width 800 :height 300 :anchor page
 [[file:img/bob_weir.jpg]]
@@ -81,12 +79,64 @@ This table holds every measured and sampled observation from the plot with the p
 - =yielding_type= :: type of yield in this table is all biomassing, but needed for checking exclusive typing.
   + biomassing - taking a measurement with the goal of inferring yield or mass from larger area. Observations are generally clearly one or the other, but small harvests may conceptually be similar. For such cases, biomassings should be limited to be less than 1000 sq ft.
   + harvesting - all product is taken off the field
-- =method= [quadrat | undercutting | exclosure] :: Technique of how biomassing was taken
+- =method= ["quadrat" | "undercutting" | "exclosure"] :: Technique of how biomassing was taken
   + /quadrat/ - taking a biomass by manually sampling above ground from small area, normally within a quadrat
   + /undercutting/ - drawing blade through the soil, for either shoots or roots. This practice was more common between 2014-2019, and stopped in preference for quadratting for less soil disturbance
-- =component= [roots | shoots] :: the portion of the plant that was biomassed.
-  + roots - underground portion
-  + shoots - above ground portion
+- =component= ["roots" | "shoots"] :: the portion of the plant that was biomassed.
+  + /roots/ - underground portion
+  + /shoots/ - above ground portion
+*** wicst.carbon                                                  :soil_archive:
+Table holding soil organic carbon measurements for WICST.
+| Column Name         | Type         | Description                                                                 |
+|---------------------+--------------+-----------------------------------------------------------------------------|
+| =year=                | FLOAT<8>     | year of soil sample                                                         |
+| =plot_id=             | VARCHAR<255> | ID of plot soil samples were taken from                                     |
+| =section=             | VARCHAR<255> | Location within plot soil samples were taken                                |
+| =coordinate=          | VARCHAR<255> | Location within plot-section soil samples were taken                        |
+| =depth=               | VARCHAR<255> | The targeted sampling depth category                                        |
+| =min_depth_inch=      | FLOAT<8>     | Actual minimum limit of soil sampling depth in inches                       |
+| =max_depth_inch=      | FLOAT<8>     | Actual maximum limit of soil sampling depth in inches                       |
+| =cn_method=           | VARCHAR<255> | Method used to quantify carbon and nitrogen                                 |
+| =number_composited=   | FLOAT<8>     | Number of soil samples that have been composited for observation            |
+| =nit=                 | FLOAT<8>     | Nitrogen percentage measured                                                |
+| =nit_kriged=          | FLOAT<8>     | kriged estimate of nitrogen as percentage                                   |
+| =nit_kriged_variance= | FLOAT<8>     | variance of kriged estimate of nitrogen                                     |
+| =soc=                 | FLOAT<8>     | Soil organic carbon percentage                                              |
+| =soc_kriged=          | FLOAT<8>     | kriged estimate of soil organic carbon as percentage                        |
+| =soc_kriged_variance= | FLOAT<8>     | variance of kriged estimate of soil organic carbon                          |
+| =soc_equipment=       | VARCHAR<255> | Equipment used for SOC measurement                                          |
+| =bulk_density_g_cm3=  | FLOAT<8>     | Bulk density in =g/cm^3=                                                      |
+| =soc_mg_ha=           | FLOAT<8>     | soil organic carbon in =megagrams/hectare=                                    |
+| =soc_mg_ha_method=    | VARCHAR<255> | method of calculating =soc_mg_ha=                                             |
+| =esm_reference=       | VARCHAR<255> | Free text description for conserved reference mass in =soc_mg_ha= calculation |
+**** Data Details
+- =coordinate= ["south" | "north" | "center"] ::
+- =depth= ["0-6 in" | "6-12 in" | "0-12 in" | "12-24 in" | "24-36 in"] ::
+  Depth categorizations of soil sampling observations. These represent the intended soil sample, even if full depth was not achieved
+- =min_depth_inch= ::
+  When target sampling depth was not obtained, these numbers provide a more accurate interval for soil collected
+- =max_depth_inch= ::
+  When target sampling depth was not obtained, these numbers provide a more accurate interval for soil collected
+- =number_composited= ::
+  Some observations are composited from multiple samples from the field.
+  - /0/ - observation is not representative of any soil samples, for example for kriged estimates
+  - /1+/ - when 1 or greater, the number of samples composited in the field for the observation
+- =soc= ::
+  The =soc= column refers to the mass % carbon of the soil sample, as determined by dry combustion using a Flash EA 1112 CN Automatic Elemental Analyzer. %C was considered equivalent to %SOC for these soils. Samples for %SOC analysis were collected by combining 3 samples taken 19 cm apart (0, 19, and 38 cm). This was done to ensure that samples were collected in-row, between-row, and at an intermediate location in all of the maize plots, to account for variation in SOC between rows of maize.
+  - See [cite/t:@dietzSoilCarbonMaintained2024]
+- =soc_kriged= ::
+  see =nit_kriged=
+- =nit_kriged= ::
+  Bulk soils were sampled on a 30 x 30 grid in 1989 as described in [cite/t:@dietzSoilCarbonMaintained2024] and segmented into 0-15, 15-30, 30-60, and 60-90 cm depth increments. Samples were analyzed for N (and C) using dry combustion. Bulk soil N (g N / 100 g soil) was interpolated using a kriging process similar to that described in [cite/t:@dietzSoilCarbonMaintained2024] for C interpolation. Briefly, spherical variogram models using were fitted to each depth separately using the gstat package in R. Starting values for nugget, psill, and range were determined by visual inspection of semi-variograms. Due to low spatial autocorrelation in the 30-60 and 60-90 cm depths, the variogram models did not fully meet convergence criteria. However, visual inspection of the model vs. semi-variogram indicated that the model fits were acceptable. The low spatial autocorrelation in the 30-60 cm and 60-90 cm depths results in high variance and limited range of estimated values. However, for N balance purposes, the high variance of N estimates is likely acceptable.
+  - See =WICST_N_kriging_graphs_2024-01-14.pdf= for graphs of the kriging process.
+  - See also [cite/t:@gralerSpatioTemporalInterpolationUsing2016] kriging details in R
+- =cn_method= ["dry combustion" | "mid infrared reflectance"] ::
+  - /dry combustion/ - considered the standard for elemental analysis
+  - /mid-infrared reflectance/ - predicts SOC concentration based on absorbed mid-infrared light. Cheaper but less accurate.
+- =soc_mg_ha_method= ["depth based" | "equivalent soil mass"] ::
+  - /depth based/ - uses the soil depth interval to estimate soil mass, multiplying by bulk density and soil carbon percentage for carbon stock
+  - /equivalent soil mass/ - To determine C stocks, rather than using depth from surface, we used cumulative mineral soil mass from the surface as it is a reference system that remains stable over time (i.e., not impacted by changes in bulk density or changes in organic matter). This "equivalent soil mass" or ESM method accounts for compaction, expansion, and addition or loss of organic matter, ensuring the same section of the soil profile is considered each time. For this dataset, these calculations were performed using R code provided by [cite/t:@vonhadenSoilsDirtyLittle2020] with the 1989 %SOC and BD for each sampling location (e.g. subplot within each plot) as the baseline.
+    - See [cite/t:@vonhadenSoilsDirtyLittle2020] a clear and thorough explanation of ESM and its importance.
 *** wicst.canopeo
 Canopeo is an app used for estimating green canopy cover, this table hold relevant information for such
 | Column Name         | Type         | Description                                                  |
@@ -295,58 +345,127 @@ Table holding information related to soil fertility. Routine fertility, and deep
 - season [fall] :: season of soil sampling
   Exact dates for soil samples are not complete, but season of soil sample sufficient for estimate of time when backfilling data
 - comments :: Additional comments about soil observations. Comments are in the format 'source: "comment"', and delimited by \vert.
-*** wicst.carbon                                                  :soil_archive:
-Table holding soil organic carbon measurements for WICST.
-| Column Name         | Type         | Description                                                                 |
-|---------------------+--------------+-----------------------------------------------------------------------------|
-| =year=                | FLOAT<8>     | year of soil sample                                                         |
-| =plot_id=             | VARCHAR<255> | ID of plot soil samples were taken from                                     |
-| =section=             | VARCHAR<255> | Location within plot soil samples were taken                                |
-| =coordinate=          | VARCHAR<255> | Location within plot-section soil samples were taken                        |
-| =depth=               | VARCHAR<255> | The targeted sampling depth category                                        |
-| =min_depth_inch=      | FLOAT<8>     | Actual minimum limit of soil sampling depth in inches                       |
-| =max_depth_inch=      | FLOAT<8>     | Actual maximum limit of soil sampling depth in inches                       |
-| =cn_method=           | VARCHAR<255> | Method used to quantify carbon and nitrogen                                 |
-| =number_composited=   | FLOAT<8>     | Number of soil samples that have been composited for observation            |
-| =nit=                 | FLOAT<8>     | Nitrogen percentage measured                                                |
-| =nit_kriged=          | FLOAT<8>     | kriged estimate of nitrogen as percentage                                   |
-| =nit_kriged_variance= | FLOAT<8>     | variance of kriged estimate of nitrogen                                     |
-| =soc=                 | FLOAT<8>     | Soil organic carbon percentage                                              |
-| =soc_kriged=          | FLOAT<8>     | kriged estimate of soil organic carbon as percentage                        |
-| =soc_kriged_variance= | FLOAT<8>     | variance of kriged estimate of soil organic carbon                          |
-| =soc_equipment=       | VARCHAR<255> | Equipment used for SOC measurement                                          |
-| =bulk_density_g_cm3=  | FLOAT<8>     | Bulk density in =g/cm^3=                                                      |
-| =soc_mg_ha=           | FLOAT<8>     | soil organic carbon in =megagrams/hectare=                                    |
-| =soc_mg_ha_method=    | VARCHAR<255> | method of calculating =soc_mg_ha=                                             |
-| =esm_reference=       | VARCHAR<255> | Free text description for conserved reference mass in =soc_mg_ha= calculation |
+*** wicst.systematiclossdetails
+| Column Name                | Type         | Description                                      |
+| =systematicloss_id= (PK, FK) | VARCHAR<255> | ID of systematic loss observation                |
+| =assessment_total_area=      | FLOAT<8>     | Total area assessed for losses in square feet    |
+| =assessment_loss_area=       | FLOAT<8>     | Area considered as loss in square feet           |
+| =assessment_loss_length=     | FLOAT<8>     | Length of area considered as loss in feet        |
+| =assessment_loss_rows=       | FLOAT<8>     | Number of rows considered as loss in plot        |
+| =sysloss_location=           | VARCHAR<255> | Description of where the systematic loss was     |
+| =sysloss_comments=           | VARCHAR<255> | Comments describing the systematic loss observed |
+*** wicst.systematiclosses
+| Column Name                | Type         | Description                                            |
+| =systematicloss_id= (PK, FK) | VARCHAR<255> | ID of systematic loss observation                      |
+| =harvesting_id=              | VARCHAR<255> | ID of harvest the systematic loss should be applied to |
+| =loss_fraction=              | FLOAT<8>     | Proportion of harvest that was lost                    |
+| =loss_category=              | VARCHAR<255> | Categorical reason of systematic loss                  |
+*** wicst.systems
+| Column Name    | Type         | Description                           |
+| =system_id= (PK) | FLOAT<8>     | ID of cropping system                 |
+| =description=    | VARCHAR<255> | Common description of cropping system |
+*** wicst.tillings
+| Column Name      | Type         | Description                              |
+|------------------+--------------+------------------------------------------|
+| =tillings_id= (PK) | INT          | ID of tilling                            |
+| =tilling_date=     | DATETIME     | Date of tilling event                    |
+| =plot_id=          | VARCHAR<255> | ID of plot                               |
+| =type=             | VARCHAR<255> | Level of tilling intensity               |
+| =implement=        | VARCHAR<255> | Category of tilling                      |
+| =modifier=         | VARCHAR<255> | Modifiers attached to implement          |
+| =timing=           | VARCHAR<255> | Timing of tilling event                  |
+| =passes=           | FLOAT<8>     | Number of passes with implement          |
+| =company=          | VARCHAR<255> | Company of implement                     |
+| =equipment=        | VARCHAR<255> | Name of equipment from company           |
+| =depth=            | FLOAT<8>     | Depth of tilling (inches)                |
+| =speed=            | FLOAT<8>     | Speed tilling implement was driven (mph) |
 **** Data Details
-- =coordinate= ["south" | "north" | "center"] ::
-- =depth= ["0-6 in" | "6-12 in" | "0-12 in" | "12-24 in" | "24-36 in"] ::
-  Depth categorizations of soil sampling observations. These represent the intended soil sample, even if full depth was not achieved
-- =min_depth_inch= ::
-  When target sampling depth was not obtained, these numbers provide a more accurate interval for soil collected
-- =max_depth_inch= ::
-  When target sampling depth was not obtained, these numbers provide a more accurate interval for soil collected
-- =number_composited= ::
-  Some observations are composited from multiple samples from the field.
-  - /0/ - observation is not representative of any soil samples, for example for kriged estimates
-  - /1+/ - when 1 or greater, the number of samples composited in the field for the observation
-- =soc= ::
-  The =soc= column refers to the mass % carbon of the soil sample, as determined by dry combustion using a Flash EA 1112 CN Automatic Elemental Analyzer. %C was considered equivalent to %SOC for these soils. Samples for %SOC analysis were collected by combining 3 samples taken 19 cm apart (0, 19, and 38 cm). This was done to ensure that samples were collected in-row, between-row, and at an intermediate location in all of the maize plots, to account for variation in SOC between rows of maize.
-  - See [cite/t:@dietzSoilCarbonMaintained2024]
-- =soc_kriged= ::
-  see =nit_kriged=
-- =nit_kriged= ::
-  Bulk soils were sampled on a 30 x 30 grid in 1989 as described in [cite/t:@dietzSoilCarbonMaintained2024] and segmented into 0-15, 15-30, 30-60, and 60-90 cm depth increments. Samples were analyzed for N (and C) using dry combustion. Bulk soil N (g N / 100 g soil) was interpolated using a kriging process similar to that described in [cite/t:@dietzSoilCarbonMaintained2024] for C interpolation. Briefly, spherical variogram models using were fitted to each depth separately using the gstat package in R. Starting values for nugget, psill, and range were determined by visual inspection of semi-variograms. Due to low spatial autocorrelation in the 30-60 and 60-90 cm depths, the variogram models did not fully meet convergence criteria. However, visual inspection of the model vs. semi-variogram indicated that the model fits were acceptable. The low spatial autocorrelation in the 30-60 cm and 60-90 cm depths results in high variance and limited range of estimated values. However, for N balance purposes, the high variance of N estimates is likely acceptable.
-  - See =WICST_N_kriging_graphs_2024-01-14.pdf= for graphs of the kriging process.
-  - See also [cite/t:@gralerSpatioTemporalInterpolationUsing2016] kriging details in R
-- =cn_method= ["dry combustion" | "mid infrared reflectance"] ::
-  - /dry combustion/ - considered the standard for elemental analysis
-  - /mid-infrared reflectance/ - predicts SOC concentration based on absorbed mid-infrared light. Cheaper but less accurate.
-- =soc_mg_ha_method= ["depth based" | "equivalent soil mass"] ::
-  - /depth based/ - uses the soil depth interval to estimate soil mass, multiplying by bulk density and soil carbon percentage for carbon stock
-  - /equivalent soil mass/ - To determine C stocks, rather than using depth from surface, we used cumulative mineral soil mass from the surface as it is a reference system that remains stable over time (i.e., not impacted by changes in bulk density or changes in organic matter). This "equivalent soil mass" or ESM method accounts for compaction, expansion, and addition or loss of organic matter, ensuring the same section of the soil profile is considered each time. For this dataset, these calculations were performed using R code provided by [cite/t:@vonhadenSoilsDirtyLittle2020] with the 1989 %SOC and BD for each sampling location (e.g. subplot within each plot) as the baseline.
-    - See [cite/t:@vonhadenSoilsDirtyLittle2020] a clear and thorough explanation of ESM and its importance.
+:PROPERTIES:
+:TABLE_EXPORT_FORMAT: orgtbl-to-csv
+:END:
+- =type= ["field prep" | "primary" | "secondary" | "tertiary"] ::
+  some types of implements can exist in multiple categories depending on how it's used. Often the type of tillage is determined by the implement used, but there are some implements that exist in multiple categories. There are also no standardized definitions for what is considered primary, secondary and tertiary. There is also some ambiguity in how implements are used with modifiers that may change the type of tilling intensity. There are no strict checks for this table, only convention to follow.
+  - /field prep/ - often a necessary precursor to tilling involving getting rid of previous crop residue. It's not strictly speaking a type of "tilling", but we decided to track the data here because stalk chopping events were often logged similarly to tilling practices.
+  - /primary/ - deep mechanical disturbance of the soil, meant to bury crop residue and loosen compacted soil layers.
+  - /secondary/ - breaks down soil clods and prepares the seedbed for planting with leveling, often a follow-up to primary tillage, or the only tillage before planting if primary tilling not deemed necessary and too much soil disturbance.
+    + disk and field digger implements can both be considered both primary and secondary
+  - /tertiary/ - shallow tillage pass that creates a smooth seedbed, managing shallow weeds, and making finer soils
+  For reference, these are the previous categories of implements in the database currently:
+  | implement        | type                 |
+  |------------------+----------------------|
+  | stalk chopper    | field prep           |
+  | chisel           | primary              |
+  | disk-chisel      | primary              |
+  | moldboard        | primary              |
+  | vertical-till    | primary              |
+  | disk             | primary or secondary |
+  | field digger     | primary or secondary |
+  | strip-till       | secondary            |
+  | culti-packer     | secondary            |
+  | drag-harrow      | secondary            |
+  | field cultivator | secondary            |
+  | vertical-till    | secondary            |
+  | ridge hiller     | tertiary             |
+  | rotary hoe       | tertiary             |
+  | row cultivator   | tertiary             |
+  | tine weeder      | tertiary             |
+
+  | implement        | type                 |
+  |------------------+----------------------|
+  | stalk chopper    | field prep           |
+  | chisel           | primary              |
+  | disk             | primary or secondary |
+  | disk-chisel      | primary or secondary |
+  | field digger     | primary or secondary |
+  | moldboard        | primary              |
+  | strip-till       | primary or secondary |
+  | vertical-till    | primary              |
+  | culti-packer     | secondary            |
+  | drag-harrow      | secondary            |
+  | field cultivator | secondary            |
+  | tine weeder      | secondary            |
+  | vertical-till    | secondary            |
+  | ridge hiller     | tertiary             |
+  | rotary hoe       | tertiary             |
+  | row cultivator   | tertiary             |
+  | tine weeder      | tertiary             |
+- =implement= ["stalk chopper" | "chisel" | "disk" | "disk-chisel" | "field digger" | "moldboard" | "strip-till" | "vertical-till" | "culti-packer" | "drag-harrow" | "field cultivator" | "tine weeder" | "ridge hiller" | "rotary hoe" | "row cultivator" | "tine weeder" ] ::
+  There is ambiguity in past labeling of implements, and even within the farming community the naming is not standardized, we try to record the closest implement, while respecting the choices of past naming.
+  [Some AI generated definitions]
+  - /stalk chopper/ - A residue-management implement that chops standing crop stalks (e.g., corn) into small pieces to accelerate decomposition and prevent interference with subsequent tillage.
+  - /chisel/ - A primary tillage tool with sturdy shanks that penetrate deep into the soil to break up compaction layers without fully inverting the soil, leaving a rough, loose seedbed.
+  - /disk/ - A secondary tillage implement composed of concave steel disks arranged in gangs; it slices and mixes surface soil, breaks clods, and incorporates residue to prepare a smoother seedbed.
+  - /disk-chisel/ -  A combination tool with chisel shanks up front (for deep loosening) followed by disk gangs (for residue cutting and clod breaking), merging primary and secondary tillage in one pass.
+  - /field digger/ – A light, shallow tillage implement (sometimes called a “dirt hook” or “field cultivator-hoe”) used to loosen surface soil and uproot weeds without deep disturbance. There is some inconsistency with usage field digger and field cultivator in past years, which is preserved here for future users to interpret. "Quack digger" is considered a field digger.
+  - /moldboard/ – A classic primary tillage plow that inverts soil completely, burying crop residue and leveling the surface but leaving large clods requiring secondary tillage. Not so common on our plots now.
+  - /strip-till/ – A conservation tillage tool that tills narrow strips where the seed row will be, leaving the inter-row soil undisturbed; it conserves moisture and residue between rows while preparing a warm, loose seedbed in each strip.
+  - /vertical-till/ – A tillage approach using vertical-cutting blades (no rear rolling or mixing) that slice residue and fracture soil vertically, reducing compaction while leaving much residue on the surface to protect soil. "turbo-till" should be identified as "vertical-till"
+  - /culti-packer/ – A finishing implement consisting of corrugated or cleated rollers that firm and smooth the seedbed after tillage, helping ensure consistent seed-to-soil contact and reducing moisture loss. "Culti-mulchers" should be labeled as culti-packers
+  - /drag-harrow/ – A lightweight, spring-tooth harrow dragged behind a tractor to break small clods, level minor ridges, and gently smooth the soil surface before planting or after emergence.
+  - /field cultivator/ – A toothed tillage tool used after primary tillage to further break clods, mix soil, and uproot shallow weeds; it works at moderate depth (2–6 inches) to create a workable seedbed. "Soil-Finisher" should be labeled as a field cultivator.
+  - /tine weeder/ – A shallow, narrow-tine implement that “rakes” the soil surface to uproot small weeds between crop rows or broadcast-seeded fields, operating at very low depth to avoid disturbing crop roots.
+  - /ridge hiller/ – An implement with angled shovels or disks designed to form raised ridges (beds) by pushing soil toward the center, helps improve drainage and root development.
+  - /rotary hoe/ – A wheel-type hoe with curved, spike-toothed wheels that lightly break crusts and uproot tiny weeds in early-emerging crops without significantly disturbing the growing plants.
+  - /row cultivator/ – A steerable or adjustable-barbed implement that runs between crop rows, using spring teeth or sweeps to uproot weeds and aerate the soil without harming the crop plants.
+- =modifier= ["no-till with sweeps" | "s-tine" | "sweep" | "twisted shank"] ::
+- =timing= ["emergence" | "post-plant" | "post-replant" | "pre-emerge" | "pre-plant"] :: micro timing of tilling
+  Since tilling may occur the same day as planting or replanting, the timing relative to these important events is also documented.
+- =company= ["Case IH" | "AGCO" | "Balzer" | "Blu-Jet" | "Brillion" | "John Deere" | "Krause" | "Sunflower" | "Wil-Rich" | "Yetter"] ::
+  Ideally the equipment and implement will eventually be replaced with an equipment ID and supported with its own table, that way tooling used will have full information, but in the past, sometimes only the company of the equipment is known, and even then for only about <5% of the existing data.
+- =equipment= ["15 ft" | "200" | "335" | "4511" | "5035" | "7400" | "980"] ::
+  Equipment should be interpreted in tandem with the company to be identifying.
+*** wicts.treatments
+| Column Name       | Type     | Description                                        |
+|-------------------+----------+----------------------------------------------------|
+| =treatment_id= (PK) | FLOAT<8> | ID of assigned treatment                           |
+| =system_id= (FK)    | FLOAT<8> | Cropping system the assigned treatment belongs     |
+| =start_year=        | FLOAT<8> | First year after 1989 that is not filler corn      |
+| =start_crop=        | FLOAT<8> | First crop planted after filler corn on =start_year= |
+*** wicst.yieldings
+| Column Name      | Type         | Description                                    |
+| =yielding_id= (PK) | VARCHAR<255> | ID of the yield observation                    |
+| =yielding_type=    | VARCHAR<255> | Cropping system the assigned treatment belongs |
+** EI Schema
 *** ei.biogeo                                                     :soil_archive:
 | Column Name                  | Type         | Description                                                                                                                   |
 |------------------------------+--------------+-------------------------------------------------------------------------------------------------------------------------------|
@@ -396,42 +515,67 @@ Table holding soil organic carbon measurements for WICST.
   =richness_coef = 1-(1/score)=
 - =cows_coef= ::
   adding 1 in denominator to account for zeros =cows_coef = 1-1/(score+1)=
-*** wicst.systematiclossdetails
-| Column Name                | Type         | Description                                      |
-| =systematicloss_id= (PK, FK) | VARCHAR<255> | ID of systematic loss observation                |
-| =assessment_total_area=      | FLOAT<8>     | Total area assessed for losses in square feet    |
-| =assessment_loss_area=       | FLOAT<8>     | Area considered as loss in square feet           |
-| =assessment_loss_length=     | FLOAT<8>     | Length of area considered as loss in feet        |
-| =assessment_loss_rows=       | FLOAT<8>     | Number of rows considered as loss in plot        |
-| =sysloss_location=           | VARCHAR<255> | Description of where the systematic loss was     |
-| =sysloss_comments=           | VARCHAR<255> | Comments describing the systematic loss observed |
-*** wicst.systematiclosses
-| Column Name                | Type         | Description                                            |
-| =systematicloss_id= (PK, FK) | VARCHAR<255> | ID of systematic loss observation                      |
-| =harvesting_id=              | VARCHAR<255> | ID of harvest the systematic loss should be applied to |
-| =loss_fraction=              | FLOAT<8>     | Proportion of harvest that was lost                    |
-| =loss_category=              | VARCHAR<255> | Categorical reason of systematic loss                  |
-*** wicst.systems
-| Column Name    | Type         | Description                           |
-| =system_id= (PK) | FLOAT<8>     | ID of cropping system                 |
-| =description=    | VARCHAR<255> | Common description of cropping system |
-*** wicst.tillings
-| Column Name    | Type         | Description                           |
-*** wicts.treatments
-| Column Name       | Type     | Description                                        |
-| =treatment_id= (PK) | FLOAT<8> | ID of assigned treatment                           |
-| =system_id= (FK)    | FLOAT<8> | Cropping system the assigned treatment belongs     |
-| =start_year=        | FLOAT<8> | First year after 1989 that is not filler corn      |
-| =start_crop=        | FLOAT<8> | First crop planted after filler corn on =start_year= |
-*** wicst.yieldings
-| Column Name      | Type         | Description                                    |
-| =yielding_id= (PK) | VARCHAR<255> | ID of the yield observation                    |
-| =yielding_type=    | VARCHAR<255> | Cropping system the assigned treatment belongs |
 * Views Documentation
 ** WICST Schema
 *** Pasture Summary
 * Database Maintenance
 ** Style Guide
 ** Design Guide
+* Front End Maintenance
+** Data Entry
+Data entry is for entering data into the database. It is designed around a well curated Excel spreadsheet with as many checks implemented so that
+1. data is as consistent as possible with database schema
+2. mistakes can be easily spotted by visual review
+
+There is 1 excel spreadsheet for data entry for each project, to match how the schemas are separated. This means that front end maintenance will have to update each one of the data entry sheets manually if there are changes to the schema that affect mutiple projects. Yearly entry can thus be a copy of their respective project sheets.
+*** Copy and pasting a table from master
+1. Make needed changes in =wicst_upload_example_master.xlsx=, i.e. create a new entry sheet for canopeo observations
+2. Copy the table + header row, with select cell in the table, Cmd + A, Cmd + A, Cmd + C
+   - the first Cmd + A selects only the rows without the headers
+3. Any formula references will carry the sheet context with it, see below ([[fig:workbook_reference_in_formula][link]]), these need to be deleted manually in the formula bar.
+   - if all workbook links are successfully deleted, the icon "workbook links" in the data section will be greyed out
+
+    #+ATTR_ODT: :width 800 :height 300 :anchor page
+    #+NAME: fig:workbook_reference_in_formula
+    #+CAPTION: Here we copied a new sheet from master into an entry sheet for 2024, but copied sheets may have sheet references in the formulas to manually delete.
+    [[file:img/frontend_workbook_reference.png]]
+4. Data Validation needs to be manually updated with the correct references as well. The validation menu is what gives each box the dropdown menu.
+
+    #+ATTR_ODT: :width 15 :height 10 :anchor paragraph
+    #+NAME: fig:validation_location
+    #+CAPTION: Data > Data Validation. This is how the drop down menus in excel are created
+    [[file:img/frontend_validation_location.png]]
+
+    #+ATTR_ODT: :width 15 :height 10 :anchor paragraph
+    #+NAME: fig:validation_location
+    #+CAPTION: Select "List" from the settings and select the range that the possible values for this cell can come from. Here I have the selection extended past the last item so that any items added in the future will show up in the drop down without additional changing of the data validation. A blank will show up as a valid option.
+    [[file:img/frontend_validation_settings.png]]
+
+    #+ATTR_ODT: :width 15 :height 10 :anchor paragraph
+    #+NAME: fig:validation_location
+    #+CAPTION: Information, error, or warning. Generally the message I give is informational to alert the user of a possible misentry, but not stop them from entering the data.
+    [[file:img/frontend_validation_error.png]]
+5. Conditional Validation rules also need to be updated manually depending on what is considered "invalid input". The red strikeout text makes it easier to visually verify that data is entered correctly.
+    - Additionally, I have found that it is easier to ensure the data validation rules do not get overwritten. When excel sheets are locked and cells are formatted to be locked, there is no category to ensure data validation rules don't disappear after a copy and paste. With data validation, the safest paste is a "special paste" with values only. There is however, a category for formatting of the cells to be locked, so crude copy and paste will not affect the formatting rules.  Hence data validation by formatting appears to be more stable.
+
+    #+ATTR_ODT: :width 15 :height 10 :anchor paragraph
+    #+NAME: fig:validation_location
+    #+CAPTION: Rules for red strikeout text are "classic" style that "Use a formula to determine which cells to format" with a custom styling.
+    [[file:img/frontend_conditional_location.png]]
+*** Reviewing data for correctness
+1. Data Validation Rules
+   - depending on the "informational -> warning -> error" level of data validation error, there still may be some incorrect values allowed when the validation level is not error. Excel will try to help with a little green corner marker, but unfortunately these do not show up unless the sheet is unlocked. You may also use the "Data > Data Validation > Circle Invalid Data" option to identify deviants.
+
+    #+ATTR_ODT: :width 12 :height 8 :anchor paragraph
+    #+NAME: fig:validation_location
+    #+CAPTION: Here is a copy and paste error, in which excel shows a little green triangle for data entry errors. This is only for /unlocked/ data sheets.
+    [[file:img/frontend_validation_notification.png]]
+2. Conditional Formatting
+   - incorrect input should be highlighted red, but this is not yet implemented for all columns/entry as it is quite annoying to maintain with lots of manual formula editing.
+
+Here is a list of additional common errors to look for:
+- data is entered into the correct sheet for each experiment
+- data is not copy and pasted in the correct cells
+* Middleware Maintenance
 * Bibliography                                                      :soil_archive:
 #+print_bibliography:
